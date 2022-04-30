@@ -11,15 +11,19 @@
     "type-check": "tsc"
   },
   "dependencies": {
+    "@types/sanitize-html": "^2.6.2",
     "@types/styled-components": "^5.1.25",
     "@wangeditor/editor": "^5.0.1",
     "@wangeditor/editor-for-react": "^1.0.2",
+    "dexie": "^3.2.1",
+    "dexie-react-hooks": "^1.1.1",
     "md-editor-rt": "^1.6.12",
     "react": "^18.0.0",
     "react-dom": "^18.0.0",
     "react-is": "^18.0.0",
     "react-router": "^6.3.0",
     "react-router-dom": "^6.3.0",
+    "sanitize-html": "^2.7.0",
     "styled-components": "^5.3.5",
     "zustand": "^4.0.0-rc.0"
   },

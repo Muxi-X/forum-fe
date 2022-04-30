@@ -4,6 +4,30 @@
 
 本地server `pnpm build && pnpm server`
 
+# 项目目录
+```
+├── src
+│   ├── components      # 公共组件
+│   ├── hooks           # 自定义hook
+│   ├── pages           # 页面
+│   ├── service         # 网络请求部分
+│   ├── store           # 全局状态
+│   ├── type            # 全局类型声明
+│   ├── utils           # 工具函数
+│   ├── db              # IndexDB部分
+│   ├── App.tsx         
+│   ├── main.tsx
+│   ├── router.tsx
+│   └── vite-env.d.ts
+├── README.md
+├── index.html
+├── node_modules
+├── package.json
+├── pnpm-lock.yaml
+├── tsconfig.json
+├── vite.config.ts
+```
+
 # Git 规范
 
 ### 提交规范
@@ -20,8 +44,6 @@
 
 # 开发规范(TODO)
 
-
-
 ### 1. 路由设计
 React-Router v6 使用 useRoutes配置路由
 
@@ -34,28 +56,5 @@ React-Router v6 使用 useRoutes配置路由
 自定义useFetch
 
 
-```
-├── src
-│   ├── components      # 公共组件
-│   ├── hooks           # 自定义hook
-│   ├── pages           # 页面
-│   ├── service         # 网络请求部分
-│   ├── store           # 全局状态
-│   ├── type            # 全局类型声明
-│   ├── utils           # 工具函数
-│   ├── App.tsx         
-│   ├── main.tsx
-│   ├── router.tsx
-│   └── vite-env.d.ts
-├── README.md
-├── index.html
-├── node_modules
-├── package.json
-├── pnpm-lock.yaml
-├── tsconfig.json
-├── vite.config.ts
-```
-
-
-
-
+### 4. IndexDB使用
+使用IndexDB对文章草稿储存 直到该文章发布成功/被删除才从IndexDB中销毁 使用 [Dexie.js](https://dexie.org/)

@@ -3,13 +3,10 @@ import '@wangeditor/editor/dist/css/style.css'; // 引入 css
 import React, { useState, useEffect } from 'react';
 import { Editor, Toolbar } from '@wangeditor/editor-for-react';
 import { IDomEditor, IEditorConfig } from '@wangeditor/editor';
+import { EditorProps } from './type';
 
-function RtfEditor() {
+const RtfEditor: React.FC<EditorProps> = ({ editorContent, handleEditorContent }) => {
   const [editor, setEditor] = useState<IDomEditor | null>(null); // 存储 editor 实例
-  const [html, setHtml] = useState(''); // 编辑器内容
-
-  // 模拟 ajax 请求，异步设置 html
-
   const toolbarConfig = {};
   const editorConfig: Partial<IEditorConfig> = {
     placeholder: '请输入内容...',
@@ -26,7 +23,7 @@ function RtfEditor() {
 
   return (
     <>
-      <div style={{ border: '1px solid #ccc', zIndex: 100 }}>
+      <div style={{ border: '1px solid #ccc', zIndex: 100, height: '100%' }}>
         <Toolbar
           editor={editor}
           defaultConfig={toolbarConfig}
@@ -35,15 +32,15 @@ function RtfEditor() {
         />
         <Editor
           defaultConfig={editorConfig}
-          value={html}
+          value={editorContent}
           onCreated={setEditor}
-          onChange={(editor) => setHtml(editor.getHtml())}
+          onChange={handleEditorContent}
           mode="default"
-          style={{ height: '500px', overflowY: 'hidden' }}
+          style={{ height: '100%', overflowY: 'hidden' }}
         />
       </div>
     </>
   );
-}
+};
 
 export default RtfEditor;

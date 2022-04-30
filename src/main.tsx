@@ -1,18 +1,11 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import { createGlobalStyle } from 'styled-components';
-import App from './App';
-
-const GlobalStyle = createGlobalStyle`
-  * {
-    margin: 0;
-    padding: 0;
-  }
-`;
+import SetRoutes from 'router';
+import GlobalStyle from '../src/styles/global';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <GlobalStyle />
-    <App />
+    <SetRoutes />
   </React.StrictMode>,
 );
