@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router';
 import useForm from 'hooks/useForm';
 import Button from 'components/Button/button';
 import { PwdInput, UserInput } from './style';
@@ -10,6 +11,10 @@ interface LoginForm {
 
 const Login: React.FC = () => {
   const [form, setForm] = useForm<LoginForm>({ username: '', password: '' });
+  const nav = useNavigate();
+  const handleLogin = () => {
+    nav('/');
+  };
   return (
     <>
       <UserInput

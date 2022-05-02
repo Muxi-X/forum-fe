@@ -7,9 +7,7 @@ const Home: React.FC = () => {
     <>
       我是首页
       {useOutlet()}
-      <button onClick={() => nav(`/editor/drafts/new__${new Date().getTime()}`)}>
-        点我去编辑页面
-      </button>
+      <button onClick={() => nav(`/login`)}>点我去登录页面</button>
     </>
   );
 };

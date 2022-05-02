@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, useRoutes } from 'react-router-dom';
 import Home from 'pages/Home';
 import Login from 'pages/Login/Login';
+import Square from 'pages/Square/square';
 import User from 'pages/User';
 import Article from 'pages/Article';
 import Editor from 'pages/Editor/Editor';
@@ -12,13 +13,7 @@ const GetRoutes = () => {
   const routes = useRoutes([
     {
       path: '/',
-      element: <Home />,
-      children: [
-        {
-          path: 'article',
-          element: <Article />,
-        },
-      ],
+      element: <Square />,
     },
     {
       path: '/login',
