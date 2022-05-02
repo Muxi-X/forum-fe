@@ -56,7 +56,7 @@ const Drafts: React.FC = () => {
             onClick={() => handleToDraft(draft.id)}
             key={draft.id}
             title={draft.title}
-            content={draft.md}
+            content={draft.content}
           />
         ))}
       </ItemWrapper>

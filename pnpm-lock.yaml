@@ -1,6 +1,7 @@
 lockfileVersion: 5.3
 
 specifiers:
+  '@types/markdown-navbar': ^1.4.0
   '@types/react': ^18.0.0
   '@types/react-dom': ^18.0.0
   '@types/sanitize-html': ^2.6.2
@@ -21,7 +22,9 @@ specifiers:
   eslint-plugin-prettier: ^4.0.0
   eslint-plugin-react: ^7.28.0
   eslint-plugin-simple-import-sort: ^7.0.0
+  markdown-navbar: ^1.4.3
   md-editor-rt: ^1.6.12
+  md-reverse: ^1.0.0
   pre-commit: ^1.2.2
   prettier: ^2.5.1
   react: ^18.0.0
@@ -37,13 +40,16 @@ specifiers:
   zustand: ^4.0.0-rc.0
 
 dependencies:
+  '@types/markdown-navbar': 1.4.0
   '@types/sanitize-html': 2.6.2
   '@types/styled-components': 5.1.25
   '@wangeditor/editor': 5.0.1
   '@wangeditor/editor-for-react': 1.0.2_3c41109f065bd7887663803783065671
   dexie: 3.2.1
   dexie-react-hooks: 1.1.1_fb7ad8211e213ccf579af852a65db12c
+  markdown-navbar: 1.4.3
   md-editor-rt: 1.6.12
+  md-reverse: 1.0.0
   react: 18.0.0
   react-dom: 18.0.0_react@18.0.0
   react-is: 18.0.0
@@ -476,6 +482,12 @@ packages:
   /@types/json5/0.0.29:
     resolution: {integrity: sha1-7ihweulOEdK4J7y+UnC86n8+ce4=}
     dev: true
+
+  /@types/markdown-navbar/1.4.0:
+    resolution: {integrity: sha512-WUG7MBobWDlKtY/d3RdBsD9ExR+UwY4zSj3XYLGEttu78AtZuOUXsW0JQb6jkjIc//Cn9qJZGW/Hs2NGaaXudA==}
+    dependencies:
+      '@types/react': 18.0.5
+    dev: false
 
   /@types/prop-types/15.7.5:
     resolution: {integrity: sha512-JCB8C6SnDoQf0cNycqd/35A7MjcnK+ZTqE7judS6o7utxUCg6imJg3QK2qzHKszlTjcj2cn+NwMB2i96ubpj7w==}
@@ -1127,6 +1139,11 @@ packages:
     resolution: {integrity: sha512-TChjCtgcMDc8t12RiwAsThjqrS/VpBlEvDgL009ot4HESzBo3h2FSZNa6ZS1nWKZEPDoulnszxUll9n0/spflQ==}
     requiresBuild: true
     dev: true
+
+  /core-js/3.22.3:
+    resolution: {integrity: sha512-1t+2a/d2lppW1gkLXx3pKPVGbBdxXAkqztvWb1EJ8oF8O2gIGiytzflNiFEehYwVK/t2ryUsGBoOFFvNx95mbg==}
+    requiresBuild: true
+    dev: false
 
   /core-util-is/1.0.3:
     resolution: {integrity: sha512-ZQBvi1DcpJ4GDqanjucZ2Hj3wEO5pZDS89BWbkcrvdxksJorwUDDZamX9ldFkp9aw2lmBDLgkObEA4DWNJ9FYQ==}
@@ -2369,9 +2386,21 @@ packages:
       yallist: 4.0.0
     dev: true
 
+  /markdown-navbar/1.4.3:
+    resolution: {integrity: sha512-esZQ9fHbjnOq/YnmKRrHTRhIO5+UmU3g5BS2tly7RwWrWCjOWv0Nq2A8r1GF9IBZKvrwM/rzaMgjjsQlkbh0tA==}
+    dependencies:
+      core-js: 3.22.3
+      prop-types: 15.8.1
+      react: 16.14.0
+    dev: false
+
   /md-editor-rt/1.6.12:
     resolution: {integrity: sha512-+R/GRcS+jPAOkY4tZ8G7AHYrPSOT10a1J2xqq3elkokcoXSRSwoXwAEKRF0nvj7XOzU3erO+LcUKv8/Ixcg6iA==}
     engines: {node: '>=12.0.0'}
+    dev: false
+
+  /md-reverse/1.0.0:
+    resolution: {integrity: sha512-8aeU1E0HDevxCsVr730hz/15q23ISVeEJvhWYSC3DqKmrZ0cclOxVngEC42Wn2LASfQZRrgUC+ql6JdHea+xig==}
     dev: false
 
   /merge2/1.4.1:
@@ -2438,7 +2467,6 @@ packages:
   /object-assign/4.1.1:
     resolution: {integrity: sha1-IQmtx5ZYh8/AXLvUQsrIv7s2CGM=}
     engines: {node: '>=0.10.0'}
-    dev: true
 
   /object-inspect/1.12.0:
     resolution: {integrity: sha512-Ho2z80bVIvJloH+YzRmpZVQe87+qASmBUKZDWgx9cu+KDrX2ZDH/3tMy+gXbZETVGs2M8YdxObOh7XAtim9Y0g==}
@@ -2635,7 +2663,6 @@ packages:
       loose-envify: 1.4.0
       object-assign: 4.1.1
       react-is: 16.13.1
-    dev: true
 
   /pseudomap/1.0.2:
     resolution: {integrity: sha1-8FKijacOYYkX7wqKw0wa5aaChrM=}
@@ -2696,6 +2723,15 @@ packages:
     dependencies:
       history: 5.3.0
       react: 18.0.0
+    dev: false
+
+  /react/16.14.0:
+    resolution: {integrity: sha512-0X2CImDkJGApiAlcf0ODKIneSwBPhqJawOa5wCtKbu7ZECrmS26NvtSILynQ66cgkT/RJ4LidJOc3bUESwmU8g==}
+    engines: {node: '>=0.10.0'}
+    dependencies:
+      loose-envify: 1.4.0
+      object-assign: 4.1.1
+      prop-types: 15.8.1
     dev: false
 
   /react/18.0.0:

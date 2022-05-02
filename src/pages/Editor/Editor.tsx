@@ -34,10 +34,15 @@ export interface Drafts {
 const EditorPage: React.FC = () => {
   const [form, setFrom] = useForm<Drafts>({ title: '', content: '', type: 'rtf' }); // Draft表单状态
   const [saveBoolean, setSaveBoolean] = useState<'' | boolean>(''); // 显示是否正在保存中
+  const [mdToHtml, setMdToHtml] = useState(''); // 控制md转换成DOM结构，网络请求发送的内容最后是这个
 
   const nav = useNavigate();
   const { id: draftId } = useParams();
   const { title, type, content } = form;
+
+  const handleMdtoHtml = (h: string) => {
+    setMdToHtml(h);
+  };
 
   // 更新草稿 不用useCallback的话无法使用防抖
   const putDraftData = useCallback(
@@ -117,7 +122,11 @@ const EditorPage: React.FC = () => {
         {type === 'rtf' ? (
           <RtfEditor editorContent={content} handleEditorContent={handleEditorContent} />
         ) : (
-          <MdEditor editorContent={content} handleEditorContent={handleEditorContent} />
+          <MdEditor
+            editorContent={content}
+            handleEditorContent={handleEditorContent}
+            handleMdToHtml={handleMdtoHtml}
+          />
         )}
       </EditorWrapper>
     </EditorPageWrapper>
