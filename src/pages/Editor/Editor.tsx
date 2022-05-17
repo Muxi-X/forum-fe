@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { IDomEditor } from '@wangeditor/editor';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useDebounceFn } from 'ahooks';
 
 import debounce from 'utils/debounce';
 import { putDraft, searchDraft } from 'db/db';
@@ -34,7 +35,7 @@ export interface Drafts {
 const EditorPage: React.FC = () => {
   const [form, setFrom] = useForm<Drafts>({ title: '', content: '', type: 'rtf' }); // Draft表单状态
   const [saveBoolean, setSaveBoolean] = useState<'' | boolean>(''); // 显示是否正在保存中
-  const [mdToHtml, setMdToHtml] = useState(''); // 控制md转换成DOM结构，网络请求发送的内容最后是这个
+  const [_, setMdToHtml] = useState(''); // 控制md转换成DOM结构，网络请求发送的内容最后是这个
 
   const nav = useNavigate();
   const { id: draftId } = useParams();
@@ -45,13 +46,14 @@ const EditorPage: React.FC = () => {
   };
 
   // 更新草稿 不用useCallback的话无法使用防抖
-  const putDraftData = useCallback(
-    debounce((id: string, form: Drafts) => {
+  const { run: putDraftData } = useDebounceFn(
+    (id: string, form: Drafts) => {
       putDraft(id, form);
-
       setSaveBoolean(false);
-    }, 1000),
-    [],
+    },
+    {
+      wait: 1000,
+    },
   );
 
   // 切换编辑器

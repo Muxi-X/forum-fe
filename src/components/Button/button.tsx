@@ -11,8 +11,8 @@ const Btn = styled.button`
   background-color: #157bc8;
 `;
 
-const Button: React.FC<PropsWithChildren<ButtonProps>> = ({ children }) => {
-  return <Btn>{children}</Btn>;
+const Button: React.FC<PropsWithChildren<ButtonProps>> = ({ onClick, children }) => {
+  return <Btn onClick={onClick}>{children}</Btn>;
 };
 
 export default Button;

@@ -17,6 +17,6 @@
     "module": "esnext",
     "moduleResolution": "node"
   },
-  "include": ["vite.config.ts", "./src"],
+  "include": ["vite.config.ts", "./src", "plugins"],
   "exclude": ["node_modules"]
 }

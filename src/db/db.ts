@@ -21,8 +21,8 @@ class DraftDatabase extends Dexie {
 
 const db = new DraftDatabase();
 
+// 更新草稿
 export const putDraft = (id: string, draft: Partial<Draft>) => {
-  console.log(id);
   db.draft.put({
     ...(draft as Draft),
     id,

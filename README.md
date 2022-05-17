@@ -58,3 +58,13 @@ React-Router v6 使用 useRoutes配置路由
 
 ### 4. IndexDB使用
 使用IndexDB对文章草稿储存 直到该文章发布成功/被删除才从IndexDB中销毁 使用 [Dexie.js](https://dexie.org/)
+
+
+### 工具函数的使用
+ahooks
+
+
+
+
+### 有意义的点
+1. 闭包陷阱的解决

@@ -1,1 +1,1 @@
-// declare module 'md-reverse';
+declare module 'react-auto-routes';

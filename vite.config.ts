@@ -1,11 +1,10 @@
-import reactRefresh from '@vitejs/plugin-react-refresh';
-import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
 import tsconfigPaths from 'vite-tsconfig-paths';
+import autoRoute from './src/plugins/vite-plugin-autoroute';
 
 export default defineConfig({
   plugins: [
-    reactRefresh(),
     tsconfigPaths(),
     react({
       babel: {
@@ -21,5 +20,6 @@ export default defineConfig({
         ],
       },
     }),
+    autoRoute(),
   ],
 });
