@@ -5,7 +5,7 @@ import routes, { parse } from 'react-auto-routes';
 namespace SyncRoute {
   export type Routes = {
     path: string;
-    component: React.LazyExoticComponent<any>;
+    element: React.LazyExoticComponent<any>;
     children?: Routes[];
   };
 }
@@ -17,7 +17,7 @@ const syncRouter = (table: SyncRoute.Routes[]): RouteObject[] => {
       path: route.path,
       element: (
         <Suspense fallback={<div>路由加载ing...</div>}>
-          <route.component />
+          <route.element />
         </Suspense>
       ),
       children: route.children && syncRouter(route.children),
@@ -25,25 +25,7 @@ const syncRouter = (table: SyncRoute.Routes[]): RouteObject[] => {
   });
   return mRouteTable;
 };
-const RouteTable: SyncRoute.Routes[] = [
-  {
-    path: '/',
-    component: lazy(() => import('pages/Article')),
-    children: [
-      {
-        path: 'home',
-        component: lazy(() => import('pages/Login')),
-        children: [
-          {
-            path: 'about',
-            component: lazy(() => import('pages/Draft')),
-          },
-        ],
-      },
-    ],
-  },
-];
-console.log(parse(routes, lazy));
+
 const Routes = () => {
   return useRoutes(syncRouter(parse(routes, lazy)));
 };
