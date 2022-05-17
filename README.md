@@ -1,4 +1,4 @@
-开发由 vite + React + ts + styled-components + pnpm 搭建
+本项目由vite + React + ts + styled-components + pnpm搭建
 
 本地预览  `git clone https://github.com/Muxi-X/forum-fe.git && cd forum-fe && pnpm install && pnpm dev`
 

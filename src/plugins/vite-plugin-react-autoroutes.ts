@@ -22,14 +22,21 @@ const parsePagesDirectory = (
   const files = siblings
     .filter((f) => f.isFile() && f.name.endsWith('.tsx') && !f.name.startsWith('-'))
     .map((f) => f.name);
-
   // 筛选出文件夹
   const directories = siblings.filter((f) => f.isDirectory()).map((d) => d.name);
-
+  // 遍历文件
   for (const name of files) {
     const f = { name: name.split('.')[0], importPath: path.join(dir, name) };
     const routeOptions = [];
-    // Route name 处理和与同目录文件夹同名以及index.jsx外的情况
+
+    // 处理NotFound情况
+    if (f.name == 'NotFound') {
+      routeOptions.push(`"name": "NotFound"`);
+      routeOptions.push(`"component": "() => import('/${f.importPath}')"`);
+      routeOptions.push(`"path": "*"`);
+      routes.push(`{ ${routeOptions.join(', ')} }`);
+      continue;
+    }
     if (
       !directories.includes(f.name) ||
       !fs.existsSync(path.join(dir, f.name, 'index.jsx'))
@@ -38,10 +45,13 @@ const parsePagesDirectory = (
         f.name === 'index' && prependName
           ? prependName.slice(0, -1)
           : prependName + f.name.replace(/^_/, '');
+      routeOptions.push(`"name": "${routeName}"`);
     }
     // Route path
     routeOptions.push(
-      `"path": "${prependPath}${f.name === 'index' ? '' : f.name.replace(/^_/, ':')}"`,
+      `"path": "${prependPath}${
+        f.name === 'index' ? '' : f.name.replace(/^_/, ':')
+      }"`.toLocaleLowerCase(),
     );
     // Route component
     routeOptions.push(`"component": "() => import('/${f.importPath}')"`);
@@ -51,7 +61,7 @@ const parsePagesDirectory = (
         prependName: `${prependName}${f.name.replace(/^_/, '')}-`,
         prependPath: '',
       }).routes;
-      routeOptions.push(`"children": "[ ${children.join(', ')} ]"`);
+      routeOptions.push(`"children": [ ${children.join(', ')} ]`);
     }
     routes.push(`{ ${routeOptions.join(', ')} }`);
   }
@@ -69,14 +79,22 @@ const parsePagesDirectory = (
     });
     routes = routes.concat(parsedDir.routes);
   }
-
   return { routes };
 };
 
-const paresModeleContent = (routes: string[], lazy: any) => {
+const parse = (routes: string[], lazy: any) => {
+  const parseChildren = (children: any) => {
+    return children.map((c: any) => {
+      if (c.children) c.children = parseChildren(c.children);
+      return { ...c, component: lazy(eval(c.component)) };
+    });
+  };
   return routes.map((route) => {
     const r = JSON.parse(route);
     r.component = lazy(eval(r.component));
+    if (r.children) {
+      r.children = parseChildren(r.children);
+    }
     return r;
   });
 };
@@ -85,7 +103,7 @@ const makeModuleContent = ({ pagesDir }: DirProps) => {
   const { routes } = parsePagesDirectory(pagesDir);
   return `
   export default [${routes.map((route) => JSON.stringify(route)).join(', \n')}]\n 
-  export const parse = ${paresModeleContent} `;
+  export const parse = ${parse} `;
 };
 
 const MyPlugin = ({ pagesDir } = { pagesDir: 'src/pages/' }): Plugin => {

@@ -2,7 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router';
 import useForm from 'hooks/useForm';
 import Button from 'components/Button/button';
-import { PwdInput, UserInput } from './style';
+import { PwdInput, UserInput } from '../styles/pageStyles/login';
 
 interface LoginForm {
   username: string;

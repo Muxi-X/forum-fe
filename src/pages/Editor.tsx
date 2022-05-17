@@ -19,7 +19,7 @@ import {
   TitleInput,
   RightBox,
   ToggleEditor,
-} from './style';
+} from '../styles/pageStyles/editor';
 import toggle from 'assets/svg/toggle.svg';
 
 export type EditorType = 'rtf' | 'md';

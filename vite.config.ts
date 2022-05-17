@@ -1,7 +1,7 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import tsconfigPaths from 'vite-tsconfig-paths';
-import autoRoute from './src/plugins/vite-plugin-autoroute';
+import autoRoute from './src/plugins/vite-plugin-react-autoroutes';
 
 export default defineConfig({
   plugins: [
