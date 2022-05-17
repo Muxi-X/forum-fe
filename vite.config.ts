@@ -20,6 +20,6 @@ export default defineConfig({
         ],
       },
     }),
-    autoRoute(),
+    autoRoute({ pagesDir: 'src/pages/' }),
   ],
 });
