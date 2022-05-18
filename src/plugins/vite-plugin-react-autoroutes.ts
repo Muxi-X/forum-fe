@@ -38,7 +38,7 @@ const parsePagesDirectory = (
     const routeOptions = [];
 
     // 处理NotFound情况
-    if (f.name == 'NotFound') {
+    if (f.name == '404') {
       routeOptions.push(`"name": "NotFound"`);
       routeOptions.push(`"element": "() => import('/${f.importPath}')"`);
       routeOptions.push(`"path": "*"`);
@@ -59,7 +59,9 @@ const parsePagesDirectory = (
     // 处理路由path
     routeOptions.push(
       `"path": "${prependPath}${
-        f.name === 'index' ? '' : parseDynamicRoutes(f.name).replace(/^_/, ':')
+        f.name === 'index' || f.name === 'layout'
+          ? ''
+          : parseDynamicRoutes(f.name).replace(/^_/, ':')
       }"`.toLocaleLowerCase(),
     );
     // 处理路由element
