@@ -9,7 +9,12 @@ interface Route {
   element: any;
   children: Route[];
 }
-
+// 解析动态路由
+const parseDynamicRoutes = (name: string): string => {
+  if (name.startsWith('[') && name.endsWith(']'))
+    return name.endsWith('$]') ? `:${name.slice(1, -2)}?` : `:${name.slice(1, -1)}`;
+  return name;
+};
 // 解析pages目录生成字符Routes
 const parsePagesDirectory = (
   dir: string,
@@ -26,7 +31,7 @@ const parsePagesDirectory = (
   const directories = siblings
     .filter((f) => f.isDirectory())
     .map((d) => d.name)
-    .filter((n) => n !== 'components');
+    .filter((n) => n !== 'components' && n !== 'style');
   // 遍历文件
   for (const name of files) {
     const f = { name: name.split('.')[0], importPath: path.join(dir, name) };
@@ -54,7 +59,7 @@ const parsePagesDirectory = (
     // 处理路由path
     routeOptions.push(
       `"path": "${prependPath}${
-        f.name === 'index' ? '' : f.name.replace(/^_/, ':')
+        f.name === 'index' ? '' : parseDynamicRoutes(f.name).replace(/^_/, ':')
       }"`.toLocaleLowerCase(),
     );
     // 处理路由element
@@ -78,7 +83,7 @@ const parsePagesDirectory = (
   for (const name of remainingDirectories) {
     const parsedDir = parsePagesDirectory(path.join(dir, name), {
       prependName: `${prependName}${name.replace(/^_/, '')}-`,
-      prependPath: `${prependPath}${name.replace(/^_/, ':')}/`,
+      prependPath: `${prependPath}${parseDynamicRoutes(name).replace(/^_/, ':')}/`,
     });
     routes = routes.concat(parsedDir.routes);
   }
