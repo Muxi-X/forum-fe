@@ -41,8 +41,8 @@ const ArticleList: React.FC = () => {
 
   const nav = useNavigate();
 
-  const handleToArticleDtl = (articleId: string) => {
-    nav(`${articleId}`);
+  const handleToArticleDtl = (article_id: string) => {
+    nav(`${article_id}`);
   };
 
   useEffect(() => {
