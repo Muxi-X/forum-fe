@@ -1,5 +1,5 @@
 import Dexie, { Table } from 'dexie';
-import { EditorType } from 'pages/Editor';
+import { EditorType } from 'pages/Editor/[id]';
 
 export interface Draft {
   id: string;

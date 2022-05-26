@@ -1,17 +1,13 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState } from 'react';
 import { IDomEditor } from '@wangeditor/editor';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useDebounceFn } from 'ahooks';
-
-import debounce from 'utils/debounce';
 import { putDraft, searchDraft } from 'db/db';
 import useForm from 'hooks/useForm';
-
 import Avatar from 'components/Avatar/avatar';
 import MdEditor from 'components/Editor/MdEditor';
 import RtfEditor from 'components/Editor/RtfEditor';
 import Button from 'components/Button/button';
-
 import {
   EditorPageWrapper,
   EditorWrapper,
@@ -19,7 +15,7 @@ import {
   TitleInput,
   RightBox,
   ToggleEditor,
-} from '../styles/pageStyles/editor';
+} from 'styles/pageStyles/editor';
 import toggle from 'assets/svg/toggle.svg';
 
 export type EditorType = 'rtf' | 'md';
@@ -33,9 +29,9 @@ export interface Drafts {
 }
 
 const EditorPage: React.FC = () => {
-  const [form, setFrom] = useForm<Drafts>({ title: '', content: '', type: 'rtf' }); // Draft表单状态
+  const [form, setFrom] = useForm<Drafts>({ title: '', content: '', type: 'md' }); // Draft表单状态
   const [saveBoolean, setSaveBoolean] = useState<'' | boolean>(''); // 显示是否正在保存中
-  const [_, setMdToHtml] = useState(''); // 控制md转换成DOM结构，网络请求发送的内容最后是这个
+  const [mdToHtml, setMdToHtml] = useState(''); // 控制md转换成DOM结构，网络请求发送的内容最后是这个
 
   const nav = useNavigate();
   const { id: draftId } = useParams();
@@ -62,7 +58,7 @@ const EditorPage: React.FC = () => {
     type === 'rtf'
       ? setFrom({ title: '', content: '', type: 'md' })
       : setFrom({ title: '', content: '', type: 'rtf' });
-    nav(`/editor/drafts/new__${new Date().getTime()}`); // 用nav跳转 拿到新id 开启新草稿
+    nav(`/editor/new__${new Date().getTime()}`); // 用nav跳转 拿到新id 开启新草稿
   };
 
   // 编辑器内容受控 编辑时读入草稿
@@ -73,6 +69,15 @@ const EditorPage: React.FC = () => {
       : setFrom('content', editor.getHtml());
 
     setSaveBoolean(true);
+  };
+
+  const postArticle = () => {
+    if (form.type === 'md') {
+      localStorage.setItem(draftId as string, mdToHtml);
+    } else {
+      localStorage.setItem(draftId as string, form.content);
+    }
+    nav('/square');
   };
 
   // 首次进入 如果该id是草稿的话直接拿草稿setState
@@ -116,7 +121,7 @@ const EditorPage: React.FC = () => {
           >
             <img style={{ height: '100%' }} src={toggle} alt="toggle"></img>
           </ToggleEditor>
-          <Button>发布</Button>
+          <Button onClick={postArticle}>发布</Button>
           <Avatar />
         </RightBox>
       </Header>

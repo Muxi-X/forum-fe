@@ -42,7 +42,10 @@
 
 合作开发时的[pr教程](https://juejin.cn/post/6949848117072101384)
 
-# 开发规范(TODO)
+# 开发规范
+
+
+# 技术要点
 
 ### 1. 路由设计
 React-Router v6 使用 useRoutes配置路由
@@ -64,7 +67,11 @@ React-Router v6 使用 useRoutes配置路由
 ahooks
 
 
-
-
 ### 有意义的点
 1. 闭包陷阱的解决
+
+
+# 迭代点
+
+目前的文章的Markdown css 是我自己写的，只有一种风格，后续可以开发新的风格 然后统一放在 src/assets/theme 目录下
+然后在可以做一写额外的API封装到Editor中去用来配置风格

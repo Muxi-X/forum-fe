@@ -25,7 +25,7 @@ const syncRouter = (table: SyncRoute.Routes[]): RouteObject[] => {
   });
   return mRouteTable;
 };
-
+console.log(syncRouter(parse(routes, lazy)));
 const Routes = () => {
   return useRoutes(syncRouter(parse(routes, lazy)));
 };

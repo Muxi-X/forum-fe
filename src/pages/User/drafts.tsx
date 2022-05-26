@@ -41,7 +41,7 @@ const Drafts: React.FC = () => {
   const nav = useNavigate();
 
   const handleToDraft = (draftId: string) => {
-    nav(`/editor/drafts/${draftId}`);
+    nav(`/editor/${draftId}`);
   };
 
   useEffect(() => {

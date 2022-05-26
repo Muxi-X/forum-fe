@@ -13,7 +13,7 @@ const Login: React.FC = () => {
   const [form, setForm] = useForm<LoginForm>({ username: '', password: '' });
   const nav = useNavigate();
   const handleLogin = () => {
-    nav('/');
+    nav('/square');
   };
 
   const handleMuxi = () => {
