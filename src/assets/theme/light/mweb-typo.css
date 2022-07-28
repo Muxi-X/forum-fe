@@ -101,7 +101,8 @@ button,
 input,
 select,
 textarea {
-  font: 300 1em/1.8 PingFang SC, Lantinghei SC, Microsoft Yahei, Hiragino Sans GB, Microsoft Sans Serif, WenQuanYi Micro Hei, sans-serif;
+  font: 300 1em/1.8 PingFang SC, Lantinghei SC, Microsoft Yahei, Hiragino Sans GB,
+    Microsoft Sans Serif, WenQuanYi Micro Hei, sans-serif;
 }
 
 button::-moz-focus-inner,
@@ -181,7 +182,7 @@ th {
 
 q:before,
 q:after {
-  content: "";
+  content: '';
 }
 
 /* 统一上标和下标 */
@@ -254,7 +255,7 @@ mark {
 pre,
 code,
 pre tt {
-  font-family: Courier, "Courier New", monospace;
+  font-family: Courier, 'Courier New', monospace;
 }
 
 pre {
@@ -274,7 +275,8 @@ hr {
 }
 
 /* 底部印刷体、版本等标记 */
-small, .typo-small,
+small,
+.typo-small,
 figcaption {
   font-size: 0.9em;
   color: #888;
@@ -293,7 +295,7 @@ b {
 
 .clearfix:before,
 .clearfix:after {
-  content: "";
+  content: '';
   display: table;
 }
 
@@ -349,7 +351,8 @@ h3,
 h4,
 h5,
 h6 {
-  font-family: PingFang SC, Verdana, Helvetica Neue, Microsoft Yahei, Hiragino Sans GB, Microsoft Sans Serif, WenQuanYi Micro Hei, sans-serif;
+  font-family: PingFang SC, Verdana, Helvetica Neue, Microsoft Yahei, Hiragino Sans GB,
+    Microsoft Sans Serif, WenQuanYi Micro Hei, sans-serif;
   font-weight: 100;
   color: #000;
   line-height: 1.35;
@@ -481,7 +484,7 @@ caption {
   width: 100%;
   overflow: hidden;
   white-space: nowrap;
-  content: "・・・・・・・・・・・・・・・・・・・・・・・・・・・・・・・・・・・・・・・・・・・・・・・・・・・・・・・・・・・・・・・・・・・・・・・・・・・・・・・・・・・・・・・・・・・・・・・・・・・・";
+  content: '・・・・・・・・・・・・・・・・・・・・・・・・・・・・・・・・・・・・・・・・・・・・・・・・・・・・・・・・・・・・・・・・・・・・・・・・・・・・・・・・・・・・・・・・・・・・・・・・・・・・';
 }
 
 /* Responsive images */
@@ -497,9 +500,11 @@ https://prismjs.com/download.html#themes=prism-coy&languages=markup+css+clike+ja
  * Based on https://github.com/tshedor/workshop-wp-theme (Example: http://workshop.kansan.com/category/sessions/basics or http://workshop.timshedor.com/category/sessions/basics);
  * @author Tim  Shedor
  */
-code[class*=language-],
-pre[class*=language-] {
-  font-family: Consolas, Menlo, Monaco, "Andale Mono WT", "Andale Mono", "Lucida Console", "Lucida Sans Typewriter", "DejaVu Sans Mono", "Bitstream Vera Sans Mono", "Liberation Mono", "Nimbus Mono L", "Courier New", Courier, monospace;
+code[class*='language-'],
+pre[class*='language-'] {
+  font-family: Consolas, Menlo, Monaco, 'Andale Mono WT', 'Andale Mono', 'Lucida Console',
+    'Lucida Sans Typewriter', 'DejaVu Sans Mono', 'Bitstream Vera Sans Mono',
+    'Liberation Mono', 'Nimbus Mono L', 'Courier New', Courier, monospace;
   font-size: 14px;
   line-height: 1.375;
   direction: ltr;
@@ -517,13 +522,13 @@ pre[class*=language-] {
   color: #4299d7;
 }
 
-pre[class*=language-] {
+pre[class*='language-'] {
   padding: 1em;
   margin: 0.5em 0;
   overflow: auto;
 }
 
-:not(pre) > code[class*=language-] {
+:not(pre) > code[class*='language-'] {
   padding: 0.1em;
   border-radius: 0.3em;
 }
@@ -631,7 +636,13 @@ pre > code.highlight {
 
 .line-highlight {
   background: rgba(77, 130, 23, 0.2);
-  background: -webkit-gradient(linear, left top, right top, color-stop(70%, rgba(77, 130, 23, 0.2)), to(rgba(77, 130, 23, 0)));
+  background: -webkit-gradient(
+    linear,
+    left top,
+    right top,
+    color-stop(70%, rgba(77, 130, 23, 0.2)),
+    to(rgba(77, 130, 23, 0))
+  );
   background: linear-gradient(to right, rgba(77, 130, 23, 0.2) 70%, rgba(77, 130, 23, 0));
 }
 

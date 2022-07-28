@@ -2,8 +2,10 @@
 body {
   color: #595959;
   font-size: 15px;
-  font-family: -apple-system, system-ui, BlinkMacSystemFont, Helvetica Neue, PingFang SC, Hiragino Sans GB, Microsoft YaHei, Arial, sans-serif;
-  background-image: linear-gradient(90deg, rgba(60, 10, 30, 0.04) 3%, rgba(0, 0, 0, 0) 3%), linear-gradient(360deg, rgba(60, 10, 30, 0.04) 3%, rgba(0, 0, 0, 0) 3%);
+  font-family: -apple-system, system-ui, BlinkMacSystemFont, Helvetica Neue, PingFang SC,
+    Hiragino Sans GB, Microsoft YaHei, Arial, sans-serif;
+  background-image: linear-gradient(90deg, rgba(60, 10, 30, 0.04) 3%, rgba(0, 0, 0, 0) 3%),
+    linear-gradient(360deg, rgba(60, 10, 30, 0.04) 3%, rgba(0, 0, 0, 0) 3%);
   background-size: 20px 20px;
   background-position: center center;
   min-width: 200px;
@@ -184,12 +186,12 @@ https://prismjs.com/download.html#themes=prism&languages=markup+css+clike+javasc
  * Based on dabblet (http://dabblet.com)
  * @author Lea Verou
  */
-code[class*=language-],
-pre[class*=language-] {
+code[class*='language-'],
+pre[class*='language-'] {
   color: black;
   background: none;
   text-shadow: 0 1px white;
-  font-family: Consolas, Monaco, "Andale Mono", "Ubuntu Mono", monospace;
+  font-family: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
   /* font-size: 1em; */
   text-align: left;
   white-space: pre;
@@ -206,42 +208,42 @@ pre[class*=language-] {
   hyphens: none;
 }
 
-pre[class*=language-]::-moz-selection,
-pre[class*=language-] ::-moz-selection,
-code[class*=language-]::-moz-selection,
-code[class*=language-] ::-moz-selection {
+pre[class*='language-']::-moz-selection,
+pre[class*='language-'] ::-moz-selection,
+code[class*='language-']::-moz-selection,
+code[class*='language-'] ::-moz-selection {
   text-shadow: none;
   background: #b3d4fc;
 }
 
-pre[class*=language-]::selection,
-pre[class*=language-] ::selection,
-code[class*=language-]::selection,
-code[class*=language-] ::selection {
+pre[class*='language-']::selection,
+pre[class*='language-'] ::selection,
+code[class*='language-']::selection,
+code[class*='language-'] ::selection {
   text-shadow: none;
   background: #b3d4fc;
 }
 
 @media print {
-  code[class*=language-],
-pre[class*=language-] {
+  code[class*='language-'],
+  pre[class*='language-'] {
     text-shadow: none;
   }
 }
 /* Code blocks */
-pre[class*=language-] {
+pre[class*='language-'] {
   /* padding: 1em; */
   margin: 0.5em 0;
   overflow: auto;
 }
 
-:not(pre) > code[class*=language-],
-pre[class*=language-] {
+:not(pre) > code[class*='language-'],
+pre[class*='language-'] {
   background: #f5f2f0;
 }
 
 /* Inline code */
-:not(pre) > code[class*=language-] {
+:not(pre) > code[class*='language-'] {
   padding: 0.1em;
   border-radius: 0.3em;
   white-space: normal;

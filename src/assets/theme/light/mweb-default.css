@@ -31,11 +31,11 @@ https://prismjs.com/download.html#themes=prism&languages=markup+css+clike+javasc
   /* Code blocks */
   /* Inline code */
 }
-.markdown-body code[class*=language-],
-.markdown-body pre[class*=language-] {
+.markdown-body code[class*='language-'],
+.markdown-body pre[class*='language-'] {
   color: black;
   background: none;
-  font-family: monospace, Menlo-Regular, Menlo, Monaco, Consolas, "Courier New";
+  font-family: monospace, Menlo-Regular, Menlo, Monaco, Consolas, 'Courier New';
   font-size: 1em;
   text-align: left;
   white-space: pre;
@@ -51,32 +51,36 @@ https://prismjs.com/download.html#themes=prism&languages=markup+css+clike+javasc
   -ms-hyphens: none;
   hyphens: none;
 }
-.markdown-body pre[class*=language-]::-moz-selection, .markdown-body pre[class*=language-] ::-moz-selection,
-.markdown-body code[class*=language-]::-moz-selection, .markdown-body code[class*=language-] ::-moz-selection {
+.markdown-body pre[class*='language-']::-moz-selection,
+.markdown-body pre[class*='language-'] ::-moz-selection,
+.markdown-body code[class*='language-']::-moz-selection,
+.markdown-body code[class*='language-'] ::-moz-selection {
   text-shadow: none;
   background: #b3d4fc;
 }
-.markdown-body pre[class*=language-]::selection, .markdown-body pre[class*=language-] ::selection,
-.markdown-body code[class*=language-]::selection, .markdown-body code[class*=language-] ::selection {
+.markdown-body pre[class*='language-']::selection,
+.markdown-body pre[class*='language-'] ::selection,
+.markdown-body code[class*='language-']::selection,
+.markdown-body code[class*='language-'] ::selection {
   text-shadow: none;
   background: #b3d4fc;
 }
 @media print {
-  .markdown-body code[class*=language-],
-.markdown-body pre[class*=language-] {
+  .markdown-body code[class*='language-'],
+  .markdown-body pre[class*='language-'] {
     text-shadow: none;
   }
 }
-.markdown-body pre[class*=language-] {
+.markdown-body pre[class*='language-'] {
   padding: 1em;
   margin: 0.5em 0;
   overflow: auto;
 }
-.markdown-body :not(pre) > code[class*=language-],
-.markdown-body pre[class*=language-] {
+.markdown-body :not(pre) > code[class*='language-'],
+.markdown-body pre[class*='language-'] {
   background: #f5f2f0;
 }
-.markdown-body :not(pre) > code[class*=language-] {
+.markdown-body :not(pre) > code[class*='language-'] {
   padding: 0.1em;
   border-radius: 0.3em;
   white-space: normal;
@@ -132,7 +136,7 @@ https://prismjs.com/download.html#themes=prism&languages=markup+css+clike+javasc
 }
 .markdown-body .token.function,
 .markdown-body .token.class-name {
-  color: #DD4A68;
+  color: #dd4a68;
 }
 .markdown-body .token.regex,
 .markdown-body .token.important,
@@ -155,7 +159,8 @@ https://prismjs.com/download.html#themes=prism&languages=markup+css+clike+javasc
  * 在用于 juejin 等平台时，需要转为 .markdown-body，防止污染全局样式
  */
 html {
-  font-family: PingFang SC, -apple-system, BlinkMacSystemFont, Segoe UI, Helvetica, Arial, sans-serif, Apple Color Emoji, Segoe UI Emoji;
+  font-family: PingFang SC, -apple-system, BlinkMacSystemFont, Segoe UI, Helvetica, Arial,
+    sans-serif, Apple Color Emoji, Segoe UI Emoji;
   font-size: 16px;
   color: black;
 }
@@ -192,7 +197,19 @@ body {
 .markdown-body > *:last-child {
   margin-top: 0 !important;
 }
-.markdown-body p, .markdown-body details, .markdown-body dl, .markdown-body ol, .markdown-body ul, .markdown-body pre, .markdown-body xmp, .markdown-body plaintext, .markdown-body listing, .markdown-body blockquote, .markdown-body table, .markdown-body figure, .markdown-body hr {
+.markdown-body p,
+.markdown-body details,
+.markdown-body dl,
+.markdown-body ol,
+.markdown-body ul,
+.markdown-body pre,
+.markdown-body xmp,
+.markdown-body plaintext,
+.markdown-body listing,
+.markdown-body blockquote,
+.markdown-body table,
+.markdown-body figure,
+.markdown-body hr {
   margin-top: 0.75em;
   margin-bottom: 0.75em;
 }
@@ -248,8 +265,11 @@ body {
   margin-left: 0;
   margin-right: 0;
 }
-.markdown-body pre, .markdown-body xmp, .markdown-body plaintext, .markdown-body listing {
-  font-family: monospace, Menlo-Regular, Menlo, Monaco, Consolas, "Courier New";
+.markdown-body pre,
+.markdown-body xmp,
+.markdown-body plaintext,
+.markdown-body listing {
+  font-family: monospace, Menlo-Regular, Menlo, Monaco, Consolas, 'Courier New';
 }
 .markdown-body blockquote > :first-child {
   margin-top: 0;
@@ -271,7 +291,10 @@ body {
 .markdown-body li + li {
   margin-top: 0.25em;
 }
-.markdown-body ul ul, .markdown-body ol ul, .markdown-body ul ol, .markdown-body ol ol {
+.markdown-body ul ul,
+.markdown-body ol ul,
+.markdown-body ul ol,
+.markdown-body ol ol {
   margin-top: 0;
   margin-bottom: 0;
 }
@@ -285,20 +308,30 @@ body {
 .markdown-body a img {
   border: none;
 }
-.markdown-body b, .markdown-body strong {
+.markdown-body b,
+.markdown-body strong {
   font-weight: bold;
 }
-.markdown-body i, .markdown-body cite, .markdown-body em, .markdown-body var, .markdown-body address, .markdown-body dfn {
+.markdown-body i,
+.markdown-body cite,
+.markdown-body em,
+.markdown-body var,
+.markdown-body address,
+.markdown-body dfn {
   font-style: italic;
 }
-.markdown-body code, .markdown-body kbd, .markdown-body tt, .markdown-body samp {
-  font-family: monospace, Menlo-Regular, Menlo, Monaco, Consolas, "Courier New";
+.markdown-body code,
+.markdown-body kbd,
+.markdown-body tt,
+.markdown-body samp {
+  font-family: monospace, Menlo-Regular, Menlo, Monaco, Consolas, 'Courier New';
 }
 .markdown-body mark {
   padding: 0.2em 0;
   background-color: yellow;
 }
-.markdown-body del, .markdown-body s {
+.markdown-body del,
+.markdown-body s {
   color: inherit;
 }
 .markdown-body table {
@@ -308,7 +341,8 @@ body {
   border-spacing: 2px;
   font-size: 1em;
 }
-.markdown-body th, .markdown-body td {
+.markdown-body th,
+.markdown-body td {
   border-color: gray;
   border-width: 1px;
   border-style: solid;
@@ -323,7 +357,7 @@ body {
   font-size: 1em;
   font-weight: normal;
 }
-.markdown-body div[id^=mweb-chart-ele] svg {
+.markdown-body div[id^='mweb-chart-ele'] svg {
   background-color: white;
 }
 

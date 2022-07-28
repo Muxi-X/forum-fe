@@ -34,11 +34,11 @@ https://prismjs.com/download.html#themes=prism&languages=markup+css+clike+javasc
   /* Code blocks */
   /* Inline code */
 }
-.markdown-body code[class*=language-],
-.markdown-body pre[class*=language-] {
+.markdown-body code[class*='language-'],
+.markdown-body pre[class*='language-'] {
   color: #edeef3;
   background: none;
-  font-family: Menlo-Regular, Menlo, Monaco, Consolas, "Courier New", monospace;
+  font-family: Menlo-Regular, Menlo, Monaco, Consolas, 'Courier New', monospace;
   font-size: 1em;
   text-align: left;
   white-space: pre;
@@ -54,32 +54,36 @@ https://prismjs.com/download.html#themes=prism&languages=markup+css+clike+javasc
   -ms-hyphens: none;
   hyphens: none;
 }
-.markdown-body pre[class*=language-]::-moz-selection, .markdown-body pre[class*=language-] ::-moz-selection,
-.markdown-body code[class*=language-]::-moz-selection, .markdown-body code[class*=language-] ::-moz-selection {
+.markdown-body pre[class*='language-']::-moz-selection,
+.markdown-body pre[class*='language-'] ::-moz-selection,
+.markdown-body code[class*='language-']::-moz-selection,
+.markdown-body code[class*='language-'] ::-moz-selection {
   text-shadow: none;
   background: #b3d4fc;
 }
-.markdown-body pre[class*=language-]::selection, .markdown-body pre[class*=language-] ::selection,
-.markdown-body code[class*=language-]::selection, .markdown-body code[class*=language-] ::selection {
+.markdown-body pre[class*='language-']::selection,
+.markdown-body pre[class*='language-'] ::selection,
+.markdown-body code[class*='language-']::selection,
+.markdown-body code[class*='language-'] ::selection {
   text-shadow: none;
   background: #b3d4fc;
 }
 @media print {
-  .markdown-body code[class*=language-],
-.markdown-body pre[class*=language-] {
+  .markdown-body code[class*='language-'],
+  .markdown-body pre[class*='language-'] {
     text-shadow: none;
   }
 }
-.markdown-body pre[class*=language-] {
+.markdown-body pre[class*='language-'] {
   padding: 1em;
   margin: 0.5em 0;
   overflow: auto;
 }
-.markdown-body :not(pre) > code[class*=language-],
-.markdown-body pre[class*=language-] {
+.markdown-body :not(pre) > code[class*='language-'],
+.markdown-body pre[class*='language-'] {
   background: #363945;
 }
-.markdown-body :not(pre) > code[class*=language-] {
+.markdown-body :not(pre) > code[class*='language-'] {
   padding: 0.1em;
   border-radius: 0.3em;
   white-space: normal;
@@ -140,7 +144,7 @@ https://prismjs.com/download.html#themes=prism&languages=markup+css+clike+javasc
 .markdown-body .token.regex,
 .markdown-body .token.important,
 .markdown-body .token.variable {
-  color: #0E73A2;
+  color: #0e73a2;
 }
 .markdown-body .token.important,
 .markdown-body .token.bold {
@@ -154,7 +158,8 @@ https://prismjs.com/download.html#themes=prism&languages=markup+css+clike+javasc
 }
 
 html {
-  font-family: AvenirNext-Regular, -apple-system, BlinkMacSystemFont, Segoe UI, Helvetica, Arial, sans-serif, Apple Color Emoji, Segoe UI Emoji;
+  font-family: AvenirNext-Regular, -apple-system, BlinkMacSystemFont, Segoe UI, Helvetica,
+    Arial, sans-serif, Apple Color Emoji, Segoe UI Emoji;
   font-size: 16px;
   color: #edeef3;
 }
@@ -181,17 +186,38 @@ body {
 .markdown-body > *:last-child {
   margin-top: 0 !important;
 }
-.markdown-body p, .markdown-body pre, .markdown-body ul, .markdown-body ol, .markdown-body dl, .markdown-body form, .markdown-body details, .markdown-body dl, .markdown-body blockquote, .markdown-body table, .markdown-body xmp, .markdown-body plaintext, .markdown-body listing, .markdown-body figure,
-.markdown-body pre[class*=language-] {
+.markdown-body p,
+.markdown-body pre,
+.markdown-body ul,
+.markdown-body ol,
+.markdown-body dl,
+.markdown-body form,
+.markdown-body details,
+.markdown-body dl,
+.markdown-body blockquote,
+.markdown-body table,
+.markdown-body xmp,
+.markdown-body plaintext,
+.markdown-body listing,
+.markdown-body figure,
+.markdown-body pre[class*='language-'] {
   margin: 0.75em 0 0.45em;
 }
 .markdown-body hr {
   margin: 0.75em auto;
 }
-.markdown-body ul ul, .markdown-body ul ol, .markdown-body ol ul, .markdown-body ol ol {
+.markdown-body ul ul,
+.markdown-body ul ol,
+.markdown-body ol ul,
+.markdown-body ol ol {
   margin-bottom: 0px;
 }
-.markdown-body h1, .markdown-body h2, .markdown-body h3, .markdown-body h4, .markdown-body h5, .markdown-body h6 {
+.markdown-body h1,
+.markdown-body h2,
+.markdown-body h3,
+.markdown-body h4,
+.markdown-body h5,
+.markdown-body h6 {
   margin-top: 1.5em;
   margin-bottom: 0.75em;
   margin-left: 0;
@@ -230,7 +256,8 @@ body {
   margin-left: 0;
   margin-right: 0;
 }
-.markdown-body pre, .markdown-body pre[class*=language-] {
+.markdown-body pre,
+.markdown-body pre[class*='language-'] {
   padding: 0;
   border: 0;
 }
@@ -248,7 +275,8 @@ body {
 .markdown-body li {
   word-wrap: break-all;
 }
-.markdown-body ul, .markdown-body ol {
+.markdown-body ul,
+.markdown-body ol {
   list-style: none;
 }
 .markdown-body ul {
@@ -264,7 +292,7 @@ body {
   position: relative;
 }
 .markdown-body ul > li:before {
-  content: "•";
+  content: '•';
   color: #90b9c9;
   position: absolute;
   left: -1.1em;
@@ -273,7 +301,7 @@ body {
   position: relative;
 }
 .markdown-body ol > li:before {
-  content: counter(ol_counter) ".";
+  content: counter(ol_counter) '.';
   counter-increment: ol_counter;
   color: #90b9c9;
   text-align: right;
@@ -284,7 +312,12 @@ body {
 .markdown-body li + li {
   margin-top: 0.25em;
 }
-.markdown-body ul ul, .markdown-body ol ul, .markdown-body ul ol, .markdown-body ol ol, .markdown-body li ul, .markdown-body li ol {
+.markdown-body ul ul,
+.markdown-body ol ul,
+.markdown-body ul ol,
+.markdown-body ol ol,
+.markdown-body li ul,
+.markdown-body li ol {
   margin-top: 0.25em;
   margin-left: 2em;
 }
@@ -293,11 +326,11 @@ body {
   text-indent: -1.5em;
 }
 .markdown-body .task-list-item:before {
-  content: "";
+  content: '';
   display: static;
   margin-right: 0px;
 }
-.markdown-body .task-list-item > input[type=checkbox] {
+.markdown-body .task-list-item > input[type='checkbox'] {
   text-indent: -1.7em;
 }
 .markdown-body img {
@@ -315,23 +348,39 @@ body {
   color: #a7bd90;
   text-decoration: none;
 }
-.markdown-body a:hover, .markdown-body a:focus, .markdown-body a:active {
+.markdown-body a:hover,
+.markdown-body a:focus,
+.markdown-body a:active {
   text-decoration: underline;
 }
 .markdown-body a img {
   border: none;
 }
-.markdown-body b, .markdown-body strong {
+.markdown-body b,
+.markdown-body strong {
   font-weight: bold;
 }
-.markdown-body i, .markdown-body cite, .markdown-body em, .markdown-body var, .markdown-body address, .markdown-body dfn {
+.markdown-body i,
+.markdown-body cite,
+.markdown-body em,
+.markdown-body var,
+.markdown-body address,
+.markdown-body dfn {
   font-style: italic;
 }
-.markdown-body del, .markdown-body s {
+.markdown-body del,
+.markdown-body s {
   color: #a0a3ab;
 }
-.markdown-body pre, .markdown-body xmp, .markdown-body plaintext, .markdown-body listing, .markdown-body code, .markdown-body kbd, .markdown-body tt, .markdown-body samp {
-  font-family: Menlo-Regular, Menlo, Monaco, Consolas, "Courier New", monospace;
+.markdown-body pre,
+.markdown-body xmp,
+.markdown-body plaintext,
+.markdown-body listing,
+.markdown-body code,
+.markdown-body kbd,
+.markdown-body tt,
+.markdown-body samp {
+  font-family: Menlo-Regular, Menlo, Monaco, Consolas, 'Courier New', monospace;
 }
 .markdown-body code {
   display: inline;
@@ -366,17 +415,20 @@ body {
   border: 1px;
   border-spacing: 0;
 }
-.markdown-body th, .markdown-body td {
+.markdown-body th,
+.markdown-body td {
   padding: 0.7em 1em;
   font-size: 0.9em;
   border: 1px solid #636e84;
 }
-.markdown-body caption, .markdown-body th, .markdown-body td {
+.markdown-body caption,
+.markdown-body th,
+.markdown-body td {
   text-align: left;
   font-weight: normal;
   vertical-align: middle;
 }
-.markdown-body div[id^=mweb-chart-ele] svg {
+.markdown-body div[id^='mweb-chart-ele'] svg {
   background-color: white;
 }
 .markdown-body .footnotes > ol li {

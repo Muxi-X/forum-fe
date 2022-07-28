@@ -37,14 +37,14 @@ const Links = styled.div`
 const User: React.FC = () => {
   const { Link } = Button;
   const location = useLocation();
-  const [user, setUser] = useState({})
+  const [user, setUser] = useState({});
 
   useEffect(() => {
-    const id = localStorage.getItem('id')
+    const id = localStorage.getItem('id');
     Service.getUser(id).then((res: any) => {
-      setUser(res.data)
-    })
-  },[])
+      setUser(res.data);
+    });
+  }, []);
 
   if (location.pathname.includes('seting')) {
     return (
@@ -59,7 +59,7 @@ const User: React.FC = () => {
       <Card>
         <UserInfo>
           <Info>
-            <Avatar size={'large'}  />
+            <Avatar size={'large'} />
             <NameAndSign>
               <div>基地班王丰</div>
               <div>我是人工智能King!</div>

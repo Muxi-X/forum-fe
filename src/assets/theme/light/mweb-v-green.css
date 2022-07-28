@@ -4,7 +4,8 @@ body {
   max-width: 760px;
   margin: 0 auto;
   padding: 3rem 1em 1em;
-  font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Helvetica, Arial, sans-serif, Apple Color Emoji, Segoe UI Emoji;
+  font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Helvetica, Arial, sans-serif,
+    Apple Color Emoji, Segoe UI Emoji;
 }
 
 body {
@@ -16,20 +17,35 @@ body {
   color: #333;
 }
 
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   line-height: 1.5;
   margin-top: 35px;
   margin-bottom: 10px;
   padding-bottom: 5px;
 }
 
-h1:first-child, h2:first-child, h3:first-child, h4:first-child, h5:first-child, h6:first-child {
+h1:first-child,
+h2:first-child,
+h3:first-child,
+h4:first-child,
+h5:first-child,
+h6:first-child {
   margin-top: -1.5rem;
   margin-bottom: 1rem;
 }
 
-h1::before, h2::before, h3::before, h4::before, h5::before, h6::before {
-  content: "#";
+h1::before,
+h2::before,
+h3::before,
+h4::before,
+h5::before,
+h6::before {
+  content: '#';
   display: inline-block;
   color: #3eaf7c;
   padding-right: 0.23em;
@@ -96,7 +112,7 @@ hr {
 }
 
 code {
-  font-family: Menlo, Monaco, Consolas, "Courier New", monospace;
+  font-family: Menlo, Monaco, Consolas, 'Courier New', monospace;
   word-break: break-word;
   overflow-x: auto;
   padding: 0.2rem 0.5rem;
@@ -108,7 +124,7 @@ code {
 }
 
 pre {
-  font-family: Menlo, Monaco, Consolas, "Courier New", monospace;
+  font-family: Menlo, Monaco, Consolas, 'Courier New', monospace;
   overflow: auto;
   position: relative;
   line-height: 1.75;
@@ -133,12 +149,13 @@ a {
   color: #3eaf7c;
 }
 
-a:hover, a:active {
+a:hover,
+a:active {
   border-bottom: 1.5px solid #3eaf7c;
 }
 
 a:before {
-  content: "⇲";
+  content: '⇲';
 }
 
 table {
@@ -160,7 +177,8 @@ tr:nth-child(2n) {
   background-color: rgba(62, 175, 124, 0.2);
 }
 
-th, td {
+th,
+td {
   padding: 12px 7px;
   line-height: 24px;
 }
@@ -180,7 +198,7 @@ blockquote {
 
 blockquote::after {
   display: block;
-  content: "";
+  content: '';
 }
 
 blockquote > p {
@@ -207,24 +225,33 @@ details summary::-webkit-details-marker {
   color: #3eaf7c;
 }
 
-ol, ul {
+ol,
+ul {
   padding-left: 28px;
 }
 
-ol li, ul li {
+ol li,
+ul li {
   margin-bottom: 0;
   list-style: inherit;
 }
 
-ol li .task-list-item, ul li .task-list-item {
+ol li .task-list-item,
+ul li .task-list-item {
   list-style: none;
 }
 
-ol li .task-list-item ul, ul li .task-list-item ul, ol li .task-list-item ol, ul li .task-list-item ol {
+ol li .task-list-item ul,
+ul li .task-list-item ul,
+ol li .task-list-item ol,
+ul li .task-list-item ol {
   margin-top: 0;
 }
 
-ol ul, ul ul, ol ol, ul ol {
+ol ul,
+ul ul,
+ol ol,
+ul ol {
   margin-top: 3px;
 }
 
@@ -241,7 +268,7 @@ ul li {
 }
 
 ul li:before {
-  content: "•";
+  content: '•';
   margin-right: 4px;
   color: #3eaf7c;
 }

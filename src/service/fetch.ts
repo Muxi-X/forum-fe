@@ -56,7 +56,7 @@ const Service: any = {
 
   deleteArt(aid: number) {
     return Fetch(`/art/delete/${aid}`, {
-      method: "DELETE"
+      method: 'DELETE',
     });
   },
 
@@ -93,29 +93,29 @@ const Service: any = {
     });
   },
 
-  getUser(uid: number){
-    return Fetch(`/user/search/${uid}`)
+  getUser(uid: number) {
+    return Fetch(`/user/search/${uid}`);
   },
 
-  uploadImg(file: any){
+  uploadImg(file: any) {
     return Fetch(`/user/upload_profile?uid=${file.uid}&photo=${file.photo}`, {
-      method:"PUT",
-    })
+      method: 'PUT',
+    });
   },
 
   addC(uid: string, aid: string) {
     return Fetch(`/favor/add/${uid}/${aid}`, {
-      method: 'POST'
-    })
+      method: 'POST',
+    });
   },
 
-  getUserC(uid: string){
-    return Fetch(`/favor/list_user/${uid}`)
+  getUserC(uid: string) {
+    return Fetch(`/favor/list_user/${uid}`);
   },
-  
-  deleteC(uid: string, aid: string){
-    return Fetch(`/favor/delete/${uid}/${aid}`)
-  }
+
+  deleteC(uid: string, aid: string) {
+    return Fetch(`/favor/delete/${uid}/${aid}`);
+  },
 };
 
 export default Service;

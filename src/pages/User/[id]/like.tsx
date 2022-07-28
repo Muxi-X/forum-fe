@@ -6,7 +6,6 @@ import { useNavigate } from 'react-router';
 import Avatar from 'components/Avatar/avatar';
 import React, { useEffect, useState } from 'react';
 
-
 interface DataType {
   gender?: string;
   name: {
@@ -32,12 +31,12 @@ const PostList: React.FC = () => {
   const [data, setData] = useState<DataType[]>([]);
   const [list, setList] = useState<DataType[]>([]);
 
-  const nav = useNavigate()
+  const nav = useNavigate();
   useEffect(() => {
     let id = +(localStorage.getItem('id') as string);
     Service.getListByuser(id).then((res: any) => {
       setInitLoading(false);
-      setList(res.list)
+      setList(res.list);
       setData(res.list);
     });
   }, []);
@@ -45,12 +44,14 @@ const PostList: React.FC = () => {
   const onLoadMore = () => {
     setLoading(true);
     setList(
-      data.concat([...new Array(count)].map(() => ({ loading: true, name: {}, picture: {} }))),
+      data.concat(
+        [...new Array(count)].map(() => ({ loading: true, name: {}, picture: {} })),
+      ),
     );
     let id = +(localStorage.getItem('id') as string);
     Service.getListByuser(id).then((res: any) => {
       setInitLoading(false);
-      setList(res.list)
+      setList(res.list);
       setData(res.list);
       window.dispatchEvent(new Event('resize'));
     });
@@ -58,13 +59,13 @@ const PostList: React.FC = () => {
 
   const handleMore = (article_id: string) => {
     nav(`/article/${article_id}`);
-  }
+  };
 
   const handleDelete = (article_id: string) => {
     Service.deleteArt(article_id).then((res: any) => {
       location.reload();
-    })
-  }
+    });
+  };
   const loadMore =
     !initLoading && !loading ? (
       <div
@@ -88,7 +89,24 @@ const PostList: React.FC = () => {
       dataSource={list}
       renderItem={(item: any) => (
         <List.Item
-          actions={[<a key="list-loadmore-edit" onClick={() => { handleDelete(item.aid) }}>delete</a>, <a onClick={() => { handleMore(item.aid) }} key="list-loadmore-more">more</a>]}
+          actions={[
+            <button
+              key="list-loadmore-edit"
+              onClick={() => {
+                handleDelete(item.aid);
+              }}
+            >
+              delete
+            </button>,
+            <button
+              onClick={() => {
+                handleMore(item.aid);
+              }}
+              key="list-loadmore-more"
+            >
+              more
+            </button>,
+          ]}
         >
           <Skeleton avatar title={false} loading={item.loading} active>
             <List.Item.Meta
