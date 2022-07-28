@@ -1,0 +1,9 @@
+.tt {
+  position:absolute !important;
+  right: 5px;
+  top: 50%;
+  transform: translateY(-50%);
+  height: 75% !important;
+  background-color: #f2f3f5 !important;
+  width: 45px !important;
+}

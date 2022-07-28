@@ -1,18 +1,48 @@
-import React, { PropsWithChildren } from 'react';
+import React from 'react';
+import { Link, LinkProps } from 'react-router-dom';
 import styled from 'styled-components';
+import Tips from 'styles/tips';
 
 interface ButtonProps {
   onClick?: () => void;
   className?: string;
 }
 
-const Btn = styled.button`
-  cursor: pointer;
-  background-color: #157bc8;
+interface BtnLibkProps extends LinkProps {
+  Tips?: string;
+}
+
+const LinkWrapper = styled.span`
+  ${Tips}
 `;
 
-const Button: React.FC<PropsWithChildren<ButtonProps>> = ({ onClick, children }) => {
-  return <Btn onClick={onClick}>{children}</Btn>;
+const InternalButton: React.FC<ButtonProps> = ({ onClick, children }) => {
+  return <Button onClick={onClick}>{children}</Button>;
 };
+
+const LinkBtn: React.FC<BtnLibkProps> = ({ to, children, target = '_self', Tips }) => {
+  if (Tips)
+    return (
+      <LinkWrapper data-tip={Tips}>
+        <Link to={to} target={target}>
+          {children}
+        </Link>
+      </LinkWrapper>
+    );
+  else
+    return (
+      <Link to={to} target={target}>
+        {children}
+      </Link>
+    );
+};
+
+interface CompoundedComponent extends React.FC<ButtonProps> {
+  Link: typeof LinkBtn;
+}
+
+const Button = InternalButton as CompoundedComponent;
+
+Button.Link = LinkBtn;
 
 export default Button;

@@ -1,15 +1,46 @@
 import React from 'react';
-import { useOutlet, useNavigate } from 'react-router-dom';
+import styled from 'styled-components';
+import { useOutlet } from 'react-router';
+import ArticleList from './Article/components/ariticle_list';
+import Card from 'components/Card/card';
+import Banner from 'components/Banner/banner';
+import Tag from 'components/Tag/tag';
+import { CATEGORY } from 'config';
+import Service from 'service/fetch';
+import useList from 'store/useList';
 
-const Home: React.FC = () => {
-  const nav = useNavigate();
+const Tags = styled.section`
+  width: 100vw;
+  height: 5vh;
+`;
+
+const Square: React.FC = () => {
+  const list = useList();
+  const handleListByTag = (tid: number) => {
+    Service.getListByTag(tid).then((res: any) => {
+      list.setList(res.list);
+    });
+  };
   return (
     <>
-      我是首页
+      <Banner />
+      <Card>
+        <Tags>
+          {CATEGORY.map((t, id) => (
+            <Tag
+              tag={t}
+              key={id}
+              onClick={() => {
+                handleListByTag(id);
+              }}
+            />
+          ))}
+        </Tags>
+      </Card>
+      <ArticleList />
       {useOutlet()}
-      <button onClick={() => nav(`/login`)}>点我去登录页面</button>
     </>
   );
 };
 
-export default Home;
+export default Square;

@@ -1,9 +1,8 @@
-import '@wangeditor/editor/dist/css/style.css'; // 引入 css
-
 import React, { useState, useEffect } from 'react';
 import { Editor, Toolbar } from '@wangeditor/editor-for-react';
 import { IDomEditor, IEditorConfig } from '@wangeditor/editor';
 import { EditorProps } from './type';
+import '@wangeditor/editor/dist/css/style.css'; // 引入 css
 
 const RtfEditor: React.FC<EditorProps> = ({ editorContent, handleEditorContent }) => {
   const [editor, setEditor] = useState<IDomEditor | null>(null); // 存储 editor 实例

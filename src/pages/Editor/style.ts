@@ -18,7 +18,6 @@ export const Header = styled.header`
 `;
 
 export const TitleInput = styled.input`
-  width: 100vw;
   height: 2em;
   padding: 0.2em 2em;
   line-height: 2em;
@@ -26,7 +25,7 @@ export const TitleInput = styled.input`
   color: #272727;
   outline: none;
   border: none;
-  flex: 6;
+  flex: 7;
 
   &::placeholder {
     color: #b0aaaa;
@@ -38,7 +37,7 @@ export const RightBox = styled.section`
   display: flex;
   justify-content: space-around;
   align-items: center;
-  flex: 1;
+  flex: 2;
   height: auto;
   background-color: white;
 

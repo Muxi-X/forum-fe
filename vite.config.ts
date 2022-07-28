@@ -22,4 +22,15 @@ export default defineConfig({
     }),
     autoRoute({ pagesDir: 'src/pages/' }),
   ],
+  server: {
+    proxy: {
+      '/api': {
+        target: 'http://192.168.148.152:8080',
+        changeOrigin: true,
+        rewrite: (path) => {
+          return path.replace(/^\/api/, '');
+        },
+      },
+    },
+  },
 });

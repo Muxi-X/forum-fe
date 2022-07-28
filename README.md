@@ -27,6 +27,7 @@
 ├── tsconfig.json
 ├── vite.config.ts
 ```
+**pages下也会有style和component目录，对应相应页面独有的组件和样式**
 
 # Git 规范
 
@@ -48,15 +49,18 @@
 # 技术要点
 
 ### 1. 路由设计
-React-Router v6 使用 useRoutes配置路由
-
+React-Router v6 使用 useRoutes配置路由，自定义插件生成Routes数组，具体可以参考umi的[约定式路由](https://v3.umijs.org/zh-CN/docs/convention-routing)
 
 ### 2. 状态管理方案
 内部状态简单的用useState / useReducer 维护
 全局状态使用 zustand 一个极简的类redux库 [地址](https://github.com/pmndrs/zustand)
 
+全局状态为: 
+ + User: 个人信息 包括Role, UserId, avatarUrl 等字段信息
++  ArticleList: 就是文章列表，直接放全局便于管理，不然组件间的通信会很麻烦，比如搜索框是放在Header组件里面的，如果不用全局状态设置文章列表的话就需要通过状态提升+callback的形式才能拿到搜索后的文章结果
+
 ### 3. 网络请求
-自定义useFetch
+pont + fetch
 
 
 ### 4. IndexDB使用

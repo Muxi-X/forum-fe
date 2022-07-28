@@ -19,47 +19,61 @@ const parseDynamicRoutes = (name: string): string => {
 const parsePagesDirectory = (
   dir: string,
   { prependName, prependPath } = { prependName: '', prependPath: '/' },
+  _layout = false,
 ): { routes: string[] } => {
   let routes = [];
   // 获取当前目录下的文件夹和文件  withFileTypes表示是否将返回值作为 fs.Dirent对象返回
   const siblings = fs.readdirSync(dir, { withFileTypes: true });
   // 筛选出文件
-  const files = siblings
+  let files = siblings
     .filter((f) => f.isFile() && f.name.endsWith('.tsx') && !f.name.startsWith('-'))
     .map((f) => f.name);
+
   // 筛选出文件夹
   const directories = siblings
     .filter((f) => f.isDirectory())
     .map((d) => d.name)
     .filter((n) => n !== 'components' && n !== 'style');
+
+  if (_layout) {
+    files = files.filter((n) => n !== '_layout.tsx' && n !== '404.tsx');
+  }
+
+  if (files.includes('_layout.tsx')) {
+    let routeOptions = [];
+    files = files.filter((n) => n !== '_layout.tsx');
+    routeOptions.push(`"element": "() => import('/${path.join(dir, '_layout.tsx')}')"`);
+    routeOptions.push(`"path": "${prependPath}"`);
+    const children = parsePagesDirectory(
+      dir,
+      {
+        prependName: `${prependName}${'_layout'.replace(/^_/, '')}-`,
+        prependPath: '',
+      },
+      true,
+    ).routes;
+    routeOptions.push(`"children": [ ${children.join(', ')} ]`);
+    if (files.includes('404.tsx')) {
+      let route404Options = [];
+      route404Options.push(`"name": "NotFound"`);
+      route404Options.push(`"element": "() => import('/${path.join(dir, '404.tsx')}')"`);
+      route404Options.push(`"path": "*"`);
+      routes.push(`{ ${route404Options.join(', ')} }`);
+    }
+
+    routes.push(`{ ${routeOptions.join(', ')} }`);
+    return { routes };
+  }
+
   // 遍历文件
   for (const name of files) {
     const f = { name: name.split('.')[0], importPath: path.join(dir, name) };
     const routeOptions = [];
 
-    // 处理NotFound情况
-    if (f.name == '404') {
-      routeOptions.push(`"name": "NotFound"`);
-      routeOptions.push(`"element": "() => import('/${f.importPath}')"`);
-      routeOptions.push(`"path": "*"`);
-      routes.push(`{ ${routeOptions.join(', ')} }`);
-      continue;
-    }
-    // 处理没有子路由或者有子路由但子路由中没有index默认路由的情况
-    if (
-      !directories.includes(f.name) ||
-      !fs.existsSync(path.join(dir, f.name, 'index.tsx'))
-    ) {
-      const routeName =
-        f.name === 'index' && prependName
-          ? prependName.slice(0, -1)
-          : prependName + f.name.replace(/^_/, '');
-      routeOptions.push(`"name": "${routeName}"`);
-    }
     // 处理路由path
     routeOptions.push(
       `"path": "${prependPath}${
-        f.name === 'index' || f.name === 'layout'
+        f.name === 'index' || f.name === '_layout'
           ? ''
           : parseDynamicRoutes(f.name).replace(/^_/, ':')
       }"`.toLocaleLowerCase(),
