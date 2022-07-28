@@ -12,7 +12,7 @@ const CardWapper = styled.div<CardProps>`
   ${(props) => (props.content ? w : '')}
 `;
 
-interface CardProps {
+interface CardProps extends React.PropsWithChildren {
   content?: boolean | 1 | 0;
 }
 

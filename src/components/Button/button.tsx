@@ -3,7 +3,7 @@ import { Link, LinkProps } from 'react-router-dom';
 import styled from 'styled-components';
 import Tips from 'styles/tips';
 
-interface ButtonProps {
+interface ButtonProps extends React.PropsWithChildren {
   onClick?: () => void;
   className?: string;
 }
