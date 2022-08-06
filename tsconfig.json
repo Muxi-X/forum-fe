@@ -15,7 +15,10 @@
     "jsx": "react",
     "composite": true,
     "module": "esnext",
-    "moduleResolution": "node"
+    "moduleResolution": "node",
+    "paths": {
+      "@/*": ["src/*"]
+    }
   },
   "include": ["vite.config.ts", "./src", "plugins"],
   "exclude": ["node_modules"]
