@@ -3,7 +3,7 @@ import { IDomEditor } from '@wangeditor/editor';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useDebounceFn } from 'ahooks';
 import { Button, Card } from 'antd';
-import { putDraft, searchDraft } from 'db/db';
+import { putDraft, searchDraft } from 'utils/db_drafts';
 import useForm from 'hooks/useForm';
 import Avatar from 'components/Avatar/avatar';
 import MdEditor from 'components/Editor/MdEditor';
@@ -158,7 +158,13 @@ const EditorPage: React.FC = () => {
               : '保存完成'
           }
         >
-          <Button>草稿箱</Button>
+          <Button
+            onClick={() => {
+              nav('/user/drafts');
+            }}
+          >
+            草稿箱
+          </Button>
           <SurePost>
             <Button
               type="primary"

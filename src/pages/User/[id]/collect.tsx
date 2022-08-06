@@ -34,17 +34,6 @@ const PostList: React.FC = () => {
   const nav = useNavigate();
   useEffect(() => {
     let id = +(localStorage.getItem('id') as string);
-    Service.getUserC(id).then((res: any) => {
-      setInitLoading(false);
-      const l = [];
-      res.list.map((i: any) => {
-        Service.getArtById(i.aid).then((res: any) => {
-          l.push(res.data);
-          setList(l);
-          setData(l);
-        });
-      });
-    });
   }, []);
 
   const onLoadMore = () => {
@@ -97,22 +86,22 @@ const PostList: React.FC = () => {
       renderItem={(item: any) => (
         <List.Item
           actions={[
-            <a
+            <button
               key="list-loadmore-edit"
               onClick={() => {
                 handleDelete(item.aid);
               }}
             >
               delete
-            </a>,
-            <a
+            </button>,
+            <button
               onClick={() => {
                 handleMore(item.aid);
               }}
               key="list-loadmore-more"
             >
               more
-            </a>,
+            </button>,
           ]}
         >
           <Skeleton avatar title={false} loading={item.loading} active>

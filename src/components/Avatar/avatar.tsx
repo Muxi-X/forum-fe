@@ -44,8 +44,6 @@ const Avatar: React.FC<AvatarProps> = ({
     };
   };
 
-  if (height && width) return <AvatarWrapper height={height} width={width} />;
-
   return (
     <AvatarWrapper
       onClick={() => {
@@ -54,8 +52,8 @@ const Avatar: React.FC<AvatarProps> = ({
           nav(`/user/${id}`);
         }
       }}
-      height={Size[size]}
-      width={Size[size]}
+      height={height ? height : Size[size]}
+      width={width ? width : Size[size]}
     >
       <AvatarImg src={src ? src : imgSrc} alt="图片正在加载中" />
       {fix ? <UploadImg type="file" accept="image/*" onChange={uploadImg} /> : null}

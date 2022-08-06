@@ -17,7 +17,6 @@ const GlobalStyle = createGlobalStyle`
 
 // 版心样式
 export const w = css`
-  background-color: white;
   margin: 0 auto;
   width: 60vw;
 `;

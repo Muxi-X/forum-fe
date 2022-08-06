@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
 import styled from 'styled-components';
-import { getDraftsList, Draft } from 'db/db';
+import { getDraftsList, Draft } from 'utils/db_drafts';
+import ArticleList from 'pages/Article/components/ariticle_list/ariticle_list';
 import { w } from 'styles/global';
 
 interface ItemProps {
@@ -49,7 +50,6 @@ const Drafts: React.FC = () => {
   }, []);
   return (
     <>
-      草稿页面
       <ItemWrapper>
         {drafts.map((draft) => (
           <DraftItem

@@ -2,6 +2,8 @@ import React from 'react';
 import { useOutlet, useLocation, useNavigate } from 'react-router';
 import styled from 'styled-components';
 import Header from 'components/Header/header';
+import Card from 'components/Card/card';
+import { w } from 'styles/global';
 import 'antd/dist/antd.css';
 
 const WelcomePage = styled.div`
@@ -11,11 +13,16 @@ const WelcomePage = styled.div`
   align-items: center;
 `;
 
+const ContentCard = styled(Card)`
+  margin-top: 10vh;
+  ${w}
+`;
+
 const LayoutPage: React.FC = () => {
   return (
     <>
       <Header />
-      {useOutlet()}
+      <ContentCard>{useOutlet()}</ContentCard>
     </>
   );
 };
@@ -35,15 +42,30 @@ const Welcome: React.FC = () => {
 const Layout: React.FC = () => {
   const location = useLocation();
 
-  if (location.pathname.includes('/login') || location.pathname.includes('editor')) {
-    return <>{useOutlet()}</>;
-  }
+  const isSpecialLayout = () => {
+    const specialRoute = ['/login', '/editor'];
 
-  return (
-    <>
-      <LayoutPage />
-    </>
-  );
+    for (const route of specialRoute) {
+      if (location.pathname.includes(route)) return true;
+    }
+    return false;
+  };
+
+  if (isSpecialLayout()) return <>{useOutlet()}</>;
+  else if (location.pathname.includes('/chat')) {
+    return (
+      <>
+        <Header />
+        {useOutlet()}
+      </>
+    );
+  } else {
+    return (
+      <>
+        <LayoutPage />
+      </>
+    );
+  }
 };
 
 export default Layout;

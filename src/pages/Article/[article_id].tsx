@@ -4,7 +4,7 @@ import MarkdownNavbar from 'markdown-navbar';
 import styled from 'styled-components';
 import { Sitdown } from 'sitdown';
 import MarkdownService from 'markdown-it';
-import { searchDraft } from 'db/db';
+import { searchDraft } from 'utils/db_drafts';
 import Service from 'service/fetch';
 import Comment from './components/comment';
 import Card from 'components/Card/card';

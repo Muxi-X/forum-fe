@@ -1,2 +1,2 @@
-import useRole from './useRole';
+import usePrivacy from './usePrivacy';
 import useColor from './useColor';
