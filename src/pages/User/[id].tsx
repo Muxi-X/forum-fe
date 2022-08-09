@@ -64,12 +64,13 @@ const User: React.FC = () => {
               <div>基地班王丰</div>
               <div>我是人工智能King!</div>
             </NameAndSign>
+            <Link to="/user/chat">聊天</Link>
           </Info>
-          <Link to={'seting'}>设置</Link>
+          <Link to="seting">设置</Link>
         </UserInfo>
         <Links>
-          <Link to={'like'}>我的发布</Link>
-          <Link to={'collect'}>我的收藏</Link>
+          <Link to="like">我的发布</Link>
+          <Link to="collect">我的收藏</Link>
         </Links>
         <div>{useOutlet()}</div>
       </Card>

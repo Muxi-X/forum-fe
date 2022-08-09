@@ -41,6 +41,7 @@ const Welcome: React.FC = () => {
 
 const Layout: React.FC = () => {
   const location = useLocation();
+  const children = useOutlet();
 
   const isSpecialLayout = () => {
     const specialRoute = ['/login', '/editor'];
@@ -51,12 +52,12 @@ const Layout: React.FC = () => {
     return false;
   };
 
-  if (isSpecialLayout()) return <>{useOutlet()}</>;
+  if (isSpecialLayout()) return <>{children}</>;
   else if (location.pathname.includes('/chat')) {
     return (
       <>
         <Header />
-        {useOutlet()}
+        {children}
       </>
     );
   } else {

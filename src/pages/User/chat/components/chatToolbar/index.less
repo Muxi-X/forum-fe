@@ -1,0 +1,25 @@
+.emoji-mart-bar, .emoji-mart-search, .emoji-mart-category-label {
+  display: none;
+}
+.emoji-mart {
+  box-shadow: 2px 2px 2px rgba(0, 0, 0, .2);
+  padding: 5px 0;
+}
+
+.emoji-mart::before, .emoji-mart::after {
+  content: '';
+  position: absolute;
+  border-bottom: 10px solid transparent;
+  border-right: 10px solid transparent;
+  border-left: 10px solid transparent;
+  border-top: 12px solid #fff;
+  bottom: -22px;
+  left: 55px;
+  filter: drop-shadow(1px 1px 1px rgba(0, 0, 0, .2));
+}
+
+.tool {
+  :hover {
+    color: blue;
+  }
+}

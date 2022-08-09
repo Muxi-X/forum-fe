@@ -52,7 +52,7 @@ const Header: React.FC = () => {
     });
   };
   return (
-    <Card content={false}>
+    <Card>
       <Wrapper>
         <Link to="/" Tips="主页">
           <HomeOutlined style={{ fontSize: '1.6em' }} />

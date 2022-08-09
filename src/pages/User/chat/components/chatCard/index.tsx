@@ -4,20 +4,21 @@ import Avatar from 'antd/lib/avatar/avatar';
 import Card from 'components/Card/card';
 import ChatInput from 'pages/User/chat/components/chatInput';
 import ChatRecordList from 'pages/User/chat/components/chatRecordList';
-import { Content, DescArea, NickName } from './style';
+import * as style from './style';
 
 const ContentCard = styled(Card)`
   width: 75%;
+  overflow-x: visible;
 `;
 
 const ChatHeadr: React.FC = () => {
   return (
-    <Content>
+    <style.Content>
       <Avatar />
-      <DescArea>
-        <NickName />
-      </DescArea>
-    </Content>
+      <style.DescArea>
+        <style.NickName />
+      </style.DescArea>
+    </style.Content>
   );
 };
 
