@@ -11,7 +11,7 @@ import {
 import useList from 'store/useList';
 import Btn from 'components/Button/button';
 import Card from 'components/Card/card';
-import Service from 'service/fetch';
+
 import './header.css';
 
 const Wrapper = styled.header`
@@ -47,9 +47,9 @@ const Header: React.FC = () => {
   const id = localStorage.getItem('id');
 
   const handleSearch = () => {
-    Service.SearchList(query).then((res: any) => {
-      list.setList(res.list);
-    });
+    // Service.SearchList(query).then((res: any) => {
+    //   list.setList(res.list);
+    // });
   };
   return (
     <Card>

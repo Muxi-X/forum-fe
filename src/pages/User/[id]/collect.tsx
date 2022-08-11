@@ -1,7 +1,7 @@
 // const [list, setlist] = useState([])
 
 import { Button, List, Skeleton } from 'antd';
-import Service from 'service/fetch';
+
 import { useNavigate } from 'react-router';
 import Avatar from 'components/Avatar/avatar';
 import React, { useEffect, useState } from 'react';
@@ -44,12 +44,12 @@ const PostList: React.FC = () => {
       ),
     );
     let id = +(localStorage.getItem('id') as string);
-    Service.getUserc(id).then((res: any) => {
-      setInitLoading(false);
-      setList(res.list);
-      setData(res.list);
-      window.dispatchEvent(new Event('resize'));
-    });
+    // Service.getUserc(id).then((res: any) => {
+    //   setInitLoading(false);
+    //   setList(res.list);
+    //   setData(res.list);
+    //   window.dispatchEvent(new Event('resize'));
+    // });
   };
 
   const handleMore = (article_id: string) => {
@@ -58,9 +58,9 @@ const PostList: React.FC = () => {
 
   const handleDelete = (article_id: string) => {
     let id = +(localStorage.getItem('id') as string);
-    Service.deleteC(id, article_id).then((res: any) => {
-      location.reload();
-    });
+    // Service.deleteC(id, article_id).then((res: any) => {
+    //   location.reload();
+    // });
   };
   const loadMore =
     !initLoading && !loading ? (

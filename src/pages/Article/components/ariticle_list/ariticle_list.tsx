@@ -4,7 +4,7 @@ import { LikeOutlined, HeartOutlined } from '@ant-design/icons';
 import useList from 'store/useList';
 import { CATEGORY } from 'config';
 import Tag from 'components/Tag/tag';
-import Service from 'service/fetch';
+
 import { Item, ItemWrapper, Content, Title, Info } from './style';
 
 interface ItemProps {
@@ -56,9 +56,9 @@ const ArticleList: React.FC = () => {
   };
 
   useEffect(() => {
-    Service.getAllList().then((res: any) => {
-      list.setList(res.list);
-    });
+    // Service.getAllList().then((res: any) => {
+    //   list.setList(res.list);
+    // });
   }, []);
 
   return (

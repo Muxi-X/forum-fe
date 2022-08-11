@@ -81,4 +81,4 @@ ahooks
 # 迭代点
 
 1. 目前的文章的 Markdown css 是我自己写的，只有一种风格，后续可以开发新的风格 然后统一放在 src/assets/theme 目录下, 然后在可以做一写额外的 API 封装到 Editor 中去用来配置风格
-2. 聊天添加上传文件功能，Toolbar已经封装好了
+2. 聊天添加上传文件功能，Toolbar 已经封装好了

@@ -6,7 +6,7 @@ import Card from 'components/Card/card';
 import Banner from 'components/Banner/banner';
 import Tag from 'components/Tag/tag';
 import { CATEGORY } from 'config';
-import Service from 'service/fetch';
+
 import useList from 'store/useList';
 
 const Tags = styled.section`
@@ -17,9 +17,9 @@ const Tags = styled.section`
 const Square: React.FC = () => {
   const list = useList();
   const handleListByTag = (tid: number) => {
-    Service.getListByTag(tid).then((res: any) => {
-      list.setList(res.list);
-    });
+    // Service.getListByTag(tid).then((res: any) => {
+    //   list.setList(res.list);
+    // });
   };
   return (
     <>

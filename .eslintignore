@@ -5,4 +5,5 @@ dist
 dist-ssr
 *.local
 node_modules/*
+src/services
 

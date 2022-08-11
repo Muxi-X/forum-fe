@@ -19,7 +19,6 @@ import {
 } from './style';
 import styled from 'styled-components';
 import toggle from 'assets/svg/toggle.svg';
-import Service from 'service/fetch';
 
 export type EditorType = 'rtf' | 'md';
 
@@ -68,11 +67,11 @@ const EditorPage: React.FC = () => {
   );
 
   const postArticle = () => {
-    const id = localStorage.getItem('id');
-    Service.addArt(tid, id, form.title, form.content).then((res: any) => {
-      if (res.result) nav('/');
-    });
-    setShow(false);
+    // const id = localStorage.getItem('id');
+    // Service.addArt(tid, id, form.title, form.content).then((res: any) => {
+    //   if (res.result) nav('/');
+    // });
+    // setShow(false);
   };
 
   const handleTag = (tid: number) => {

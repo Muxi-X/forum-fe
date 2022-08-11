@@ -14,6 +14,13 @@ const Login: React.FC = () => {
   const [searchParams] = useSearchParams();
   const nav = useNavigate();
 
+  const { data, isLoading } = API.auth.postStudent.useRequest({
+    student_id: '22',
+    password: '33',
+  });
+
+  console.log(data);
+
   const { student_id, password } = form;
   const accessCode = searchParams.get('accessCode');
 
@@ -24,7 +31,7 @@ const Login: React.FC = () => {
     }
   }, []);
 
-  const onFinish = (values: any) => {
+  const onFinish = (values: defs.StudentLoginRequest) => {
     console.log('Success:', values);
   };
 
@@ -48,8 +55,8 @@ const Login: React.FC = () => {
         autoComplete="off"
       >
         <Form.Item
-          label="Username"
-          name="username"
+          label="Student_id"
+          name="student_id"
           rules={[{ required: true, message: 'Please input your username!' }]}
         >
           <Input />

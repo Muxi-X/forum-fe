@@ -4,7 +4,6 @@ import styled from 'styled-components';
 import Card from 'components/Card/card';
 import Avatar from 'components/Avatar/avatar';
 import Button from 'components/Button/button';
-import Service from 'service/fetch';
 
 const UserWrapper = styled.div`
   margin-top: 5vh;
@@ -41,9 +40,9 @@ const User: React.FC = () => {
 
   useEffect(() => {
     const id = localStorage.getItem('id');
-    Service.getUser(id).then((res: any) => {
-      setUser(res.data);
-    });
+    // Service.getUser(id).then((res: any) => {
+    //   setUser(res.data);
+    // });
   }, []);
 
   if (location.pathname.includes('seting')) {

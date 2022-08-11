@@ -5,7 +5,7 @@ import styled from 'styled-components';
 import { Sitdown } from 'sitdown';
 import MarkdownService from 'markdown-it';
 import { searchDraft } from 'utils/db_drafts';
-import Service from 'service/fetch';
+
 import Comment from './components/comment';
 import Card from 'components/Card/card';
 import 'markdown-navbar/dist/navbar.css';
@@ -51,15 +51,15 @@ const Article: React.FC = () => {
     //     setNavBar(md);
     //   }
     // });
-    Service.getArtById(+(article_id as string)).then((res: any) => {
-      const md = new MarkdownService();
-      setNavBar(`#${res.title}\n${res.content}`);
-      setContent(md.render(res.data.content));
-      setTitle(res.data.title);
-      Service.getUser(res.data.uid).then((res: any) => {
-        setUser(res.data);
-      });
-    });
+    // Service.getArtById(+(article_id as string)).then((res: any) => {
+    //   const md = new MarkdownService();
+    //   setNavBar(`#${res.title}\n${res.content}`);
+    //   setContent(md.render(res.data.content));
+    //   setTitle(res.data.title);
+    //   Service.getUser(res.data.uid).then((res: any) => {
+    //     setUser(res.data);
+    //   });
+    // });
   }, []);
 
   const [isLike, setIsLike] = useState(false);
@@ -72,9 +72,9 @@ const Article: React.FC = () => {
   const handleCollect = () => {
     setIsC(true);
     const id = localStorage.getItem('id');
-    Service.addC(id, article_id).then((res: any) => {
-      console.log(res);
-    });
+    // Service.addC(id, article_id).then((res: any) => {
+    //   console.log(res);
+    // });
   };
   return (
     <Wrapper>

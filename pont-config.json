@@ -1,0 +1,10 @@
+{
+  "originUrl": "http://localhost:3003/news",
+  "templatePath": "./pontTemplate",
+  "outDir": "./services",
+  "mocks": {
+    "enable": true
+  },
+  "templateType": "hooks",
+  "surrounding": "javaScript"
+}
