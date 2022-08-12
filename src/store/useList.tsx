@@ -1,15 +1,13 @@
 import create from 'zustand';
 
 interface List {
-  list: Array<any>;
-  setList: (list: any) => void;
+  postList: defs.post_ListResponse[];
+  setList: (list: defs.post_ListResponse[]) => void;
 }
 
 const useList = create<List>((set, get) => ({
-  list: [],
-  setList: (newlist: Array<any>) => {
-    set(() => ({ list: newlist }));
-  },
+  postList: [],
+  setList: (newList) => set(() => ({ postList: newList })),
 }));
 
 export default useList;

@@ -63,7 +63,7 @@ const ArticleList: React.FC = () => {
 
   return (
     <ItemWrapper>
-      {list.list.map((article: any, id: any) => (
+      {list.postList.map((article: any, id: any) => (
         <ArticleItem
           onClick={() => handleToArticleDtl(article.aid)}
           key={id}

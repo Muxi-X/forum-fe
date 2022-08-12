@@ -1,6 +1,6 @@
 /**
-     * @desc list post api
-获取帖子 (type_id = 1 -> 团队内(type_id暂时均填0))
+     * @desc list 主贴 api
+type_id = 1 -> 团队内 (type_id暂时均填0); 根据category获取主贴list
      */
 
 import * as SWR from 'swr';
@@ -16,8 +16,6 @@ export class Params {
   page;
   /** last_id */
   last_id;
-  /** type_id */
-  type_id;
 }
 
 export const method = 'GET';
@@ -28,7 +26,7 @@ export function mutate(
   shouldRevalidate = true,
 ) {
   return SWR.mutate(
-    Hooks.getUrlKey('/post/list/{type_id}', params, 'GET'),
+    Hooks.getUrlKey('/post/list', params, 'GET'),
     newValue,
     shouldRevalidate,
   );
@@ -36,22 +34,20 @@ export function mutate(
 
 export function trigger(params = {}, shouldRevalidate = true) {
   return SWR.trigger(
-    Hooks.getUrlKey('/post/list/{type_id}', params, 'GET'),
+    Hooks.getUrlKey('/post/list', params, 'GET'),
     shouldRevalidate,
   );
 }
 
 export function useRequest(params = {}, swrOptions = {}) {
-  return Hooks.useRequest('/post/list/{type_id}', params, swrOptions);
+  return Hooks.useRequest('/post/list', params, swrOptions);
 }
 
-export function request(params, options = {}) {
-  return PontCore.fetch(
-    PontCore.getUrl('/post/list/{type_id}', params, 'GET'),
-    {
-      method: 'GET',
+export function request(params, body, options = {}) {
+  return PontCore.fetch(PontCore.getUrl('/post/list', params, 'GET'), {
+    method: 'GET',
 
-      ...options,
-    },
-  );
+    body,
+    ...options,
+  });
 }

@@ -1,5 +1,5 @@
 const Request = (url, options = {}) => {
-  url = `/api/v1${url}`
+  url = `/api${url}`
   const isFile = options.body instanceof FormData
   options.headers = isFile
       ? {}

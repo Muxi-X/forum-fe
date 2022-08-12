@@ -1,6 +1,7 @@
 /**
- * @desc 获取帖子 api
- */
+     * @desc WebSocket
+建立 WebSocket 连接
+     */
 
 import * as SWR from 'swr';
 
@@ -9,8 +10,8 @@ import * as Hooks from '../../hooks';
 import { PontCore } from '../../pontCore';
 
 export class Params {
-  /** post_id */
-  post_id;
+  /** uuid */
+  id;
 }
 
 export const method = 'GET';
@@ -21,7 +22,7 @@ export function mutate(
   shouldRevalidate = true,
 ) {
   return SWR.mutate(
-    Hooks.getUrlKey('/post/{post_id}', params, 'GET'),
+    Hooks.getUrlKey('/chat/ws', params, 'GET'),
     newValue,
     shouldRevalidate,
   );
@@ -29,17 +30,17 @@ export function mutate(
 
 export function trigger(params = {}, shouldRevalidate = true) {
   return SWR.trigger(
-    Hooks.getUrlKey('/post/{post_id}', params, 'GET'),
+    Hooks.getUrlKey('/chat/ws', params, 'GET'),
     shouldRevalidate,
   );
 }
 
 export function useRequest(params = {}, swrOptions = {}) {
-  return Hooks.useRequest('/post/{post_id}', params, swrOptions);
+  return Hooks.useRequest('/chat/ws', params, swrOptions);
 }
 
 export function request(params, options = {}) {
-  return PontCore.fetch(PontCore.getUrl('/post/{post_id}', params, 'GET'), {
+  return PontCore.fetch(PontCore.getUrl('/chat/ws', params, 'GET'), {
     method: 'GET',
 
     ...options,

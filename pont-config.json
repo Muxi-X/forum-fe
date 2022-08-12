@@ -1,9 +1,12 @@
 {
   "originUrl": "http://localhost:3003/news",
   "templatePath": "./pontTemplate",
-  "outDir": "./services",
+  "outDir": "./src/test-server",
   "mocks": {
-    "enable": true
+    "enable": true,
+    "basePath": "",
+    "port": 8080,
+    "wrapper": "{\"code\": 0, \"data\": {response}, \"message\": \"\"}"
   },
   "templateType": "hooks",
   "surrounding": "javaScript"

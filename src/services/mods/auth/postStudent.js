@@ -33,7 +33,6 @@ export function trigger(params = {}, shouldRevalidate = true) {
 }
 
 export function useRequest(params = {}, swrOptions = {}) {
-  console.log(params)
   return Hooks.useRequest('/auth/login/student', params, swrOptions, {
     method: 'POST',
   });

@@ -14,25 +14,23 @@ const Login: React.FC = () => {
   const [searchParams] = useSearchParams();
   const nav = useNavigate();
 
-  const { data, isLoading } = API.auth.postStudent.useRequest({
-    student_id: '22',
-    password: '33',
-  });
-
-  console.log(data);
-
-  const { student_id, password } = form;
-  const accessCode = searchParams.get('accessCode');
+  const oauth_code = searchParams.get('accessCode');
 
   useEffect(() => {
-    if (accessCode) {
-      // 请求木犀er登陆接口
+    if (oauth_code) {
+      API.auth.postTeam.request({}, { oauth_code }).then((res) => {
+        localStorage.setItem('token', res.token as string);
+      });
       nav('/');
     }
   }, []);
 
   const onFinish = (values: defs.StudentLoginRequest) => {
-    console.log('Success:', values);
+    const { student_id, password } = values;
+    API.auth.postStudent.request({}, { student_id, password }).then((res) => {
+      localStorage.setItem('token', res.token as string);
+      nav('/');
+    });
   };
 
   const onFinishFailed = (errorInfo: any) => {

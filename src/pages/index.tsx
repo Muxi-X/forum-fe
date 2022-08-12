@@ -1,12 +1,11 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import styled from 'styled-components';
 import { useOutlet } from 'react-router';
-import ArticleList from './Article/components/ariticle_list/ariticle_list';
+import ArticleList from 'pages/Article/components/ariticle_list/ariticle_list';
 import Card from 'components/Card/card';
 import Banner from 'components/Banner/banner';
 import Tag from 'components/Tag/tag';
 import { CATEGORY } from 'config';
-
 import useList from 'store/useList';
 
 const Tags = styled.section`
@@ -15,7 +14,7 @@ const Tags = styled.section`
 `;
 
 const Square: React.FC = () => {
-  const list = useList();
+  const listStore = useList();
   const handleListByTag = (tid: number) => {
     // Service.getListByTag(tid).then((res: any) => {
     //   list.setList(res.list);
@@ -37,8 +36,8 @@ const Square: React.FC = () => {
           ))}
         </Tags>
       </Card>
-      <ArticleList />
-      {useOutlet()}
+      {/* <ArticleList /> */}
+      {/* {useOutlet()} */}
     </>
   );
 };
