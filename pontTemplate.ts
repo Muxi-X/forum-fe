@@ -13,19 +13,6 @@ export default class MyGenerator extends CodeGenerator {
 
       export type Response = ${inter.responseType}
 
-      export function mutate(params?: HooksParams, newValue?: any, shouldRevalidate = true);
-  
-      export function trigger(params?: HooksParams, shouldRevalidate = true);
-
-      ${
-        method === 'GET'
-          ? `
-        export function useRequest(params?: HooksParams, options?: ConfigInterface): { isLoading: boolean; data: Response, error: Error };`
-          : `
-        export function useRequest(params?: HooksParams, options?: ConfigInterface): { isLoading: boolean; data: Response, error: Error };
-        `
-      }
-
       export const method: string;
 
       export function request(${requestParams}): Promise<Response>;
@@ -49,9 +36,7 @@ export default class MyGenerator extends CodeGenerator {
   }
 
   getCommonDeclaration() {
-    return `
-    declare type ConfigInterface = import("swr").ConfigInterface;
-    `;
+    return ``;
   }
 
   getInterfaceContent(inter: Interface) {
@@ -64,41 +49,14 @@ export default class MyGenerator extends CodeGenerator {
      * @desc ${inter.description}
      */
 
-    import * as SWR from 'swr';
 
     import * as defs from '../../baseClass';
-    import * as Hooks from '${relativePath}hooks';
     import { PontCore } from '${relativePath}pontCore';
 
 
     export ${inter.getParamsCode('Params', this.surrounding)}
 
     export const method = "${method}";
-
-    export function mutate(params = {}, newValue = undefined, shouldRevalidate = true) {
-      return SWR.mutate(Hooks.getUrlKey("${
-        inter.path
-      }", params, "${method}"), newValue, shouldRevalidate);
-    }
-
-    export function trigger(params = {}, shouldRevalidate = true) {
-      return SWR.trigger(Hooks.getUrlKey("${
-        inter.path
-      }", params, "${method}"), shouldRevalidate);
-    }
-
-    ${
-      method === 'GET'
-        ? `
-      export function useRequest(params = {}, swrOptions = {}) {
-        return Hooks.useRequest("${inter.path}", params, swrOptions);
-      };`
-        : `
-      export function useRequest(params = {}, swrOptions = {}) {
-        return Hooks.useRequest("${inter.path}", params, swrOptions, { method: "${method}" });
-      }
-      `
-    }
 
     export function request(${requestParams}) {
       return PontCore.fetch(PontCore.getUrl("${

@@ -17,3 +17,4 @@ declare class PontCoreManager {
   getUrl(path: string, queryParams: any, method: string): string;
 }
 export declare const PontCore: PontCoreManager;
+export {};

@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import styled from 'styled-components';
 import { useOutlet } from 'react-router';
+import { useRequest } from 'ahooks';
 import ArticleList from 'pages/Article/components/ariticle_list/ariticle_list';
 import Card from 'components/Card/card';
 import Banner from 'components/Banner/banner';
@@ -15,6 +16,8 @@ const Tags = styled.section`
 
 const Square: React.FC = () => {
   const listStore = useList();
+  const { data, loading } = useRequest(() => API.post.getPostList.request({}, {}));
+  console.log(data);
   const handleListByTag = (tid: number) => {
     // Service.getListByTag(tid).then((res: any) => {
     //   list.setList(res.list);

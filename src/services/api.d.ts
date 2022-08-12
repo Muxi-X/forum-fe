@@ -2,8 +2,6 @@ type ObjectMap<Key extends string | number | symbol = any, Value = any> = {
   [key in Key]: Value;
 };
 
-declare type ConfigInterface = import('swr').ConfigInterface;
-
 declare namespace defs {
   export class ListResponse {
     /** count */
@@ -81,6 +79,43 @@ declare namespace defs {
     role?: number;
   }
 
+  export class chat_Id {
+    /** id */
+    id?: string;
+  }
+
+  export class comment_Comment {
+    /** content */
+    content?: string;
+
+    /** create_time */
+    create_time?: string;
+
+    /** creator_avatar */
+    creator_avatar?: string;
+
+    /** creator_id */
+    creator_id?: number;
+
+    /** creator_name */
+    creator_name?: string;
+
+    /** father_id */
+    father_id?: number;
+
+    /** id */
+    id?: number;
+
+    /** is_liked */
+    is_liked?: boolean;
+
+    /** like_num */
+    like_num?: number;
+
+    /** type_id */
+    type_id?: number;
+  }
+
   export class comment_CreateRequest {
     /** content */
     content?: string;
@@ -95,25 +130,86 @@ declare namespace defs {
     typeId?: number;
   }
 
+  export class like_Item {
+    /** target_id */
+    target_id?: number;
+
+    /** type_id */
+    type_id?: number;
+  }
+
+  export class like_ListResponse {}
+
   export class post_CreateRequest {
-    /** category */
-    category?: string;
+    /** category_id */
+    category_id?: number;
 
     /** content */
     content?: string;
 
+    /** main_post_id */
+    main_post_id?: number;
+
     /** title */
     title?: string;
 
-    /** typeId */
-    typeId?: number;
+    /** type_id */
+    type_id?: number;
   }
 
-  export class post_ListResponse {}
+  export class post_ListMainPostRequest {
+    /** category_id */
+    category_id?: number;
+
+    /** type_id */
+    type_id?: number;
+  }
+
+  export class post_ListResponse {
+    /** posts */
+    posts?: Array<defs.post_Post>;
+  }
+
+  export class post_ListSubPostRequest {
+    /** main_post_id */
+    main_post_id?: number;
+
+    /** type_id */
+    type_id?: number;
+  }
+
+  export class post_Post {
+    /** category_id */
+    category_id?: number;
+
+    /** content */
+    content?: string;
+
+    /** creator_avatar */
+    creator_avatar?: string;
+
+    /** creator_id */
+    creator_id?: number;
+
+    /** creator_name */
+    creator_name?: string;
+
+    /** is_favorite */
+    is_favorite?: boolean;
+
+    /** is_liked */
+    is_liked?: boolean;
+
+    /** last_edit_time */
+    last_edit_time?: string;
+
+    /** title */
+    title?: string;
+  }
 
   export class post_UpdateInfoRequest {
-    /** category */
-    category?: string;
+    /** category_id */
+    category_id?: number;
 
     /** content */
     content?: string;
@@ -160,19 +256,6 @@ login the student-forum
 
       export type Response = defs.StudentLoginResponse;
 
-      export function mutate(
-        params?: HooksParams,
-        newValue?: any,
-        shouldRevalidate = true,
-      );
-
-      export function trigger(params?: HooksParams, shouldRevalidate = true);
-
-      export function useRequest(
-        params?: HooksParams,
-        options?: ConfigInterface,
-      ): { isLoading: boolean; data: Response; error: Error };
-
       export const method: string;
 
       export function request(
@@ -194,19 +277,6 @@ login the team-forum
 
       export type Response = defs.TeamLoginResponse;
 
-      export function mutate(
-        params?: HooksParams,
-        newValue?: any,
-        shouldRevalidate = true,
-      );
-
-      export function trigger(params?: HooksParams, shouldRevalidate = true);
-
-      export function useRequest(
-        params?: HooksParams,
-        options?: ConfigInterface,
-      ): { isLoading: boolean; data: Response; error: Error };
-
       export const method: string;
 
       export function request(
@@ -218,74 +288,51 @@ login the team-forum
   }
 
   /**
-   * 帖子服务
+   * 聊天服务
    */
-  export namespace post {
+  export namespace chat {
     /**
-     * 创建评论 api
-     * /comment
-     */
-    export namespace postComment {
+        * 获取该用户的uuid
+该用户发送信息前先获取自己的uuid，并放入query(id=?)，有效期24h
+        * /chat
+        */
+    export namespace getChat {
       export class Params {}
 
       export type HooksParams = (() => Params) | Params;
 
-      export type Response = defs.Response;
-
-      export function mutate(
-        params?: HooksParams,
-        newValue?: any,
-        shouldRevalidate = true,
-      );
-
-      export function trigger(params?: HooksParams, shouldRevalidate = true);
-
-      export function useRequest(
-        params?: HooksParams,
-        options?: ConfigInterface,
-      ): { isLoading: boolean; data: Response; error: Error };
-
-      export const method: string;
-
-      export function request(
-        params: Params,
-        body: defs.comment_CreateRequest,
-        options?: any,
-      ): Promise<Response>;
-    }
-
-    /**
-     * 获取评论 api
-     * /comment/{comment_id}
-     */
-    export namespace getCommentByComment_id {
-      export class Params {
-        /** comment_id */
-        comment_id: number;
-      }
-
-      export type HooksParams = (() => Params) | Params;
-
-      export type Response = defs.Response;
-
-      export function mutate(
-        params?: HooksParams,
-        newValue?: any,
-        shouldRevalidate = true,
-      );
-
-      export function trigger(params?: HooksParams, shouldRevalidate = true);
-
-      export function useRequest(
-        params?: HooksParams,
-        options?: ConfigInterface,
-      ): { isLoading: boolean; data: Response; error: Error };
+      export type Response = defs.chat_Id;
 
       export const method: string;
 
       export function request(params: Params, options?: any): Promise<Response>;
     }
 
+    /**
+        * WebSocket
+建立 WebSocket 连接
+        * /chat/ws
+        */
+    export namespace getChatWs {
+      export class Params {
+        /** uuid */
+        id: string;
+      }
+
+      export type HooksParams = (() => Params) | Params;
+
+      export type Response = any;
+
+      export const method: string;
+
+      export function request(params: Params, options?: any): Promise<Response>;
+    }
+  }
+
+  /**
+   * 帖子服务
+   */
+  export namespace post {
     /**
         * update post info api
 修改帖子信息
@@ -297,19 +344,6 @@ login the team-forum
       export type HooksParams = (() => Params) | Params;
 
       export type Response = defs.Response;
-
-      export function mutate(
-        params?: HooksParams,
-        newValue?: any,
-        shouldRevalidate = true,
-      );
-
-      export function trigger(params?: HooksParams, shouldRevalidate = true);
-
-      export function useRequest(
-        params?: HooksParams,
-        options?: ConfigInterface,
-      ): { isLoading: boolean; data: Response; error: Error };
 
       export const method: string;
 
@@ -332,19 +366,6 @@ login the team-forum
 
       export type Response = defs.Response;
 
-      export function mutate(
-        params?: HooksParams,
-        newValue?: any,
-        shouldRevalidate = true,
-      );
-
-      export function trigger(params?: HooksParams, shouldRevalidate = true);
-
-      export function useRequest(
-        params?: HooksParams,
-        options?: ConfigInterface,
-      ): { isLoading: boolean; data: Response; error: Error };
-
       export const method: string;
 
       export function request(
@@ -355,11 +376,11 @@ login the team-forum
     }
 
     /**
-        * list post api
-获取帖子 (type_id = 1 -> 团队内(type_id暂时均填0))
-        * /post/list/{type_id}
+        * list 主贴 api
+type_id = 1 -> 团队内 (type_id暂时均填0); 根据category获取主贴list
+        * /post/list
         */
-    export namespace getPostListByType_id {
+    export namespace getPostList {
       export class Params {
         /** limit */
         limit?: number;
@@ -367,62 +388,49 @@ login the team-forum
         page?: number;
         /** last_id */
         last_id?: number;
-        /** type_id */
-        type_id: number;
       }
 
       export type HooksParams = (() => Params) | Params;
 
       export type Response = defs.post_ListResponse;
 
-      export function mutate(
-        params?: HooksParams,
-        newValue?: any,
-        shouldRevalidate = true,
-      );
-
-      export function trigger(params?: HooksParams, shouldRevalidate = true);
-
-      export function useRequest(
-        params?: HooksParams,
-        options?: ConfigInterface,
-      ): { isLoading: boolean; data: Response; error: Error };
-
       export const method: string;
 
-      export function request(params: Params, options?: any): Promise<Response>;
+      export function request(
+        params: Params,
+        body: defs.post_ListMainPostRequest,
+        options?: any,
+      ): Promise<Response>;
     }
 
     /**
-     * 获取帖子 api
-     * /post/{post_id}
-     */
-    export namespace getPostByPost_id {
+        * list 从贴 api
+type_id = 1 -> 团队内 (type_id暂时均填0); 根据 main_post_id 获取主贴的从贴list
+        * /post/list/{main_post_id}
+        */
+    export namespace getPostListByMain_post_id {
       export class Params {
-        /** post_id */
-        post_id: number;
+        /** limit */
+        limit?: number;
+        /** page */
+        page?: number;
+        /** last_id */
+        last_id?: number;
+        /** main_post_id */
+        main_post_id: number;
       }
 
       export type HooksParams = (() => Params) | Params;
 
-      export type Response = defs.Response;
-
-      export function mutate(
-        params?: HooksParams,
-        newValue?: any,
-        shouldRevalidate = true,
-      );
-
-      export function trigger(params?: HooksParams, shouldRevalidate = true);
-
-      export function useRequest(
-        params?: HooksParams,
-        options?: ConfigInterface,
-      ): { isLoading: boolean; data: Response; error: Error };
+      export type Response = defs.post_ListResponse;
 
       export const method: string;
 
-      export function request(params: Params, options?: any): Promise<Response>;
+      export function request(
+        params: Params,
+        body: defs.post_ListSubPostRequest,
+        options?: any,
+      ): Promise<Response>;
     }
 
     /**
@@ -438,19 +446,6 @@ login the team-forum
       export type HooksParams = (() => Params) | Params;
 
       export type Response = defs.Response;
-
-      export function mutate(
-        params?: HooksParams,
-        newValue?: any,
-        shouldRevalidate = true,
-      );
-
-      export function trigger(params?: HooksParams, shouldRevalidate = true);
-
-      export function useRequest(
-        params?: HooksParams,
-        options?: ConfigInterface,
-      ): { isLoading: boolean; data: Response; error: Error };
 
       export const method: string;
 
@@ -473,19 +468,6 @@ login the team-forum
       export type HooksParams = (() => Params) | Params;
 
       export type Response = defs.Response;
-
-      export function mutate(
-        params?: HooksParams,
-        newValue?: any,
-        shouldRevalidate = true,
-      );
-
-      export function trigger(params?: HooksParams, shouldRevalidate = true);
-
-      export function useRequest(
-        params?: HooksParams,
-        options?: ConfigInterface,
-      ): { isLoading: boolean; data: Response; error: Error };
 
       export const method: string;
 
@@ -519,19 +501,6 @@ login the team-forum
 
       export type Response = defs.ListResponse;
 
-      export function mutate(
-        params?: HooksParams,
-        newValue?: any,
-        shouldRevalidate = true,
-      );
-
-      export function trigger(params?: HooksParams, shouldRevalidate = true);
-
-      export function useRequest(
-        params?: HooksParams,
-        options?: ConfigInterface,
-      ): { isLoading: boolean; data: Response; error: Error };
-
       export const method: string;
 
       export function request(params: Params, options?: any): Promise<Response>;
@@ -548,19 +517,6 @@ login the team-forum
       export type HooksParams = (() => Params) | Params;
 
       export type Response = defs.UserProfile;
-
-      export function mutate(
-        params?: HooksParams,
-        newValue?: any,
-        shouldRevalidate = true,
-      );
-
-      export function trigger(params?: HooksParams, shouldRevalidate = true);
-
-      export function useRequest(
-        params?: HooksParams,
-        options?: ConfigInterface,
-      ): { isLoading: boolean; data: Response; error: Error };
 
       export const method: string;
 
@@ -581,19 +537,6 @@ login the team-forum
       export type HooksParams = (() => Params) | Params;
 
       export type Response = defs.UserProfile;
-
-      export function mutate(
-        params?: HooksParams,
-        newValue?: any,
-        shouldRevalidate = true,
-      );
-
-      export function trigger(params?: HooksParams, shouldRevalidate = true);
-
-      export function useRequest(
-        params?: HooksParams,
-        options?: ConfigInterface,
-      ): { isLoading: boolean; data: Response; error: Error };
 
       export const method: string;
 

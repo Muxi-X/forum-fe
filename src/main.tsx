@@ -2,18 +2,16 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import SetRoutes from 'router';
 import GlobalStyle from '../src/styles/global';
-import API from 'services/mods/index';
-import { SWRProvider } from 'services/hooks';
 import { PontCore } from 'services/pontCore';
 import Request from 'services/fetchMiddleware';
+import API from 'services/mods/index.js';
 
-window.API = API;
 PontCore.useFetch(Request);
+window.API = API;
+
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <SWRProvider>
-      <GlobalStyle />
-      <SetRoutes />
-    </SWRProvider>
+    <GlobalStyle />
+    <SetRoutes />
   </React.StrictMode>,
 );

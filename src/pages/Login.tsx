@@ -3,6 +3,7 @@ import useForm from 'hooks/useForm';
 import { message, Input, Form, Button, Checkbox } from 'antd';
 import { useNavigate } from 'react-router';
 import { useSearchParams } from 'react-router-dom';
+import { useRequest } from 'ahooks';
 
 interface LoginState {
   student_id: string;
@@ -14,23 +15,30 @@ const Login: React.FC = () => {
   const [searchParams] = useSearchParams();
   const nav = useNavigate();
 
+  const successLogin = (res: defs.StudentLoginResponse) => {
+    localStorage.setItem('token', res.token as string);
+    nav('/');
+  };
+
+  const { run } = useRequest(API.auth.postStudent.request, {
+    onSuccess: successLogin,
+  });
+
+  const { run: runTeam } = useRequest(API.auth.postTeam.request, {
+    onSuccess: successLogin,
+  });
+
   const oauth_code = searchParams.get('accessCode');
 
   useEffect(() => {
     if (oauth_code) {
-      API.auth.postTeam.request({}, { oauth_code }).then((res) => {
-        localStorage.setItem('token', res.token as string);
-      });
-      nav('/');
+      runTeam({}, { oauth_code });
     }
   }, []);
 
   const onFinish = (values: defs.StudentLoginRequest) => {
     const { student_id, password } = values;
-    API.auth.postStudent.request({}, { student_id, password }).then((res) => {
-      localStorage.setItem('token', res.token as string);
-      nav('/');
-    });
+    run({}, { student_id, password });
   };
 
   const onFinishFailed = (errorInfo: any) => {
