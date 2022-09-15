@@ -9,6 +9,7 @@ import {
   SearchOutlined,
 } from '@ant-design/icons';
 import useList from 'store/useList';
+import useProfile from 'store/useProfile';
 import Btn from 'components/Button/button';
 import Card from 'components/Card/card';
 
@@ -44,6 +45,7 @@ const Header: React.FC = () => {
   const { Link } = Btn;
   const [query, setQuery] = useState('');
   const list = useList();
+  const profileStore = useProfile();
   const id = localStorage.getItem('id');
 
   const handleSearch = () => {
@@ -51,6 +53,7 @@ const Header: React.FC = () => {
     //   list.setList(res.list);
     // });
   };
+
   return (
     <Card>
       <Wrapper>
@@ -82,7 +85,7 @@ const Header: React.FC = () => {
         <Link to="message" Tips="查看消息">
           <MessageOutlined style={{ fontSize: '1.6em' }} />
         </Link>
-        <Link to={`user/${id}`} Tips="个人页面">
+        <Link to={`user/${profileStore.userProfile.id}`} Tips="个人页面">
           <UserOutlined style={{ fontSize: '1.6em' }} />
         </Link>
       </Wrapper>

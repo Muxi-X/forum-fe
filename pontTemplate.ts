@@ -11,7 +11,7 @@ export default class MyGenerator extends CodeGenerator {
 
       export type HooksParams = (() => Params) | Params;
 
-      export type Response = ${inter.responseType}
+      export type Response = ResponseTypeWarpper<${inter.responseType}>
 
       export const method: string;
 
@@ -36,7 +36,12 @@ export default class MyGenerator extends CodeGenerator {
   }
 
   getCommonDeclaration() {
-    return ``;
+    return `       
+     interface ResponseTypeWarpper<T> {
+      code: number;
+      data: T;
+      message: string;
+  };`;
   }
 
   getInterfaceContent(inter: Interface) {

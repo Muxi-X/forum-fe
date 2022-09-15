@@ -1,6 +1,6 @@
 /**
-     * @desc get 我的 profile api
-获取 my 完整 user 信息
+     * @desc list 热门tags api
+降序
      */
 
 import * as defs from '../../baseClass';
@@ -11,7 +11,7 @@ export class Params {}
 export const method = 'GET';
 
 export function request(params, options = {}) {
-  return PontCore.fetch(PontCore.getUrl('/user/myprofile', params, 'GET'), {
+  return PontCore.fetch(PontCore.getUrl('/post/popular_tags', params, 'GET'), {
     method: 'GET',
 
     ...options,

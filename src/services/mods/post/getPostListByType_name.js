@@ -1,6 +1,6 @@
 /**
-     * @desc list user api
-通过 group 和 team 获取 user_list
+     * @desc list 主帖 api
+type_name : normal -> 团队外; muxi -> 团队内 (type_name暂时均填normal); 根据category获取主帖list
      */
 
 import * as defs from '../../baseClass';
@@ -13,17 +13,17 @@ export class Params {
   page;
   /** last_id */
   last_id;
-  /** group_id */
-  group_id;
-  /** team_id */
-  team_id;
+  /** type_name */
+  type_name;
+  /** category */
+  category;
 }
 
 export const method = 'GET';
 
 export function request(params, options = {}) {
   return PontCore.fetch(
-    PontCore.getUrl('/user/list/{group_id}/{team_id}', params, 'GET'),
+    PontCore.getUrl('/post/list/{type_name}', params, 'GET'),
     {
       method: 'GET',
 

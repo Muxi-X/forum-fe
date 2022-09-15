@@ -1,3 +1,42 @@
+export class FeedItem {
+  /** action */
+  action = '';
+
+  /** date */
+  date = '';
+
+  /** id */
+  id = undefined;
+
+  /** 分割线 */
+  show_divider = false;
+
+  /** source */
+  source = new Source();
+
+  /** time */
+  time = '';
+
+  /** user */
+  user = new FeedUser();
+}
+
+export class FeedListResponse {
+  /** list */
+  list = [];
+}
+
+export class FeedUser {
+  /** avatar_url */
+  avatar_url = '';
+
+  /** id */
+  id = undefined;
+
+  /** name */
+  name = '';
+}
+
 export class ListResponse {
   /** count */
   count = undefined;
@@ -15,6 +54,23 @@ export class Response {
 
   /** message */
   message = '';
+}
+
+export class Source {
+  /** id */
+  id = undefined;
+
+  /** 类型，1 -> 团队，2 -> 项目，3 -> 文档，4 -> 文件，6 -> 进度（5 不使用） */
+  kind = undefined;
+
+  /** name */
+  name = '';
+
+  /** project_id */
+  project_id = undefined;
+
+  /** project_name */
+  project_name = '';
 }
 
 export class StudentLoginRequest {
@@ -55,6 +111,9 @@ export class UpdateInfoRequest {
 
   /** name */
   name = '';
+
+  /** signature */
+  signature = '';
 }
 
 export class UserProfile {
@@ -71,12 +130,49 @@ export class UserProfile {
   name = '';
 
   /** role */
-  role = undefined;
+  role = '';
+
+  /** signature */
+  signature = '';
 }
 
 export class chat_Id {
   /** id */
   id = '';
+}
+
+export class collection_Collection {
+  /** comment_num */
+  comment_num = undefined;
+
+  /** content */
+  content = '';
+
+  /** creator_avatar */
+  creator_avatar = '';
+
+  /** creator_id */
+  creator_id = undefined;
+
+  /** creator_name */
+  creator_name = '';
+
+  /** id */
+  id = undefined;
+
+  /** post_id */
+  post_id = undefined;
+
+  /** time */
+  time = '';
+
+  /** title */
+  title = '';
+}
+
+export class collection_CreateRequest {
+  /** post_id */
+  post_id = undefined;
 }
 
 export class comment_Comment {
@@ -107,75 +203,37 @@ export class comment_Comment {
   /** like_num */
   like_num = undefined;
 
-  /** type_id */
-  type_id = undefined;
+  /** first-level -> 一级评论; second-level -> 其它级 */
+  type_name = '';
 }
 
 export class comment_CreateRequest {
   /** content */
   content = '';
 
-  /** fatherId */
-  fatherId = undefined;
+  /** father_id */
+  father_id = undefined;
 
-  /** postId */
-  postId = undefined;
+  /** post_id */
+  post_id = undefined;
 
-  /** typeId */
-  typeId = undefined;
+  /** sub-post -> 从帖; first-level -> 一级评论; second-level -> 其它级 */
+  type_name = '';
 }
 
 export class like_Item {
   /** target_id */
   target_id = undefined;
 
-  /** type_id */
-  type_id = undefined;
+  /** post or comment */
+  type_name = '';
 }
 
 export class like_ListResponse {}
 
-export class post_CreateRequest {
-  /** category_id */
-  category_id = undefined;
-
-  /** content */
-  content = '';
-
-  /** main_post_id */
-  main_post_id = undefined;
-
-  /** title */
-  title = '';
-
-  /** type_id */
-  type_id = undefined;
-}
-
-export class post_ListMainPostRequest {
-  /** category_id */
-  category_id = undefined;
-
-  /** type_id */
-  type_id = undefined;
-}
-
-export class post_ListResponse {
-  /** posts */
-  posts = [];
-}
-
-export class post_ListSubPostRequest {
-  /** main_post_id */
-  main_post_id = undefined;
-
-  /** type_id */
-  type_id = undefined;
-}
-
-export class post_Post {
-  /** category_id */
-  category_id = undefined;
+export class post_Comment {
+  /** comment_num */
+  comment_num = undefined;
 
   /** content */
   content = '';
@@ -189,22 +247,171 @@ export class post_Post {
   /** creator_name */
   creator_name = '';
 
-  /** is_favorite */
-  is_favorite = false;
+  /** id */
+  id = undefined;
 
   /** is_liked */
   is_liked = false;
 
-  /** last_edit_time */
-  last_edit_time = '';
+  /** like_num */
+  like_num = undefined;
+
+  /** replies */
+  replies = [];
+
+  /** time */
+  time = '';
+}
+
+export class post_CreateRequest {
+  /** category */
+  category = '';
+
+  /** content */
+  content = '';
+
+  /** md or rtf */
+  content_type = '';
+
+  /** tags */
+  tags = [];
+
+  /** title */
+  title = '';
+
+  /** normal -> 团队外; muxi -> 团队内 (type_name暂时均填normal) */
+  type_name = '';
+}
+
+export class post_GetPostResponse {
+  /** category */
+  category = '';
+
+  /** comment_num */
+  comment_num = undefined;
+
+  /** content */
+  content = '';
+
+  /** md or rtf */
+  content_type = '';
+
+  /** creator_avatar */
+  creator_avatar = '';
+
+  /** creator_id */
+  creator_id = undefined;
+
+  /** creator_name */
+  creator_name = '';
+
+  /** id */
+  id = undefined;
+
+  /** is_collection */
+  is_collection = false;
+
+  /** is_liked */
+  is_liked = false;
+
+  /** like_num */
+  like_num = undefined;
+
+  /** sub_posts */
+  sub_posts = [];
+
+  /** tags */
+  tags = [];
+
+  /** time */
+  time = '';
 
   /** title */
   title = '';
 }
 
+export class post_Post {
+  /** category */
+  category = '';
+
+  /** comment_num */
+  comment_num = undefined;
+
+  /** comments */
+  comments = [];
+
+  /** content */
+  content = '';
+
+  /** md or rtf */
+  content_type = '';
+
+  /** creator_avatar */
+  creator_avatar = '';
+
+  /** creator_id */
+  creator_id = undefined;
+
+  /** creator_name */
+  creator_name = '';
+
+  /** id */
+  id = undefined;
+
+  /** is_collection */
+  is_collection = false;
+
+  /** is_liked */
+  is_liked = false;
+
+  /** like_num */
+  like_num = undefined;
+
+  /** tags */
+  tags = [];
+
+  /** time */
+  time = '';
+
+  /** title */
+  title = '';
+}
+
+export class post_SubPost {
+  /** comment_num */
+  comment_num = undefined;
+
+  /** comments */
+  comments = [];
+
+  /** content */
+  content = '';
+
+  /** creator_avatar */
+  creator_avatar = '';
+
+  /** creator_id */
+  creator_id = undefined;
+
+  /** creator_name */
+  creator_name = '';
+
+  /** id */
+  id = undefined;
+
+  /** is_liked */
+  is_liked = false;
+
+  /** like_num */
+  like_num = undefined;
+
+  /** time */
+  time = '';
+}
+
 export class post_UpdateInfoRequest {
-  /** category_id */
-  category_id = undefined;
+  /** category */
+  category = '';
 
   /** content */
   content = '';
@@ -212,8 +419,40 @@ export class post_UpdateInfoRequest {
   /** id */
   id = undefined;
 
+  /** tags */
+  tags = [];
+
   /** title */
   title = '';
+}
+
+export class post_info {
+  /** comment_num */
+  comment_num = undefined;
+
+  /** content */
+  content = '';
+
+  /** creator_avatar */
+  creator_avatar = '';
+
+  /** creator_id */
+  creator_id = undefined;
+
+  /** creator_name */
+  creator_name = '';
+
+  /** id */
+  id = undefined;
+
+  /** is_liked */
+  is_liked = false;
+
+  /** like_num */
+  like_num = undefined;
+
+  /** time */
+  time = '';
 }
 
 export class user {
@@ -230,5 +469,5 @@ export class user {
   name = '';
 
   /** role */
-  role = undefined;
+  role = '';
 }

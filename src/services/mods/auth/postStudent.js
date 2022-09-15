@@ -1,5 +1,5 @@
 /**
-     * @desc login api
+     * @desc 学生登录 api
 login the student-forum
      */
 

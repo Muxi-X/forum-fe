@@ -1,6 +1,8 @@
-import React, { lazy, Suspense } from 'react';
+import React, { lazy, Suspense, useEffect } from 'react';
 import { BrowserRouter as Router, useRoutes, RouteObject } from 'react-router-dom';
 import routes, { parse } from 'react-auto-routes';
+import { useRequest } from 'ahooks';
+import useProfile from 'store/useProfile';
 
 namespace SyncRoute {
   export type Routes = {
@@ -25,13 +27,20 @@ const syncRouter = (table: SyncRoute.Routes[]): RouteObject[] => {
   });
   return mRouteTable;
 };
-console.log(parse(routes, lazy));
 
 const Routes = () => {
   return useRoutes(syncRouter(parse(routes, lazy)));
 };
 
+// 初始化工作
 const SetRoutes = () => {
+  const profileStore = useProfile();
+  useRequest(API.user.getUserMyprofile.request, {
+    onSuccess: (res) => {
+      profileStore.setUser(res.data);
+    },
+  });
+
   return (
     <Router>
       <Routes />

@@ -1,59 +1,90 @@
 import React, { useEffect, useState } from 'react';
 import { IDomEditor } from '@wangeditor/editor';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useDebounceFn } from 'ahooks';
-import { Button, Card } from 'antd';
+import { useDebounceFn, useRequest } from 'ahooks';
+import { Form, Button, Radio, Select, Popover, message } from 'antd';
 import { putDraft, searchDraft } from 'utils/db_drafts';
 import useForm from 'hooks/useForm';
 import Avatar from 'components/Avatar/avatar';
 import MdEditor from 'components/Editor/MdEditor';
 import RtfEditor from 'components/Editor/RtfEditor';
-import Tag from 'components/Tag/tag';
-import {
-  EditorPageWrapper,
-  EditorWrapper,
-  Header,
-  TitleInput,
-  RightBox,
-  ToggleEditor,
-} from './style';
-import styled from 'styled-components';
+import { CATEGORY } from 'config';
 import toggle from 'assets/svg/toggle.svg';
+import * as style from './style';
 
 export type EditorType = 'rtf' | 'md';
 
 export interface Drafts {
   title: string;
   content: string;
-  // tag: string;
-  // category: string;
   type: EditorType;
 }
 
-interface ShowStyle {
-  showCard: boolean;
+interface PostProps {
+  handlePost: (val: PostInfo) => void;
 }
 
-const SurePost = styled.div`
-  position: relative;
-`;
+interface PostInfo {
+  category: string;
+  tags: string[];
+}
 
-const PostCard = styled.div<ShowStyle>`
-  position: absolute;
-  z-index: 999;
-  display: ${(props) => (props.showCard ? 'block' : 'none')};
-`;
+const { Option } = Select;
 
-const Tags = ['运动', '交友', '摄影', '动漫', '游戏', '校园', '生活', '美食'];
+const children: React.ReactNode[] = [];
+for (let i = 10; i < 36; i++) {
+  children.push(<Option key={i.toString(36) + i}>{i.toString(36) + i}</Option>);
+}
+
+const Post: React.FC<PostProps> = ({ handlePost }) => {
+  const onFinish = (values: PostInfo) => {
+    handlePost(values);
+  };
+  return (
+    <Form
+      onFinish={onFinish}
+      labelCol={{ span: 4 }}
+      wrapperCol={{ span: 12 }}
+      layout="horizontal"
+    >
+      <Form.Item label="分类" name="category" required>
+        <Radio.Group optionType="button" buttonStyle="solid">
+          {CATEGORY.map((val, i) => (
+            <Radio.Button style={{ margin: 3 }} key={`${i}`} value={`${i}`}>
+              {val}
+            </Radio.Button>
+          ))}
+        </Radio.Group>
+      </Form.Item>
+      <Form.Item label="标签" name="tags" required>
+        <Select mode="tags" style={{ width: '100%' }} tokenSeparators={[',']}>
+          {children}
+        </Select>
+      </Form.Item>
+      <Form.Item wrapperCol={{ offset: 8, span: 16 }}>
+        <Button type="primary" htmlType="submit">
+          发表
+        </Button>
+      </Form.Item>
+    </Form>
+  );
+};
 
 const EditorPage: React.FC = () => {
   const [form, setFrom] = useForm<Drafts>({ title: '', content: '', type: 'md' }); // Draft表单状态
   const [saveBoolean, setSaveBoolean] = useState<'' | boolean>(''); // 显示是否正在保存中
-  const [tid, setTag] = useState<number>();
-  const [showCard, setShow] = useState(false);
+  const [visible, setVisible] = useState(false);
   const nav = useNavigate();
   const { id: draftId } = useParams();
   const { title, type, content } = form;
+
+  const { run } = useRequest(API.post.postPost.request, {
+    onSuccess: () => {
+      message.success('发布成功');
+      nav('/');
+    },
+    manual: true,
+  });
 
   // 更新草稿 不用useCallback的话无法使用防抖
   const { run: putDraftData } = useDebounceFn(
@@ -66,42 +97,13 @@ const EditorPage: React.FC = () => {
     },
   );
 
-  const postArticle = () => {
-    // const id = localStorage.getItem('id');
-    // Service.addArt(tid, id, form.title, form.content).then((res: any) => {
-    //   if (res.result) nav('/');
-    // });
-    // setShow(false);
+  const postArticle = (val: PostInfo) => {
+    run({}, { ...val, title, content, type_name: 'normal', content_type: type });
   };
 
-  const handleTag = (tid: number) => {
-    setTag(tid);
+  const handleVisibleChange = (newVisible: boolean) => {
+    setVisible(newVisible);
   };
-
-  const Post = (
-    <PostCard showCard={showCard}>
-      <Card>
-        <p>请选择标签</p>
-        {Tags.map((tag, i) => (
-          <Tag
-            tag={tag}
-            key={i}
-            onClick={(e: React.MouseEvent<HTMLElement, MouseEvent>) => {
-              e.stopPropagation();
-              handleTag(i);
-            }}
-            trigger={i === tid}
-          />
-        ))}
-        <br />
-        <div style={{ display: 'flex', flexDirection: 'row-reverse', marginTop: '2em' }}>
-          <Button type="primary" onClick={postArticle}>
-            确认发布
-          </Button>
-        </div>
-      </Card>
-    </PostCard>
-  );
 
   // 切换编辑器
   const selectEditor = () => {
@@ -138,9 +140,9 @@ const EditorPage: React.FC = () => {
   }, [content, title]);
 
   return (
-    <EditorPageWrapper onClick={() => setShow(false)}>
-      <Header>
-        <TitleInput
+    <style.EditorPageWrapper>
+      <style.Header>
+        <style.TitleInput
           value={title}
           onChange={(e) => {
             setFrom('title', e.target.value);
@@ -148,7 +150,7 @@ const EditorPage: React.FC = () => {
           }}
           placeholder="请输入文章标题..."
         />
-        <RightBox
+        <style.RightBox
           data-save={
             saveBoolean === ''
               ? '文章内容自动存入草稿箱'
@@ -164,35 +166,33 @@ const EditorPage: React.FC = () => {
           >
             草稿箱
           </Button>
-          <SurePost>
-            <Button
-              type="primary"
-              onClick={(e) => {
-                e.stopPropagation();
-                setShow(true);
-              }}
-            >
-              发布文章
-            </Button>
-            {Post}
-          </SurePost>
-          <ToggleEditor
+          <Popover
+            content={<Post handlePost={postArticle} />}
+            trigger="click"
+            title={<h2>发布文章</h2>}
+            placement="bottomRight"
+            visible={visible}
+            onVisibleChange={handleVisibleChange}
+          >
+            <Button type="primary">发布文章</Button>
+          </Popover>
+          <style.ToggleEditor
             data-tip={`切换成${type === 'md' ? 'rtf' : 'md'}编辑器`}
             onClick={selectEditor}
           >
             <img style={{ height: '100%' }} src={toggle} alt="toggle"></img>
-          </ToggleEditor>
+          </style.ToggleEditor>
           <Avatar />
-        </RightBox>
-      </Header>
-      <EditorWrapper>
+        </style.RightBox>
+      </style.Header>
+      <style.EditorWrapper>
         {type === 'rtf' ? (
           <RtfEditor editorContent={content} handleEditorContent={handleEditorContent} />
         ) : (
           <MdEditor editorContent={content} handleEditorContent={handleEditorContent} />
         )}
-      </EditorWrapper>
-    </EditorPageWrapper>
+      </style.EditorWrapper>
+    </style.EditorPageWrapper>
   );
 };
 

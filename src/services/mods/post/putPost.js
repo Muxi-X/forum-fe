@@ -1,7 +1,6 @@
 /**
-     * @desc update post info api
-修改帖子信息
-     */
+ * @desc 修改帖子信息 api
+ */
 
 import * as defs from '../../baseClass';
 import { PontCore } from '../../pontCore';

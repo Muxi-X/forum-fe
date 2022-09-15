@@ -1,5 +1,5 @@
 const Request = (url, options = {}) => {
-  url = `/api${url}`
+  url = `/api/v1${url}`
   const isFile = options.body instanceof FormData
   options.headers = isFile
       ? {}
@@ -12,8 +12,23 @@ const Request = (url, options = {}) => {
   if (options.body) {
       options.body = isFile ? options.body : JSON.stringify(options.body)
   }
-  return fetch(url, options).then(function (res) {
-      return res.json()
+  return fetch(url, options)
+  .then(response => {
+      if (response.ok) {
+          return response.json().then(res => {
+              return res;
+          });
+      } else {
+          return response.json().then(res => {
+              return new Promise((_, reject) => {
+                  reject(res);
+              });
+          });
+      }
+  })
+  .catch(e => {
+      console.log(`服务端错误：${e.message}`)
+      throw e;
   })
 }
 

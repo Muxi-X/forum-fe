@@ -1,5 +1,5 @@
 /**
-     * @desc login api
+     * @desc 团队登录 api
 login the team-forum
      */
 

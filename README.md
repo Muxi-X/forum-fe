@@ -64,7 +64,10 @@ React-Router v6 使用 useRoutes 配置路由，自定义插件生成 Routes 数
 
 ### 3. 网络请求
 
-pont + fetch
+pont + useRequest
+
+用 pont 拉取数据源后，记得在mods/index.js 添加 `export default window.API`
+因为esm的工作原理是使用才会打包，如果不export 到 main.tsx 中去使用的话，index.js不被会被打包执行， window.API 也不会被执行，那么全局的API就是undefined
 
 ### 4. IndexDB 使用
 
@@ -77,8 +80,10 @@ ahooks
 ### 有意义的点
 
 1. 闭包陷阱的解决
+2. 对 useRequest 的再封装， 全局Loading状态的处理
 
 # 迭代点
 
 1. 目前的文章的 Markdown css 是我自己写的，只有一种风格，后续可以开发新的风格 然后统一放在 src/assets/theme 目录下, 然后在可以做一写额外的 API 封装到 Editor 中去用来配置风格
 2. 聊天添加上传文件功能，Toolbar 已经封装好了
+3. 添加新需求，比如关注功能，专栏需求等

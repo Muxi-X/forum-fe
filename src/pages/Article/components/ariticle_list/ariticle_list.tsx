@@ -7,51 +7,40 @@ import Tag from 'components/Tag/tag';
 
 import { Item, ItemWrapper, Content, Title, Info } from './style';
 
-interface ItemProps {
-  title: string;
-  content: string;
+interface ItemProps extends Required<defs.post_Post> {
   onClick: () => void;
-  popularity: number;
-  likes: number;
-  time: string;
-  tid: number;
 }
 
 export const ArticleItem: React.FC<ItemProps> = ({
   onClick,
   title,
+  category,
   content,
-  popularity,
-  likes,
-  time,
-  tid,
 }) => {
   return (
     <Item onClick={onClick}>
       <Title>
-        {title} <Tag tag={CATEGORY[tid]} />
+        {title} <Tag tag={CATEGORY[+category]} />
       </Title>
       <Content>{content}</Content>
       <Info>
         <span>
           <HeartOutlined style={{ color: 'gray' }} />
-          {popularity}
         </span>
         <span>
           <LikeOutlined style={{ color: 'gray' }} />
-          {likes}
         </span>
-        <span>{time}</span>
+        <span>time</span>
       </Info>
     </Item>
   );
 };
 
 const ArticleList: React.FC = () => {
-  const list = useList();
+  const listStore = useList();
   const nav = useNavigate();
 
-  const handleToArticleDtl = (article_id: string) => {
+  const handleToArticleDtl = (article_id: number) => {
     nav(`/article/${article_id}`);
   };
 
@@ -63,16 +52,13 @@ const ArticleList: React.FC = () => {
 
   return (
     <ItemWrapper>
-      {list.postList.map((article: any, id: any) => (
+      {listStore.postList.map((article) => (
         <ArticleItem
-          onClick={() => handleToArticleDtl(article.aid)}
-          key={id}
-          title={article.title}
-          content={article.content}
-          popularity={article.popularity}
-          likes={article.likes}
-          time={article.time}
-          tid={article.tid}
+          onClick={() => {
+            handleToArticleDtl(article.id as number);
+          }}
+          key={article.id}
+          {...(article as Required<defs.post_Post>)}
         />
       ))}
     </ItemWrapper>

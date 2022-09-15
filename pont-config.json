@@ -1,7 +1,7 @@
 {
-  "originUrl": "http://localhost:3003/news",
+  "originUrl": "http://forum.muxixyz.com/swagger/doc.json",
   "templatePath": "./pontTemplate",
-  "outDir": "./test-server",
+  "outDir": "./src/services",
   "mocks": {
     "enable": true,
     "basePath": "",

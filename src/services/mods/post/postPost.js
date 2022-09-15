@@ -1,7 +1,6 @@
 /**
-     * @desc 创建帖子 api
-(type_id = 1 -> 团队内(type_id暂时不用管))
-     */
+ * @desc 创建帖子 api
+ */
 
 import * as defs from '../../baseClass';
 import { PontCore } from '../../pontCore';
