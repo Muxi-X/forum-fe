@@ -38,6 +38,7 @@ module.exports = {
     'react/prop-types': 'off',
     'no-unused-vars': 'off',
     'no-undef': 'off',
+    'jsx-a11y/no-autofocus': 'off',
     '@typescript-eslint/explicit-function-return-type': 'off',
     'jsx-a11y/anchor-is-valid': [
       'error',

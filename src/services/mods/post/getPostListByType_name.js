@@ -13,10 +13,16 @@ export class Params {
   page;
   /** last_id */
   last_id;
-  /** type_name */
-  type_name;
   /** category */
   category;
+  /** filter */
+  filter;
+  /** search_content */
+  search_content;
+  /** tag */
+  tag;
+  /** type_name */
+  type_name;
 }
 
 export const method = 'GET';

@@ -2,8 +2,8 @@ export class FeedItem {
   /** action */
   action = '';
 
-  /** date */
-  date = '';
+  /** create_time */
+  create_time = '';
 
   /** id */
   id = undefined;
@@ -14,27 +14,13 @@ export class FeedItem {
   /** source */
   source = new Source();
 
-  /** time */
-  time = '';
-
   /** user */
-  user = new FeedUser();
+  user = new User();
 }
 
 export class FeedListResponse {
   /** list */
   list = [];
-}
-
-export class FeedUser {
-  /** avatar_url */
-  avatar_url = '';
-
-  /** id */
-  id = undefined;
-
-  /** name */
-  name = '';
 }
 
 export class ListResponse {
@@ -57,20 +43,14 @@ export class Response {
 }
 
 export class Source {
-  /** id */
+  /** Kind uint32 `json:"kind"` // 类型，1 -> 团队，2 -> 项目，3 -> 文档，4 -> 文件，6 -> 进度（5 不使用） */
   id = undefined;
-
-  /** 类型，1 -> 团队，2 -> 项目，3 -> 文档，4 -> 文件，6 -> 进度（5 不使用） */
-  kind = undefined;
 
   /** name */
   name = '';
 
-  /** project_id */
-  project_id = undefined;
-
-  /** project_name */
-  project_name = '';
+  /** type_name */
+  type_name = '';
 }
 
 export class StudentLoginRequest {
@@ -103,17 +83,28 @@ export class UpdateInfoRequest {
   /** avatar_url */
   avatar_url = '';
 
-  /** email */
-  email = '';
+  /** is_public_collection_and_like */
+  is_public_collection_and_like = false;
 
-  /** id */
-  id = undefined;
+  /** is_public_feed */
+  is_public_feed = false;
 
   /** name */
   name = '';
 
   /** signature */
   signature = '';
+}
+
+export class User {
+  /** avatar_url */
+  avatar_url = '';
+
+  /** id */
+  id = undefined;
+
+  /** name */
+  name = '';
 }
 
 export class UserProfile {
@@ -125,6 +116,12 @@ export class UserProfile {
 
   /** id */
   id = undefined;
+
+  /** is_public_collection_and_like */
+  is_public_collection_and_like = false;
+
+  /** is_public_feed */
+  is_public_feed = false;
 
   /** name */
   name = '';
@@ -141,38 +138,18 @@ export class chat_Id {
   id = '';
 }
 
-export class collection_Collection {
-  /** comment_num */
-  comment_num = undefined;
-
+export class chat_Message {
   /** content */
   content = '';
 
-  /** creator_avatar */
-  creator_avatar = '';
-
-  /** creator_id */
-  creator_id = undefined;
-
-  /** creator_name */
-  creator_name = '';
-
-  /** id */
-  id = undefined;
-
-  /** post_id */
-  post_id = undefined;
+  /** sender */
+  sender = undefined;
 
   /** time */
   time = '';
 
-  /** title */
-  title = '';
-}
-
-export class collection_CreateRequest {
-  /** post_id */
-  post_id = undefined;
+  /** type_name */
+  type_name = '';
 }
 
 export class comment_Comment {
@@ -229,9 +206,13 @@ export class like_Item {
   type_name = '';
 }
 
-export class like_ListResponse {}
-
 export class post_Comment {
+  /** be_replied_content */
+  be_replied_content = '';
+
+  /** be_replied_id */
+  be_replied_id = undefined;
+
   /** comment_num */
   comment_num = undefined;
 
@@ -256,9 +237,6 @@ export class post_Comment {
   /** like_num */
   like_num = undefined;
 
-  /** replies */
-  replies = [];
-
   /** time */
   time = '';
 }
@@ -267,11 +245,17 @@ export class post_CreateRequest {
   /** category */
   category = '';
 
+  /** compiled_content */
+  compiled_content = '';
+
   /** content */
   content = '';
 
   /** md or rtf */
   content_type = '';
+
+  /** summary */
+  summary = '';
 
   /** tags */
   tags = [];
@@ -287,8 +271,14 @@ export class post_GetPostResponse {
   /** category */
   category = '';
 
+  /** collection_num */
+  collection_num = undefined;
+
   /** comment_num */
   comment_num = undefined;
+
+  /** compiled_content */
+  compiled_content = '';
 
   /** content */
   content = '';
@@ -320,6 +310,9 @@ export class post_GetPostResponse {
   /** sub_posts */
   sub_posts = [];
 
+  /** summary */
+  summary = '';
+
   /** tags */
   tags = [];
 
@@ -330,18 +323,23 @@ export class post_GetPostResponse {
   title = '';
 }
 
+export class post_ListMainPostResponse {
+  /** posts */
+  posts = [];
+}
+
 export class post_Post {
   /** category */
   category = '';
+
+  /** collection_num */
+  collection_num = undefined;
 
   /** comment_num */
   comment_num = undefined;
 
   /** comments */
   comments = [];
-
-  /** content */
-  content = '';
 
   /** md or rtf */
   content_type = '';
@@ -367,6 +365,9 @@ export class post_Post {
   /** like_num */
   like_num = undefined;
 
+  /** summary */
+  summary = '';
+
   /** tags */
   tags = [];
 
@@ -375,6 +376,54 @@ export class post_Post {
 
   /** title */
   title = '';
+}
+
+export class post_PostPartInfo {
+  /** category */
+  category = '';
+
+  /** collection_num */
+  collection_num = undefined;
+
+  /** comment_num */
+  comment_num = undefined;
+
+  /** creator_avatar */
+  creator_avatar = '';
+
+  /** creator_id */
+  creator_id = undefined;
+
+  /** creator_name */
+  creator_name = '';
+
+  /** like_num */
+  like_num = undefined;
+
+  /** post_id */
+  post_id = undefined;
+
+  /** summary */
+  summary = '';
+
+  /** tags */
+  tags = [];
+
+  /** time */
+  time = '';
+
+  /** title */
+  title = '';
+}
+
+export class post_PostPartInfoResponse {
+  /** posts */
+  posts = [];
+}
+
+export class post_QiNiuToken {
+  /** token */
+  token = '';
 }
 
 export class post_SubPost {
@@ -419,40 +468,14 @@ export class post_UpdateInfoRequest {
   /** id */
   id = undefined;
 
+  /** summary */
+  summary = '';
+
   /** tags */
   tags = [];
 
   /** title */
   title = '';
-}
-
-export class post_info {
-  /** comment_num */
-  comment_num = undefined;
-
-  /** content */
-  content = '';
-
-  /** creator_avatar */
-  creator_avatar = '';
-
-  /** creator_id */
-  creator_id = undefined;
-
-  /** creator_name */
-  creator_name = '';
-
-  /** id */
-  id = undefined;
-
-  /** is_liked */
-  is_liked = false;
-
-  /** like_num */
-  like_num = undefined;
-
-  /** time */
-  time = '';
 }
 
 export class user {

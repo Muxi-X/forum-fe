@@ -4,43 +4,41 @@ import { AvatarProps } from './type';
 import { AvatarWrapper, AvatarImg, UploadImg } from './style';
 import defaultAvatar from 'assets/image/img.jpeg';
 
+enum Size {
+  small = '2em',
+  mid = '4em',
+  large = '6em',
+}
+
 const Avatar: React.FC<AvatarProps> = ({
   size = 'small',
   src = '',
   height,
   width,
   fix = false,
+  userId,
+  onChange,
+  className,
 }) => {
-  const [imgSrc, setImgSrc] = useState(defaultAvatar);
-
-  enum Size {
-    small = '2em',
-    mid = '4em',
-    large = '6em',
-  }
+  const [imgSrc, setImgSrc] = useState('');
 
   const nav = useNavigate();
-  const id = localStorage.getItem('id');
 
   const uploadImg = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // 在线浏览
     const imgFile = e.currentTarget.files ? e.currentTarget.files[0] : null;
     const form = new FormData();
     form.append('photo', imgFile as File);
-    // Service.upload(form).then((res: any) => {
-    //   const url = 'http://192.168.148.152:8080' + res.data;
-    //   const form = {
-    //     uid: +(localStorage.getItem('id') as string),
-    //     photo: url,
-    //   };
-    //   Service.uploadImg(form).then((res: any) => {
-    //     console.log(res);
-    //   });
-    // });
     const reader = new FileReader();
     reader.readAsDataURL(imgFile as File);
     reader.onload = function () {
       setImgSrc(this.result as string);
     };
+    onChange && onChange(imgFile as File);
+  };
+
+  const haveSrc = () => {
+    return src ? src : defaultAvatar;
   };
 
   return (
@@ -48,13 +46,16 @@ const Avatar: React.FC<AvatarProps> = ({
       onClick={() => {
         if (fix) return;
         else {
-          nav(`/user/${id}`);
+          userId && nav(`/user/${userId}`);
         }
       }}
       height={height ? height : Size[size]}
       width={width ? width : Size[size]}
+      className={className}
+      style={{ cursor: userId ? `pointer` : 'auto' }}
+      fix={fix}
     >
-      <AvatarImg src={src ? src : imgSrc} alt="图片正在加载中" />
+      <AvatarImg src={imgSrc ? imgSrc : haveSrc()} alt="图片正在加载中" />
       {fix ? <UploadImg type="file" accept="image/*" onChange={uploadImg} /> : null}
     </AvatarWrapper>
   );

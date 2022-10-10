@@ -1,5 +1,5 @@
 import styled from 'styled-components';
-import Tips from 'styles/tips';
+import { Tips } from 'styles/tips';
 
 export const EditorPageWrapper = styled.div`
   display: flex;

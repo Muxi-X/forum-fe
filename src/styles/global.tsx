@@ -13,6 +13,10 @@ const GlobalStyle = createGlobalStyle`
   body {
     background-color:#F2F2F2 !important;
   }
+
+  html {
+    font-size: 12px;
+  }
 `;
 
 // 版心样式
@@ -20,5 +24,7 @@ export const w = css`
   margin: 0 auto;
   width: 60vw;
 `;
+
+export const color = `rgba(255, 227, 139, 1)`;
 
 export default GlobalStyle;

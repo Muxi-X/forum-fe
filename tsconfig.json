@@ -16,6 +16,7 @@
     "composite": true,
     "module": "esnext",
     "moduleResolution": "node",
+    "suppressImplicitAnyIndexErrors": true,
     "paths": {
       "@/*": ["src/*"]
     }

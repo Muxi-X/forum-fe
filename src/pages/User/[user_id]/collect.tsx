@@ -1,120 +1,46 @@
-// const [list, setlist] = useState([])
+import React, { useState, useEffect } from 'react';
+import { message } from 'antd';
+import { useParams } from 'react-router';
+import useRequest from 'hooks/useRequest';
+import ArticleList from 'components/List';
 
-import { Button, List, Skeleton } from 'antd';
+const Collect: React.FC = () => {
+  const { user_id } = useParams();
+  const [page, setPage] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
+  const [list, setList] = useState<defs.post_Post[]>([]);
 
-import { useNavigate } from 'react-router';
-import Avatar from 'components/Avatar/avatar';
-import React, { useEffect, useState } from 'react';
+  const {
+    data: res,
+    loading,
+    run,
+  } = useRequest(API.collection.getListByUser_id.request, {
+    onSuccess: (res) => {
+      if (res.data.posts?.length === 0) {
+        message.warning('没有更多文章了');
+        setHasMore(false);
+      } else setList([...list, ...(res.data.posts as defs.post_Post[])]);
+    },
+    manual: true,
+  });
 
-interface DataType {
-  gender?: string;
-  name: {
-    title?: string;
-    first?: string;
-    last?: string;
+  const next = () => {
+    setPage(page + 1);
+    run({ user_id: +(user_id as string), limit: 20, page: page + 1 });
   };
-  email?: string;
-  picture: {
-    large?: string;
-    medium?: string;
-    thumbnail?: string;
-  };
-  nat?: string;
-  loading: boolean;
-}
 
-const count = 3;
-
-const PostList: React.FC = () => {
-  const [initLoading, setInitLoading] = useState(true);
-  const [loading, setLoading] = useState(false);
-  const [data, setData] = useState<DataType[]>([]);
-  const [list, setList] = useState<DataType[]>([]);
-
-  const nav = useNavigate();
   useEffect(() => {
-    let id = +(localStorage.getItem('id') as string);
+    run({ user_id: +(user_id as string), limit: 20, page });
   }, []);
 
-  const onLoadMore = () => {
-    setLoading(true);
-    setList(
-      data.concat(
-        [...new Array(count)].map(() => ({ loading: true, name: {}, picture: {} })),
-      ),
-    );
-    let id = +(localStorage.getItem('id') as string);
-    // Service.getUserc(id).then((res: any) => {
-    //   setInitLoading(false);
-    //   setList(res.list);
-    //   setData(res.list);
-    //   window.dispatchEvent(new Event('resize'));
-    // });
-  };
-
-  const handleMore = (article_id: string) => {
-    nav(`/article/${article_id}`);
-  };
-
-  const handleDelete = (article_id: string) => {
-    let id = +(localStorage.getItem('id') as string);
-    // Service.deleteC(id, article_id).then((res: any) => {
-    //   location.reload();
-    // });
-  };
-  const loadMore =
-    !initLoading && !loading ? (
-      <div
-        style={{
-          textAlign: 'center',
-          marginTop: 12,
-          height: 32,
-          lineHeight: '32px',
-        }}
-      >
-        <Button onClick={onLoadMore}>loading more</Button>
-      </div>
-    ) : null;
-
   return (
-    <List
-      className="demo-loadmore-list"
-      loading={initLoading}
-      itemLayout="horizontal"
-      loadMore={loadMore}
-      dataSource={list}
-      renderItem={(item: any) => (
-        <List.Item
-          actions={[
-            <button
-              key="list-loadmore-edit"
-              onClick={() => {
-                handleDelete(item.aid);
-              }}
-            >
-              delete
-            </button>,
-            <button
-              onClick={() => {
-                handleMore(item.aid);
-              }}
-              key="list-loadmore-more"
-            >
-              more
-            </button>,
-          ]}
-        >
-          <Skeleton avatar title={false} loading={item.loading} active>
-            <List.Item.Meta
-              avatar={<Avatar />}
-              title={<div>{item.title}</div>}
-              description={item.content}
-            />
-          </Skeleton>
-        </List.Item>
-      )}
+    <ArticleList
+      loading={loading && page === 0}
+      hasMore={hasMore}
+      run={next}
+      list={list}
     />
   );
 };
 
-export default PostList;
+export default Collect;

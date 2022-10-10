@@ -1,6 +1,6 @@
 /**
  * @description 动态服务
  */
-import * as getList from './getList';
+import * as getByUser_id from './getByUser_id';
 
-export { getList };
+export { getByUser_id };

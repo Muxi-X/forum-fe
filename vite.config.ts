@@ -40,6 +40,7 @@ export default defineConfig({
     proxy: {
       '/api': {
         target: 'http://forum.muxixyz.com/api',
+        // target: 'http://192.168.1.112:8080/api',
         changeOrigin: true,
         rewrite: (path) => {
           return path.replace(/^\/api/, '');

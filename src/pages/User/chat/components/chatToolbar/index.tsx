@@ -1,5 +1,8 @@
-import React, { useEffect, useState, useRef, RefObject } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { FileImageOutlined, SmileOutlined } from '@ant-design/icons';
+import qiniupload, { observer, CompleteRes } from 'utils/qiniup';
+import { QiniuServer } from 'config';
+import useProfile from 'store/useProfile';
 import 'emoji-mart/css/emoji-mart.css';
 import { EmojiData, Picker } from 'emoji-mart';
 import useOnClickOutside from 'hooks/useOnClickOutside';
@@ -15,7 +18,7 @@ interface EmojiPopoverProps extends PopoverProps {
 }
 
 interface ImgPopoverProps extends PopoverProps {
-  onUploadImg?: (ref: RefObject<HTMLInputElement>) => void;
+  onUploadImg?: (data: string) => void;
 }
 // 可以根据这些Props来决定使用哪些工具组件
 interface ToolbarProps {
@@ -23,35 +26,21 @@ interface ToolbarProps {
   img?: boolean;
   file?: boolean;
   onSelectEmoji?: (emoji: EmojiData, e: React.MouseEvent<HTMLElement>) => void;
-  onUploadImg?: (ref: RefObject<HTMLInputElement>) => void;
+  onUploadImg?: (data: string) => void;
 }
 
 const EmojiPopover: React.FC<EmojiPopoverProps> = ({ className, onSelectEmoji }) => {
   const [showPopover, setShowPopover] = useState(false);
 
-  useEffect(() => {
-    // if (showPopover) {
-    //   let picker = document.getElementsByTagName('em-emoji-picker')[0];
-    //   const style = document.createElement('style');
-    //   style.innerHTML = `.sticky {display: none}`;
-    //   picker.shadowRoot?.appendChild(style);
-    //   (picker as unknown) = null;
-    //   const root = document.getElementById('root');
-    //   root?.addEventListener('click', () => {
-    //     if (showPopover) setShowPopover(false);
-    //     console.log(222);
-    //   });
-    // }
-  }, []);
-
-  useOnClickOutside(document.getElementsByClassName('emoji-mart')[0], () => {
-    if (showPopover) setShowPopover(false);
-  });
+  useOnClickOutside(
+    document.getElementsByClassName('emoji-mart')[0],
+    () => {
+      if (showPopover) setShowPopover(false);
+    },
+    { class: 'anticon-smile' },
+  );
 
   const handleShowEmojiPicker = () => {
-    // let picker = document.getElementsByTagName('em-emoji-picker')[0];
-    // (picker as HTMLElement).style.display = 'block';
-    // (picker as unknown) = null;
     setShowPopover(true);
   };
 
@@ -69,7 +58,10 @@ const EmojiPopover: React.FC<EmojiPopoverProps> = ({ className, onSelectEmoji })
           left: '-50px',
           visibility: `${showPopover ? 'visible' : 'hidden'}`,
         }}
-        onClick={onSelectEmoji}
+        onClick={(emoji, e) => {
+          setShowPopover(false);
+          onSelectEmoji && onSelectEmoji(emoji, e);
+        }}
       />
 
       <SmileOutlined onClick={handleShowEmojiPicker} className={className} />
@@ -78,22 +70,27 @@ const EmojiPopover: React.FC<EmojiPopoverProps> = ({ className, onSelectEmoji })
 };
 
 const ImgPopover: React.FC<ImgPopoverProps> = ({ className, onUploadImg }) => {
-  const [img, setImg] = useState('');
-  const inputRef = useRef(null);
+  const inputRef = useRef<HTMLInputElement>();
+  const profileStore = useProfile();
+  const handleSelectImg = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const imgFile = e.currentTarget.files ? e.currentTarget.files[0] : null;
+    observer.complete = (res: CompleteRes) => {
+      onUploadImg && onUploadImg(QiniuServer + res.key);
+    };
+    qiniupload(imgFile as File, profileStore.qiniuToken);
+  };
   return (
     <>
       <input
-        onChange={(e) => {
-          console.log(e);
-        }}
-        ref={inputRef}
+        onChange={handleSelectImg}
+        ref={inputRef as React.LegacyRef<HTMLInputElement>}
         type="file"
         accept="image/*"
         style={{ display: 'none' }}
       />
       <FileImageOutlined
         onClick={() => {
-          onUploadImg && onUploadImg(inputRef);
+          inputRef?.current?.click();
         }}
         className={className}
       />
@@ -104,7 +101,6 @@ const ImgPopover: React.FC<ImgPopoverProps> = ({ className, onUploadImg }) => {
 const ChatToolbar: React.FC<ToolbarProps> = ({
   emoji,
   img,
-  file,
   onSelectEmoji,
   onUploadImg,
 }) => {

@@ -1,6 +1,6 @@
 import { css } from 'styled-components';
 
-const Tips = css`
+export const Tips = css`
   & {
     position: relative;
   }
@@ -32,4 +32,16 @@ const Tips = css`
   }
 `;
 
-export default Tips;
+export const Slider = css`
+  padding: 0.3em 0.5em;
+  margin-top: 2em;
+  background-image: linear-gradient(rgb(251, 251, 251) 15px, rgba(255, 255, 255, 0)),
+    radial-gradient(at center top, rgba(0, 0, 0, 0.4), transparent 70%),
+    linear-gradient(0deg, rgb(251, 251, 251) 15px, rgba(255, 255, 255, 0)),
+    radial-gradient(at center bottom, rgba(0, 0, 0, 0.4), transparent 70%);
+  background-position-x: 0, 0, center, center;
+  background-position-y: 0, 0, bottom, bottom;
+  background-size: 100% 50px, 100% 15px, 100% 50px, 100% 15px;
+  background-repeat: no-repeat;
+  background-attachment: local, scroll;
+`;

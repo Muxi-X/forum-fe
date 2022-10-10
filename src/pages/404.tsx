@@ -1,7 +1,13 @@
 import React from 'react';
+import Result from './Result';
+import { Content } from './_layout';
 
 const NotFount: React.FC = () => {
-  return <>404页面没找到</>;
+  return (
+    <Content>
+      <Result type="404" />
+    </Content>
+  );
 };
 
 export default NotFount;

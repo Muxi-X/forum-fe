@@ -1,70 +1,62 @@
-import React from 'react';
-import { useOutlet, useLocation, useNavigate } from 'react-router';
+import React, { useEffect } from 'react';
+import { useOutlet, useLocation } from 'react-router';
+import useShowHeader from 'store/useShowHeader';
 import styled from 'styled-components';
-import Header from 'components/Header/header';
-import Card from 'components/Card/card';
-import { w } from 'styles/global';
-import 'antd/dist/antd.css';
+import { Alert } from 'antd';
+import ErrorBoundary from 'components/ErrorBoundary';
+import ResultPage from './Result';
+import media from 'styles/media';
 
-const WelcomePage = styled.div`
+export const ContentWrapper = styled.main`
   display: flex;
-  flex-direction: column;
   justify-content: center;
-  align-items: center;
+  margin-top: 5.17rem;
 `;
 
-const ContentCard = styled(Card)`
-  margin-top: 10vh;
-  ${w}
+export const Content = styled.div`
+  width: 60vw;
+  max-width: 960px;
+  min-width: 375px;
+  ${media.desktop`width: 100vw`}
 `;
 
-const LayoutPage: React.FC = () => {
-  return (
-    <>
-      <Header />
-      <ContentCard>{useOutlet()}</ContentCard>
-    </>
-  );
-};
+const ErrorInfo = ({ error }: { error: Error | null }) => (
+  <ContentWrapper>
+    <Content>
+      <ResultPage type="500" />
 
-const Welcome: React.FC = () => {
-  const nav = useNavigate();
-  return (
-    <WelcomePage>
-      <h1>欢迎来到XXX</h1>
-      <h3>这里是一个分享经验，互相学习的平台</h3>
-      <h3>欢迎大家在这里畅所欲言</h3>
-      <button onClick={() => nav(`/login`)}>点我去登录页面</button>
-    </WelcomePage>
-  );
-};
+      <Alert message="Error" description={error?.message} type="error" showIcon />
+    </Content>
+  </ContentWrapper>
+);
 
 const Layout: React.FC = () => {
-  const location = useLocation();
+  const { pathname } = useLocation();
   const children = useOutlet();
+  const { setShowHeader } = useShowHeader();
 
-  const isSpecialLayout = () => {
-    const specialRoute = ['/login', '/editor'];
-
-    for (const route of specialRoute) {
-      if (location.pathname.includes(route)) return true;
-    }
-    return false;
+  const isSpecialPage = () => {
+    const isLogin = pathname === '/login';
+    const isPost = pathname.includes('/editor/article');
+    return isLogin || isPost;
   };
 
-  if (isSpecialLayout()) return <>{children}</>;
-  else if (location.pathname.includes('/chat')) {
+  useEffect(() => {
+    if (isSpecialPage()) {
+      setShowHeader(false);
+    } else {
+      setShowHeader(true);
+    }
+  }, [pathname]);
+  if (isSpecialPage())
+    return <ErrorBoundary fallbackRender={ErrorInfo}>{children}</ErrorBoundary>;
+  else {
     return (
-      <>
-        <Header />
-        {children}
-      </>
-    );
-  } else {
-    return (
-      <>
-        <LayoutPage />
-      </>
+      <ErrorBoundary fallbackRender={ErrorInfo}>
+        <ContentWrapper>
+          <Content>{children}</Content>
+        </ContentWrapper>
+      </ErrorBoundary>
     );
   }
 };

@@ -13,8 +13,8 @@ declare namespace defs {
     /** action */
     action?: string;
 
-    /** date */
-    date?: string;
+    /** create_time */
+    create_time?: string;
 
     /** id */
     id?: number;
@@ -25,27 +25,13 @@ declare namespace defs {
     /** source */
     source?: defs.Source;
 
-    /** time */
-    time?: string;
-
     /** user */
-    user?: defs.FeedUser;
+    user?: defs.User;
   }
 
   export class FeedListResponse {
     /** list */
     list?: Array<defs.FeedItem>;
-  }
-
-  export class FeedUser {
-    /** avatar_url */
-    avatar_url?: string;
-
-    /** id */
-    id?: number;
-
-    /** name */
-    name?: string;
   }
 
   export class ListResponse {
@@ -68,20 +54,14 @@ declare namespace defs {
   }
 
   export class Source {
-    /** id */
+    /** Kind uint32 `json:"kind"` // 类型，1 -> 团队，2 -> 项目，3 -> 文档，4 -> 文件，6 -> 进度（5 不使用） */
     id?: number;
-
-    /** 类型，1 -> 团队，2 -> 项目，3 -> 文档，4 -> 文件，6 -> 进度（5 不使用） */
-    kind?: number;
 
     /** name */
     name?: string;
 
-    /** project_id */
-    project_id?: number;
-
-    /** project_name */
-    project_name?: string;
+    /** type_name */
+    type_name?: string;
   }
 
   export class StudentLoginRequest {
@@ -114,17 +94,28 @@ declare namespace defs {
     /** avatar_url */
     avatar_url?: string;
 
-    /** email */
-    email?: string;
+    /** is_public_collection_and_like */
+    is_public_collection_and_like?: boolean;
 
-    /** id */
-    id?: number;
+    /** is_public_feed */
+    is_public_feed?: boolean;
 
     /** name */
     name?: string;
 
     /** signature */
     signature?: string;
+  }
+
+  export class User {
+    /** avatar_url */
+    avatar_url?: string;
+
+    /** id */
+    id?: number;
+
+    /** name */
+    name?: string;
   }
 
   export class UserProfile {
@@ -136,6 +127,12 @@ declare namespace defs {
 
     /** id */
     id?: number;
+
+    /** is_public_collection_and_like */
+    is_public_collection_and_like?: boolean;
+
+    /** is_public_feed */
+    is_public_feed?: boolean;
 
     /** name */
     name?: string;
@@ -152,38 +149,18 @@ declare namespace defs {
     id?: string;
   }
 
-  export class collection_Collection {
-    /** comment_num */
-    comment_num?: number;
-
+  export class chat_Message {
     /** content */
     content?: string;
 
-    /** creator_avatar */
-    creator_avatar?: string;
-
-    /** creator_id */
-    creator_id?: number;
-
-    /** creator_name */
-    creator_name?: string;
-
-    /** id */
-    id?: number;
-
-    /** post_id */
-    post_id?: number;
+    /** sender */
+    sender?: number;
 
     /** time */
     time?: string;
 
-    /** title */
-    title?: string;
-  }
-
-  export class collection_CreateRequest {
-    /** post_id */
-    post_id?: number;
+    /** type_name */
+    type_name?: string;
   }
 
   export class comment_Comment {
@@ -240,9 +217,13 @@ declare namespace defs {
     type_name?: string;
   }
 
-  export class like_ListResponse {}
-
   export class post_Comment {
+    /** be_replied_content */
+    be_replied_content?: string;
+
+    /** be_replied_id */
+    be_replied_id?: number;
+
     /** comment_num */
     comment_num?: number;
 
@@ -267,9 +248,6 @@ declare namespace defs {
     /** like_num */
     like_num?: number;
 
-    /** replies */
-    replies?: Array<defs.post_info>;
-
     /** time */
     time?: string;
   }
@@ -278,11 +256,17 @@ declare namespace defs {
     /** category */
     category?: string;
 
+    /** compiled_content */
+    compiled_content?: string;
+
     /** content */
     content?: string;
 
     /** md or rtf */
     content_type?: string;
+
+    /** summary */
+    summary?: string;
 
     /** tags */
     tags?: Array<string>;
@@ -298,8 +282,14 @@ declare namespace defs {
     /** category */
     category?: string;
 
+    /** collection_num */
+    collection_num?: number;
+
     /** comment_num */
     comment_num?: number;
+
+    /** compiled_content */
+    compiled_content?: string;
 
     /** content */
     content?: string;
@@ -331,6 +321,9 @@ declare namespace defs {
     /** sub_posts */
     sub_posts?: Array<defs.post_SubPost>;
 
+    /** summary */
+    summary?: string;
+
     /** tags */
     tags?: Array<string>;
 
@@ -341,18 +334,23 @@ declare namespace defs {
     title?: string;
   }
 
+  export class post_ListMainPostResponse {
+    /** posts */
+    posts?: Array<defs.post_Post>;
+  }
+
   export class post_Post {
     /** category */
     category?: string;
+
+    /** collection_num */
+    collection_num?: number;
 
     /** comment_num */
     comment_num?: number;
 
     /** comments */
     comments?: Array<defs.comment_Comment>;
-
-    /** content */
-    content?: string;
 
     /** md or rtf */
     content_type?: string;
@@ -378,6 +376,9 @@ declare namespace defs {
     /** like_num */
     like_num?: number;
 
+    /** summary */
+    summary?: string;
+
     /** tags */
     tags?: Array<string>;
 
@@ -386,6 +387,54 @@ declare namespace defs {
 
     /** title */
     title?: string;
+  }
+
+  export class post_PostPartInfo {
+    /** category */
+    category?: string;
+
+    /** collection_num */
+    collection_num?: number;
+
+    /** comment_num */
+    comment_num?: number;
+
+    /** creator_avatar */
+    creator_avatar?: string;
+
+    /** creator_id */
+    creator_id?: number;
+
+    /** creator_name */
+    creator_name?: string;
+
+    /** like_num */
+    like_num?: number;
+
+    /** post_id */
+    post_id?: number;
+
+    /** summary */
+    summary?: string;
+
+    /** tags */
+    tags?: Array<string>;
+
+    /** time */
+    time?: string;
+
+    /** title */
+    title?: string;
+  }
+
+  export class post_PostPartInfoResponse {
+    /** posts */
+    posts?: Array<defs.post_PostPartInfo>;
+  }
+
+  export class post_QiNiuToken {
+    /** token */
+    token?: string;
   }
 
   export class post_SubPost {
@@ -430,40 +479,14 @@ declare namespace defs {
     /** id */
     id?: number;
 
+    /** summary */
+    summary?: string;
+
     /** tags */
     tags?: Array<string>;
 
     /** title */
     title?: string;
-  }
-
-  export class post_info {
-    /** comment_num */
-    comment_num?: number;
-
-    /** content */
-    content?: string;
-
-    /** creator_avatar */
-    creator_avatar?: string;
-
-    /** creator_id */
-    creator_id?: number;
-
-    /** creator_name */
-    creator_name?: string;
-
-    /** id */
-    id?: number;
-
-    /** is_liked */
-    is_liked?: boolean;
-
-    /** like_num */
-    like_num?: number;
-
-    /** time */
-    time?: string;
   }
 
   export class user {
@@ -554,6 +577,29 @@ login the team-forum
     }
 
     /**
+     * 获取该用户的聊天记录
+     * /chat/history/{id}
+     */
+    export namespace getChatHistoryById {
+      export class Params {
+        /** limit */
+        limit?: number;
+        /** page */
+        page?: number;
+        /** id */
+        id: number;
+      }
+
+      export type HooksParams = (() => Params) | Params;
+
+      export type Response = ResponseTypeWarpper<Array<defs.chat_Message>>;
+
+      export const method: string;
+
+      export function request(params: Params, options?: any): Promise<Response>;
+    }
+
+    /**
         * WebSocket
 建立 WebSocket 连接
         * /chat/ws
@@ -566,7 +612,7 @@ login the team-forum
 
       export type HooksParams = (() => Params) | Params;
 
-      export type Response = ResponseTypeWarpper<string>;
+      export type Response = ResponseTypeWarpper<defs.chat_Message>;
 
       export const method: string;
 
@@ -580,16 +626,24 @@ login the team-forum
   export namespace collection {
     /**
      * list收藏 api
-     * /collection
+     * /collection/list/{user_id}
      */
-    export namespace getCollection {
-      export class Params {}
+    export namespace getListByUser_id {
+      export class Params {
+        /** user_id */
+        user_id: number;
+        /** limit */
+        limit?: number;
+        /** page */
+        page?: number;
+        /** last_id */
+        last_id?: number;
+      }
 
       export type HooksParams = (() => Params) | Params;
 
-      export type Response = ResponseTypeWarpper<
-        Array<defs.collection_Collection>
-      >;
+      export type Response =
+        ResponseTypeWarpper<defs.post_PostPartInfoResponse>;
 
       export const method: string;
 
@@ -597,11 +651,14 @@ login the team-forum
     }
 
     /**
-     * 收藏帖子 api
-     * /collection
+     * 收藏/取消收藏帖子 api
+     * /collection/{post_id}
      */
-    export namespace postCollection {
-      export class Params {}
+    export namespace postByPost_id {
+      export class Params {
+        /** post_id */
+        post_id: number;
+      }
 
       export type HooksParams = (() => Params) | Params;
 
@@ -609,21 +666,61 @@ login the team-forum
 
       export const method: string;
 
+      export function request(params: Params, options?: any): Promise<Response>;
+    }
+  }
+
+  /**
+   * 评论服务
+   */
+  export namespace comment {
+    /**
+     * 创建评论/从帖 api
+     * /comment
+     */
+    export namespace postComment {
+      export class Params {}
+
+      export type HooksParams = (() => Params) | Params;
+
+      export type Response = ResponseTypeWarpper<defs.comment_Comment>;
+
+      export const method: string;
+
       export function request(
         params: Params,
-        body: defs.collection_CreateRequest,
+        body: defs.comment_CreateRequest,
         options?: any,
       ): Promise<Response>;
     }
 
     /**
-     * 取消收藏 api
-     * /collection/{collection_id}
+     * 获取评论 api
+     * /comment/{comment_id}
      */
-    export namespace deleteCollectionByCollection_id {
+    export namespace getCommentByComment_id {
       export class Params {
-        /** collection_id */
-        collection_id: number;
+        /** comment_id */
+        comment_id: number;
+      }
+
+      export type HooksParams = (() => Params) | Params;
+
+      export type Response = ResponseTypeWarpper<defs.comment_Comment>;
+
+      export const method: string;
+
+      export function request(params: Params, options?: any): Promise<Response>;
+    }
+
+    /**
+     * 删除评论 api
+     * /comment/{comment_id}
+     */
+    export namespace deleteCommentByComment_id {
+      export class Params {
+        /** comment_id */
+        comment_id: number;
       }
 
       export type HooksParams = (() => Params) | Params;
@@ -641,11 +738,13 @@ login the team-forum
    */
   export namespace feed {
     /**
-     * list 此用户的动态 api
-     * /feed/list
+     * list 用户的动态 api
+     * /feed/list/{user_id}
      */
-    export namespace getList {
+    export namespace getByUser_id {
       export class Params {
+        /** user_id */
+        user_id: number;
         /** limit */
         limit?: number;
         /** page */
@@ -657,6 +756,57 @@ login the team-forum
       export type HooksParams = (() => Params) | Params;
 
       export type Response = ResponseTypeWarpper<defs.FeedListResponse>;
+
+      export const method: string;
+
+      export function request(params: Params, options?: any): Promise<Response>;
+    }
+  }
+
+  /**
+   * 点赞服务
+   */
+  export namespace like {
+    /**
+     * 点赞/取消点赞 api
+     * /like
+     */
+    export namespace postLike {
+      export class Params {}
+
+      export type HooksParams = (() => Params) | Params;
+
+      export type Response = ResponseTypeWarpper<defs.Response>;
+
+      export const method: string;
+
+      export function request(
+        params: Params,
+        body: defs.like_Item,
+        options?: any,
+      ): Promise<Response>;
+    }
+
+    /**
+     * 获取用户点赞列表 api
+     * /like/list/{user_id}
+     */
+    export namespace getLikeListByUser_id {
+      export class Params {
+        /** user_id */
+        user_id: number;
+        /** limit */
+        limit?: number;
+        /** page */
+        page?: number;
+        /** last_id */
+        last_id?: number;
+      }
+
+      export type HooksParams = (() => Params) | Params;
+
+      export type Response =
+        ResponseTypeWarpper<defs.post_PostPartInfoResponse>;
 
       export const method: string;
 
@@ -721,31 +871,22 @@ type_name : normal -> 团队外; muxi -> 团队内 (type_name暂时均填normal)
         page?: number;
         /** last_id */
         last_id?: number;
-        /** type_name */
-        type_name: string;
         /** category */
         category?: string;
+        /** filter */
+        filter?: string;
+        /** search_content */
+        search_content?: string;
+        /** tag */
+        tag?: string;
+        /** type_name */
+        type_name: string;
       }
 
       export type HooksParams = (() => Params) | Params;
 
-      export type Response = ResponseTypeWarpper<Array<defs.post_Post>>;
-
-      export const method: string;
-
-      export function request(params: Params, options?: any): Promise<Response>;
-    }
-
-    /**
-     * list 我发布的帖子 api
-     * /post/my/list
-     */
-    export namespace getPostMyList {
-      export class Params {}
-
-      export type HooksParams = (() => Params) | Params;
-
-      export type Response = ResponseTypeWarpper<Array<defs.post_Post>>;
+      export type Response =
+        ResponseTypeWarpper<defs.post_ListMainPostResponse>;
 
       export const method: string;
 
@@ -755,14 +896,56 @@ type_name : normal -> 团队外; muxi -> 团队内 (type_name暂时均填normal)
     /**
         * list 热门tags api
 降序
-        * /post/popular_tags
+        * /post/popular_tag
         */
-    export namespace getPostPopular_tags {
+    export namespace getPostPopular_tag {
       export class Params {}
 
       export type HooksParams = (() => Params) | Params;
 
       export type Response = ResponseTypeWarpper<Array<string>>;
+
+      export const method: string;
+
+      export function request(params: Params, options?: any): Promise<Response>;
+    }
+
+    /**
+     * list 用户发布的帖子 api
+     * /post/published/{user_id}
+     */
+    export namespace getPostPublishedByUser_id {
+      export class Params {
+        /** user_id */
+        user_id: number;
+        /** limit */
+        limit?: number;
+        /** page */
+        page?: number;
+        /** last_id */
+        last_id?: number;
+      }
+
+      export type HooksParams = (() => Params) | Params;
+
+      export type Response =
+        ResponseTypeWarpper<defs.post_PostPartInfoResponse>;
+
+      export const method: string;
+
+      export function request(params: Params, options?: any): Promise<Response>;
+    }
+
+    /**
+     * 获取七牛云token
+     * /post/qiniu_token
+     */
+    export namespace getPostQiniu_token {
+      export class Params {}
+
+      export type HooksParams = (() => Params) | Params;
+
+      export type Response = ResponseTypeWarpper<defs.post_QiNiuToken>;
 
       export const method: string;
 
@@ -833,11 +1016,10 @@ type_name : normal -> 团队外; muxi -> 团队内 (type_name暂时均填normal)
     }
 
     /**
-        * list user api
-通过 group 和 team 获取 user_list
-        * /user/list/{group_id}/{team_id}
-        */
-    export namespace getUserListByGroup_idByTeam_id {
+     * list user api
+     * /user/list
+     */
+    export namespace getUserList {
       export class Params {
         /** limit */
         limit?: number;
@@ -845,10 +1027,6 @@ type_name : normal -> 团队外; muxi -> 团队内 (type_name暂时均填normal)
         page?: number;
         /** last_id */
         last_id?: number;
-        /** group_id */
-        group_id: number;
-        /** team_id */
-        team_id: number;
       }
 
       export type HooksParams = (() => Params) | Params;

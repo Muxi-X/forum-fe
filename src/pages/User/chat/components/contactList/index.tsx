@@ -1,25 +1,26 @@
 import React from 'react';
 import styled from 'styled-components';
-import Card from 'components/Card/card';
+import useChat from 'store/useChat';
+import { Card } from 'antd';
 import ContactItem from 'pages/User/chat/components/contactItem';
-import { Contact } from '../../type';
-
-interface IProps {
-  data: Contact[];
-}
 
 const ListCard = styled(Card)`
   width: 25%;
   margin-right: 2vw;
-  padding: 0;
+  .ant-card-body {
+    padding: 0;
+  }
 `;
 
-const ContactList: React.FC<IProps> = ({ data }) => {
+const ContactList: React.FC = () => {
+  const chatStore = useChat();
+  const { contacts } = chatStore;
+
   return (
     <ListCard>
-      {data.map((contact) => (
-        <ContactItem contact={contact} key={contact.id} />
-      ))}
+      {contacts
+        ? contacts.map((contact, i) => <ContactItem key={contact.id} {...contact} />)
+        : null}
     </ListCard>
   );
 };

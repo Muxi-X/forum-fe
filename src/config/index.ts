@@ -97,3 +97,5 @@ export const Emoji = [
   '🤒',
   '🤕',
 ];
+
+export const QiniuServer = 'http://ossforum.muxixyz.com/';

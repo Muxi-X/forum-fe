@@ -3,10 +3,7 @@
   "templatePath": "./pontTemplate",
   "outDir": "./src/services",
   "mocks": {
-    "enable": true,
-    "basePath": "",
-    "port": 8080,
-    "wrapper": "{\"code\": 0, \"data\": {response}, \"message\": \"\"}"
+    "enable": false
   },
   "templateType": "fetch",
   "surrounding": "javaScript"

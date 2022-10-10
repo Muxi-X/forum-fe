@@ -8,36 +8,32 @@ import banner4 from 'assets/image/banner4.jpg';
 
 const BannerWrapper = styled.div`
   height: 40vh;
-  width: 100vw;
   img {
     width: 100%;
     height: 100%;
   }
 `;
+// const Arrow = ({ type, style, className, onClick }) => (
+//   <Icon type={type} style={style} className={className} onClick={onClick} />
+// );
 
 const Banner: React.FC = () => (
-  <Carousel effect="fade" autoplay>
-    <div>
-      <BannerWrapper>
+  <>
+    <Carousel effect="fade" autoplay dots>
+      <div>
         <img src={banner1} alt="banner" />
-      </BannerWrapper>
-    </div>
-    <div>
-      <BannerWrapper>
+      </div>
+      <div>
         <img src={banner2} alt="banner" />
-      </BannerWrapper>
-    </div>
-    <div>
-      <BannerWrapper>
+      </div>
+      <div>
         <img src={banner3} alt="banner" />
-      </BannerWrapper>
-    </div>
-    <div>
-      <BannerWrapper>
+      </div>
+      <div>
         <img src={banner4} alt="banner" />
-      </BannerWrapper>
-    </div>
-  </Carousel>
+      </div>
+    </Carousel>
+  </>
 );
 
 export default Banner;

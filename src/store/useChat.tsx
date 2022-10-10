@@ -1,39 +1,49 @@
 import create from 'zustand';
+import WS, { MsgResponse, Message } from 'utils/WS';
 
-interface ChatAPI {
-  user_id: string;
-  type_id: string;
-  content: string;
-  time: string;
+export type MessageList = (MsgResponse | Message)[];
+
+export interface Contact extends defs.user {
+  msgRecords: MessageList;
 }
-
-interface UserProfile {
-  avatar: string;
-  email: string;
-  id: 0;
-  name: string;
-  role: 0;
-}
-
-interface MessageDtl {
-  user: UserProfile;
-  type_id: string;
-  content: string;
-  time: string;
-}
-
-type MessageList = MessageDtl[];
 
 interface MsgListStore {
-  msglist: MessageList;
-  setMsgList: (newList: MessageList) => void;
+  contacts: Contact[];
+  selectedId: number;
+  setSelectedId: (id: number) => void;
+  setContacts: (newList: Contact[]) => void;
+  setRecords: (records: MessageList, id: number) => void;
+  getRecords: (id: number) => MessageList;
+  getContact: (id: number) => Contact;
 }
 
-const useMsgList = create<MsgListStore>((set, get) => ({
-  msglist: [],
-  setMsgList: (newList: MessageList) => {
-    set(() => ({ msglist: newList }));
+const useChat = create<MsgListStore>((set, get) => ({
+  contacts: [],
+
+  setContacts: (contacts: Contact[]) => {
+    set(() => ({ contacts }));
+  },
+  selectedId: 0,
+  setSelectedId: (id: number) => {
+    set(() => ({ selectedId: id }));
+  },
+  getRecords: (id: number) => {
+    if (get().contacts.length > 0)
+      return get().contacts.filter((contact) => contact.id === id)[0].msgRecords;
+    else return [];
+  },
+  getContact: (id: number) => {
+    if (get().contacts.length > 0)
+      return get().contacts.filter((contact) => contact.id === id)[0];
+    else return { msgRecords: [] };
+  },
+  setRecords: (records: MessageList, id: number) => {
+    const contacts = get().contacts;
+    for (const contact of contacts) {
+      if (contact.id === id) contact.msgRecords = records;
+    }
+    set({ contacts });
   },
 }));
 
-export default useMsgList;
+export default useChat;

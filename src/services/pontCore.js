@@ -79,3 +79,4 @@ var PontCoreManager = /** @class */ (function () {
   return PontCoreManager;
 })();
 export const PontCore = PontCoreManager.getSignleInstance();
+

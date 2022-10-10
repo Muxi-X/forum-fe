@@ -1,5 +1,8 @@
-import React, { useContext } from 'react';
-import styled from 'styled-components';
+import React from 'react';
+import useRequest from 'hooks/useRequest';
+import useList from 'store/useList';
+import * as style from './style';
+import { CATEGORY } from 'config/index';
 
 interface TagProps {
   tag: string;
@@ -9,51 +12,55 @@ interface TagProps {
   trigger?: boolean;
 }
 
-const TagWarpper = styled.div`
-  display: inline-block;
-  width: fit-content;
-  padding: 0 0.5em;
-  border: 1px solid rgb(0, 153, 255);
-  border-radius: 999px;
-  color: rgb(0, 153, 255);
-  margin: 5px;
-  cursor: pointer;
-  height: 21px;
-  line-height: 21px;
-  font-size: 14px;
+interface CategoryProps {
+  children: string;
+  className?: string;
+}
 
-  &:hover {
-    background-color: rgb(194, 231, 255);
-  }
-`;
+const Category: React.FC<CategoryProps> = ({ children, className }) => {
+  return <style.CategoryDiv className={className}>{children}</style.CategoryDiv>;
+};
 
-const TriggerTag = styled.div`
-  display: inline-block;
-  width: fit-content;
-  padding: 0 0.5em;
-  border: 1px solid rgb(0, 153, 255);
-  border-radius: 999px;
-  color: rgb(0, 153, 255);
-  margin: 5px;
-  cursor: pointer;
-  height: 21px;
-  line-height: 21px;
-  background-color: rgb(194, 231, 255);
-  font-size: 14px;
-`;
+const TagCp: React.FC<TagProps> = ({ tag, trigger = false }) => {
+  const listStore = useList();
+  const { run } = useRequest(API.post.getPostListByType_name.request, {
+    onSuccess: (res) => {
+      if (res.data === null) listStore.setList([]);
+      else listStore.setList(res.data);
+    },
+    manual: true,
+  });
+  const handleTagClick = () => {
+    run({ type_name: 'normal', category: tag });
+  };
 
-const Tag: React.FC<TagProps> = ({
-  tag,
-  count,
-  size = 'normal',
-  onClick,
-  trigger = false,
-}) => {
   return trigger ? (
-    <TriggerTag onClick={onClick}>{tag}</TriggerTag>
+    <style.TriggerTag
+      onClick={(e) => {
+        e.stopPropagation();
+        handleTagClick();
+      }}
+    >
+      {tag}
+    </style.TriggerTag>
   ) : (
-    <TagWarpper onClick={onClick}>{tag}</TagWarpper>
+    <style.TagWarpper
+      onClick={(e) => {
+        e.stopPropagation();
+        handleTagClick();
+      }}
+    >
+      {tag}
+    </style.TagWarpper>
   );
 };
+
+interface CompoundedComponent extends React.FC<TagProps> {
+  Category: typeof Category;
+}
+
+const Tag = TagCp as CompoundedComponent;
+
+Tag.Category = Category;
 
 export default Tag;

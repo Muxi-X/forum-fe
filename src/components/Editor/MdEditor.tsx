@@ -1,19 +1,29 @@
 import React from 'react';
 import Editor from 'md-editor-rt';
+import qiniupload, { observer, CompleteRes } from 'utils/qiniup';
+import { QiniuServer } from 'config';
 import 'md-editor-rt/lib/style.css';
 import { EditorProps } from './type';
 
-const MdEditor: React.FC<EditorProps> = ({ editorContent, handleEditorContent }) => {
-  const onUploadImg = async (file: any, callback: any) => {
-    const form = new FormData();
-    form.append('photo', file[0]);
-    // const res = await Service.upload(form).then((res: any) => {
-    //   return res;
-    // });
-    // let resArr = [res];
-    // callback(resArr.map((res) => 'http://192.168.148.152:8080' + res.data));
-  };
+interface MdEditorProps extends EditorProps {
+  onHtmlChanged: (html: string) => void;
+}
 
+const MdEditor: React.FC<MdEditorProps> = ({
+  editorContent,
+  handleEditorContent,
+  onHtmlChanged,
+  token,
+}) => {
+  // 上传图片
+  const onUploadImg = (files: Array<File>, callback: (urls: string[]) => void) => {
+    const file = files[files.length - 1];
+    observer.complete = (res: CompleteRes) => {
+      let resArr = [res];
+      callback(resArr.map((res) => QiniuServer + res.key));
+    };
+    qiniupload(file, token);
+  };
   return (
     <>
       <Editor
@@ -24,6 +34,7 @@ const MdEditor: React.FC<EditorProps> = ({ editorContent, handleEditorContent })
         showCodeRowNumber={true}
         previewTheme={'vuepress'}
         onUploadImg={onUploadImg}
+        onHtmlChanged={onHtmlChanged}
       />
     </>
   );
