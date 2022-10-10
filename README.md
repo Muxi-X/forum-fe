@@ -66,8 +66,8 @@ React-Router v6 使用 useRoutes 配置路由，自定义插件生成 Routes 数
 
 pont + useRequest
 
-用 pont 拉取数据源后，记得在mods/index.js 添加 `export default window.API`
-因为esm的工作原理是使用才会打包，如果不export 到 main.tsx 中去使用的话，index.js不被会被打包执行， window.API 也不会被执行，那么全局的API就是undefined
+用 pont 拉取数据源后，记得在 mods/index.js 添加 `export default window.API`
+因为 esm 的工作原理是使用才会打包，如果不 export 到 main.tsx 中去使用的话，index.js 不被会被打包执行， window.API 也不会被执行，那么全局的 API 就是 undefined
 
 ### 4. IndexDB 使用
 
@@ -80,7 +80,7 @@ ahooks
 ### 有意义的点
 
 1. 闭包陷阱的解决
-2. 对 useRequest 的再封装， 全局Loading状态的处理
+2. 对 useRequest 的再封装， 全局 Loading 状态的处理
 
 # 迭代点
 
