@@ -1,8 +1,7 @@
 /**
  * @description 聊天服务
  */
-import * as getChat from './getChat';
-import * as getChatHistoryById from './getChatHistoryById';
-import * as getChatWs from './getChatWs';
+import * as getHistoryById from './getHistoryById';
+import * as getWs from './getWs';
 
-export { getChat, getChatHistoryById, getChatWs };
+export { getHistoryById, getWs };

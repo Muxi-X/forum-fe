@@ -1,8 +1,5 @@
 import React from 'react';
-import useRequest from 'hooks/useRequest';
-import useList from 'store/useList';
 import * as style from './style';
-import { CATEGORY } from 'config/index';
 
 interface TagProps {
   tag: string;
@@ -10,45 +7,43 @@ interface TagProps {
   count?: number;
   onClick?: any;
   trigger?: boolean;
+  type?: 'filter' | 'tag';
+  inArticle?: boolean;
 }
 
 interface CategoryProps {
   children: string;
   className?: string;
+  trigger?: boolean;
+  onClick?: () => void;
 }
 
-const Category: React.FC<CategoryProps> = ({ children, className }) => {
-  return <style.CategoryDiv className={className}>{children}</style.CategoryDiv>;
+const Category: React.FC<CategoryProps> = ({
+  children,
+  className,
+  trigger = false,
+  onClick,
+}) => {
+  return (
+    <style.CategoryDiv onClick={onClick} trigger={trigger} className={className}>
+      {children}
+    </style.CategoryDiv>
+  );
 };
 
-const TagCp: React.FC<TagProps> = ({ tag, trigger = false }) => {
-  const listStore = useList();
-  const { run } = useRequest(API.post.getPostListByType_name.request, {
-    onSuccess: (res) => {
-      if (res.data === null) listStore.setList([]);
-      else listStore.setList(res.data);
-    },
-    manual: true,
-  });
-  const handleTagClick = () => {
-    run({ type_name: 'normal', category: tag });
-  };
-
-  return trigger ? (
-    <style.TriggerTag
-      onClick={(e) => {
-        e.stopPropagation();
-        handleTagClick();
-      }}
-    >
-      {tag}
-    </style.TriggerTag>
-  ) : (
+const TagCp: React.FC<TagProps> = ({
+  tag,
+  trigger = false,
+  type = 'tag',
+  onClick,
+  inArticle = false,
+}) => {
+  return (
     <style.TagWarpper
-      onClick={(e) => {
-        e.stopPropagation();
-        handleTagClick();
-      }}
+      inArticle={inArticle}
+      type={type}
+      trigger={trigger}
+      onClick={onClick}
     >
       {tag}
     </style.TagWarpper>

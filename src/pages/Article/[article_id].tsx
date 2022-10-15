@@ -6,9 +6,10 @@ import {
   LikeFilled,
   StarFilled,
   MessageFilled,
-  ShareAltOutlined,
+  createFromIconfontCN,
 } from '@ant-design/icons';
-import { Card, Affix, Badge } from 'antd';
+import { Card, Affix, Badge, message, Modal, Input } from 'antd';
+import { useNavigate } from 'react-router';
 import useRequest from 'hooks/useRequest';
 import styled from 'styled-components';
 import Loading from 'components/Loading';
@@ -20,33 +21,15 @@ import media from 'styles/media';
 import 'markdown-navbar/dist/navbar.css';
 import * as style from './style';
 import 'assets/theme/theme.less';
+import useDocTitle from 'hooks/useDocTitle';
+import { CATEGORY, CATEGORY_EN } from 'config';
 
 interface ActionProps {
   done?: boolean;
 }
 
 const { Category } = Tag;
-
-const Navigation = styled(Card)`
-  height: 300px;
-  width: 350px;
-  overflow: scroll;
-  position: sticky;
-  top: 0vh;
-`;
-
-const ArticleCard = styled(Card)`
-  width: 100%;
-  padding-left: 2em;
-  padding-right: 2em;
-  margin-bottom: 1em;
-  a {
-    cursor: pointer;
-  }
-  h1 {
-    font-size: 2.4em;
-  }
-`;
+const { TextArea } = Input;
 
 const ArticleCategory = styled(Category)`
   margin: 10px;
@@ -55,7 +38,7 @@ const ArticleCategory = styled(Category)`
 
 const ActionWrapper = styled(Affix)`
   position: absolute;
-  left: 10%;
+  left: -10%;
   user-select: none;
   ${media.desktop`visibility: hidden`}
 `;
@@ -79,11 +62,43 @@ const Action = styled.div<ActionProps>`
   }`}
 `;
 
+const IconFont = createFromIconfontCN({
+  scriptUrl: '//at.alicdn.com/t/c/font_3699573_vczcgw5jf6p.js',
+});
+
+const Icon: React.FC<{ onClick?: () => void; type: string }> = ({ type, onClick }) => {
+  const [hover, setHover] = useState(false);
+
+  return (
+    <Action
+      onClick={() => {
+        if (type.includes('share')) {
+          navigator.clipboard.writeText(location.href);
+          message.success('文章链接已复制到剪切板上!');
+        } else {
+          onClick && onClick();
+        }
+      }}
+      onMouseEnter={() => {
+        setHover(true);
+      }}
+      onMouseLeave={() => {
+        setHover(false);
+      }}
+    >
+      <IconFont type={hover ? type + '_hover' : type}></IconFont>
+    </Action>
+  );
+};
+
 const Article: React.FC = () => {
   const [articleInfo, setArticleInfo] = useState<defs.post_GetPostResponse>({});
   const [navBar, setNavBar] = useState({ show: false, content: '' });
+  const [showReport, setShowReport] = useState(false);
+  const [reportVal, setReportVal] = useState('');
   const ref = useRef<HTMLDivElement>();
   const { article_id } = useParams();
+  const nav = useNavigate();
 
   const {
     content_type,
@@ -119,15 +134,6 @@ const Article: React.FC = () => {
         // 目录生成逻辑 如果是markdown 就用markdown源码进行 而如果是富文本的话则用Turndown逆解析后再使用
         // 这里都要加上title的话是因为这个Navbar组件好像会默认把第一个 # 认作文章标题而不会解析到目录中
         if (response.data.content_type === 'md') {
-          setArticleInfo(response.data);
-          setLike({
-            is_liked: response.data.is_liked,
-            like_num: response.data.like_num as number,
-          });
-          setCollect({
-            is_collection: response.data.is_collection,
-            collection_num: response.data.collection_num as number,
-          });
           setNavBar({
             show: true,
             content: `#${response.data.title}\n${response.data.content}`,
@@ -135,9 +141,28 @@ const Article: React.FC = () => {
         } else if (response.data.content_type === 'rtf') {
           setArticleInfo(response.data);
         }
+        useDocTitle(`${response.data.title} - 论坛`);
+        setArticleInfo(response.data);
+        setLike({
+          is_liked: response.data.is_liked,
+          like_num: response.data.like_num as number,
+        });
+        setCollect({
+          is_collection: response.data.is_collection,
+          collection_num: response.data.collection_num as number,
+        });
+        setCommentNum(response.data.comment_num as number);
       },
     },
   );
+
+  const { run: report } = useRequest(API.report.postReport.request, {
+    manual: true,
+    onSuccess: () => {
+      setShowReport(false);
+      message.success('举报成功!');
+    },
+  });
 
   const { run: postLike } = useRequest(API.like.postLike.request, {
     manual: true,
@@ -165,6 +190,8 @@ const Article: React.FC = () => {
     collection_num: collection_num as number,
   });
 
+  const [commentNum, setCommentNum] = useState<number>(0);
+
   const handleToComment = () => {
     window.scrollTo({
       top: ref.current?.getBoundingClientRect().top,
@@ -172,105 +199,149 @@ const Article: React.FC = () => {
     });
   };
 
+  const handleReport = () => {
+    report({}, { cause: reportVal, post_id: +(article_id as string), type_name: 'post' });
+  };
+
+  const handleAddComment = (num: number) => {
+    setCommentNum(num);
+  };
   return (
     <>
-      <ActionWrapper offsetTop={200}>
-        <Badge
-          offset={[-5, 5]}
-          count={like.like_num}
-          color={like.is_liked ? 'gold' : `#8a919f`}
-          showZero
-        >
-          <Action
-            onClick={() => {
-              postLike({}, { target_id: +(article_id as string), type_name: 'post' });
-            }}
-            done={like.is_liked}
-          >
-            <LikeFilled />
-          </Action>
-        </Badge>
-      </ActionWrapper>
-      <ActionWrapper offsetTop={265}>
-        <Badge
-          offset={[-5, 5]}
-          count={collect.collection_num}
-          color={collect.is_collection ? 'gold' : `#8a919f`}
-          showZero
-        >
-          <Action
-            onClick={() => {
-              postCollect({ post_id: +(article_id as string) }, {});
-            }}
-            done={collect.is_collection}
-          >
-            <StarFilled />
-          </Action>
-        </Badge>
-      </ActionWrapper>
-      <ActionWrapper offsetTop={330}>
-        <Badge offset={[-5, 5]} count={comment_num} color="#8a919f" showZero>
-          <Action onClick={handleToComment}>
-            <MessageFilled />
-          </Action>
-        </Badge>
-      </ActionWrapper>
-      <ActionWrapper offsetTop={395}>
-        <Action>
-          <ShareAltOutlined />
-        </Action>
-      </ActionWrapper>
-      <ActionWrapper offsetTop={460}>
-        <Action>举报</Action>
-      </ActionWrapper>
       {/**以后还可以做沉浸阅读等功能 */}
       {loading ? (
         <Loading />
       ) : (
-        <>
-          <style.Wrapper>
-            <ArticleCard>
-              <style.ArticleBody>
-                <h1>{articleInfo.title}</h1>
-                <style.CreatorInfo>
-                  <Avatar
-                    height={'3em'}
-                    width={'3em'}
-                    src={creator_avatar}
-                    userId={creator_id}
-                  />
-                  <div className="info">
-                    <style.Name>{creator_name}</style.Name>
-                    <style.Time>
-                      {moment(time).format('YYYY年MM月DD日 HH:MM:ss')}
-                    </style.Time>
-                  </div>
-                </style.CreatorInfo>
-                <div
-                  id="markdown-body"
-                  dangerouslySetInnerHTML={{
-                    __html: (content_type === 'md'
-                      ? compiled_content
-                      : content) as string,
+        <style.Wrapper>
+          <ActionWrapper offsetTop={200}>
+            <Badge
+              offset={[-5, 5]}
+              count={like.like_num}
+              color={like.is_liked ? 'gold' : `#8a919f`}
+              showZero
+              overflowCount={9999}
+            >
+              <Action
+                onClick={() => {
+                  postLike({}, { target_id: +(article_id as string), type_name: 'post' });
+                }}
+                done={like.is_liked}
+              >
+                <LikeFilled />
+              </Action>
+            </Badge>
+          </ActionWrapper>
+          <ActionWrapper offsetTop={265}>
+            <Badge
+              offset={[-5, 5]}
+              count={collect.collection_num}
+              color={collect.is_collection ? 'gold' : `#8a919f`}
+              showZero
+              overflowCount={9999}
+            >
+              <Action
+                onClick={() => {
+                  postCollect({ post_id: +(article_id as string) }, {});
+                }}
+                done={collect.is_collection}
+              >
+                <StarFilled />
+              </Action>
+            </Badge>
+          </ActionWrapper>
+          <ActionWrapper offsetTop={330}>
+            <Badge
+              offset={[-5, 5]}
+              count={commentNum}
+              color="#8a919f"
+              showZero
+              overflowCount={9999}
+            >
+              <Action onClick={handleToComment}>
+                <MessageFilled />
+              </Action>
+            </Badge>
+          </ActionWrapper>
+          <ActionWrapper offsetTop={395}>
+            <Icon type="icon-share" />
+          </ActionWrapper>
+          <ActionWrapper offsetTop={460}>
+            <Icon
+              onClick={() => {
+                setShowReport(true);
+              }}
+              type="icon-report"
+            />
+          </ActionWrapper>
+          <style.ArticleCard>
+            <style.ArticleBody>
+              <h1>{articleInfo.title}</h1>
+              <style.CreatorInfo>
+                <Avatar
+                  height={'3em'}
+                  width={'3em'}
+                  src={creator_avatar}
+                  userId={creator_id}
+                />
+                <div className="info">
+                  <style.Name>{creator_name}</style.Name>
+                  <style.Time>
+                    {moment(time).format('YYYY年MM月DD日 HH:MM:ss')}
+                  </style.Time>
+                </div>
+              </style.CreatorInfo>
+              <div
+                id="markdown-body"
+                dangerouslySetInnerHTML={{
+                  __html: (content_type === 'md' ? compiled_content : content) as string,
+                }}
+              ></div>
+              <style.ArticleInfo>
+                分类:
+                <ArticleCategory
+                  onClick={() => {
+                    const c = CATEGORY_EN[CATEGORY.indexOf(category as string)];
+                    nav(`/${c}`);
                   }}
-                ></div>
-                <style.ArticleInfo>
-                  分类:<ArticleCategory>{category as string}</ArticleCategory>
-                  标签: <Tag tag={(tags as string[])[0]}></Tag>
-                </style.ArticleInfo>
-              </style.ArticleBody>
-            </ArticleCard>
-            <Card>
-              <Comment
-                ref={ref}
-                commentList={sub_posts ? sub_posts : []}
-                post_id={+(article_id as string)}
-              />
-            </Card>
-          </style.Wrapper>
-        </>
+                >
+                  {category as string}
+                </ArticleCategory>
+                标签: <Tag onClick={() => {}} inArticle tag={(tags as string[])[0]}></Tag>
+              </style.ArticleInfo>
+            </style.ArticleBody>
+          </style.ArticleCard>
+          <Card>
+            <Comment
+              ref={ref}
+              commentList={sub_posts ? sub_posts : []}
+              post_id={+(article_id as string)}
+              commentNum={commentNum}
+              handleAddComment={handleAddComment}
+            />
+          </Card>
+        </style.Wrapper>
       )}
-
+      <Modal
+        centered
+        open={showReport}
+        onOk={handleReport}
+        onCancel={() => {
+          setShowReport(false);
+        }}
+        okText="确认"
+        cancelText="取消"
+        title="举报"
+      >
+        <TextArea
+          value={reportVal}
+          maxLength={100}
+          onChange={(e) => {
+            setReportVal(e.target.value);
+          }}
+          showCount
+          placeholder="请输入举报原因，最多100字"
+        />
+      </Modal>
       <BackToTop />
     </>
   );

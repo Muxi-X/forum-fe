@@ -12,6 +12,8 @@ import Feed from './[user_id]/index';
 import Loading from 'components/Loading';
 import Back from './component/back';
 import * as style from './style';
+import useDocTitle from 'hooks/useDocTitle';
+import BackToTop from 'components/BackTop';
 
 const UserInfoCard = styled(Card)`
   .ant-card-body {
@@ -48,10 +50,11 @@ const User: React.FC = () => {
 
   const { data: user, loading } = useRequest(API.user.getUserProfileById.request, {
     defaultParams: [{ id: +(user_id as string) }],
+    refreshDeps: [user_id],
   });
 
-  const isMySelf = user?.data.id === id;
-  const isRole = user?.data.role === 'admin';
+  const isMyself = user?.data.id === id;
+  const isRole = user?.data.role?.includes('Admin');
 
   const items = [
     {
@@ -83,6 +86,8 @@ const User: React.FC = () => {
       : history.pushState({ tabKey: key }, key, `/user/${user_id}/${key}`);
   };
 
+  useDocTitle(`${user?.data.name} - 仙风道骨 - 论坛`);
+
   if (pathname === `/user/${user_id}/seting` || pathname === `/user/${user_id}/drafts`) {
     return (
       <style.UserWrapper>
@@ -93,60 +98,72 @@ const User: React.FC = () => {
   }
 
   return (
-    <style.UserWrapper>
-      {loading ? (
-        <Loading />
-      ) : (
-        <UserInfoCard>
-          <style.Info>
-            <Avatar
-              size={'large'}
-              src={isMySelf ? avatar : user?.data.avatar}
-              userId={+(user_id as string)}
-            />
-            <style.NameAndSign>
-              <div className="user-name">{user?.data.name}</div>
-              <div className="user-signature">{user?.data.signature}</div>
-            </style.NameAndSign>
-          </style.Info>
+    <>
+      <style.UserWrapper>
+        {loading ? (
+          <Loading />
+        ) : (
+          <UserInfoCard>
+            <style.Info>
+              <Avatar
+                size={'large'}
+                src={isMyself ? avatar : user?.data.avatar}
+                userId={+(user_id as string)}
+              />
+              <style.NameAndSign>
+                <div className="user-name">{user?.data.name}</div>
+                <div className="user-signature">{user?.data.signature}</div>
+              </style.NameAndSign>
+            </style.Info>
 
-          <style.Tools>
-            {isMySelf ? null : (
-              <Button
-                onClick={() => {
-                  nav('/user/chat', { state: { id: user_id } });
-                }}
-                type="ghost"
-              >
-                发私信
-              </Button>
-            )}
-            {isMySelf ? (
-              <>
+            <style.Tools>
+              {isMyself ? null : (
                 <Button
                   onClick={() => {
-                    nav('seting');
+                    nav('/user/chat', { state: { id: user_id } });
                   }}
                   type="ghost"
                 >
-                  编辑个人资料
+                  发私信
                 </Button>
+              )}
+              {isMyself ? (
+                <>
+                  <Button
+                    onClick={() => {
+                      nav('seting');
+                    }}
+                    type="ghost"
+                  >
+                    编辑个人资料
+                  </Button>
+                  <Button
+                    onClick={() => {
+                      nav('drafts');
+                    }}
+                    type="ghost"
+                  >
+                    草稿箱
+                  </Button>
+                </>
+              ) : null}
+              {isRole && isMyself ? (
                 <Button
                   onClick={() => {
-                    nav('drafts');
+                    nav('/admin');
                   }}
                   type="ghost"
                 >
-                  草稿箱
+                  审核举报
                 </Button>
-              </>
-            ) : null}
-            {isRole ? <Button type="ghost">审核举报</Button> : null}
-          </style.Tools>
-        </UserInfoCard>
-      )}
-      <ToolsTabs onChange={handleChange} defaultActiveKey={tabKey} items={items} />
-    </style.UserWrapper>
+              ) : null}
+            </style.Tools>
+          </UserInfoCard>
+        )}
+        <ToolsTabs onChange={handleChange} defaultActiveKey={tabKey} items={items} />
+        <BackToTop />
+      </style.UserWrapper>
+    </>
   );
 };
 

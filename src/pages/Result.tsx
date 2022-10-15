@@ -3,12 +3,19 @@ import { Button, Result, Card, Skeleton } from 'antd';
 import { useNavigate, useLocation } from 'react-router';
 import styled from 'styled-components';
 import React from 'react';
+import useDocTitle from 'hooks/useDocTitle';
+import { Link } from 'react-router-dom';
 
 const ResultCard = styled(Card)`
   height: 100%;
 
   h3 {
     color: #acabab;
+  }
+  .link {
+    width: 100%;
+    display: flex;
+    justify-content: center;
   }
 `;
 
@@ -21,13 +28,28 @@ const ResultPage: React.FC<{ type?: resultType }> = ({ type }) => {
   const btn = (
     <Button
       onClick={() => {
-        nav('/');
+        location.href = location.origin;
       }}
       type="primary"
     >
       回到主页
     </Button>
   );
+
+  const getTitle = (type: resultType) => {
+    switch (type) {
+      case 'published':
+        return '发布成功!';
+      case '404':
+        return '页面不存在';
+      case 'login':
+        return '登录中';
+      default:
+        return '发生了意料之外的错误';
+    }
+  };
+
+  useDocTitle(state ? getTitle((state as any).type) : getTitle(type as resultType));
 
   const getResult = (type: resultType) => {
     switch (type) {
@@ -52,6 +74,13 @@ const ResultPage: React.FC<{ type?: resultType }> = ({ type }) => {
   return (
     <ResultCard>
       {state ? getResult((state as any).type) : getResult(type as resultType)}
+      {state && (state as any).id ? (
+        <div className="link">
+          <Link to={`/article/${(state as any).id}`}>查看文章</Link>
+        </div>
+      ) : (
+        ''
+      )}
     </ResultCard>
   );
 };

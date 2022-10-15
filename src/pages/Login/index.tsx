@@ -1,15 +1,17 @@
-import React, { useEffect } from 'react';
-import { message, Card } from 'antd';
+import React, { useEffect, useState } from 'react';
+import { message } from 'antd';
 import { useNavigate } from 'react-router';
 import { useSearchParams } from 'react-router-dom';
 import useRequest from 'hooks/useRequest';
 import useForm from 'hooks/useForm';
+import useDocTitle from 'hooks/useDocTitle';
 import useProfile from 'store/useProfile';
 import useWS from 'store/useWS';
 import WS from 'utils/WS';
-import styled from 'styled-components';
-import * as style from './style';
 import ResultPage from 'pages/Result';
+import ccnu from 'assets/svg/log.svg';
+import muxi from 'assets/svg/register.svg';
+import './index.less';
 
 interface LoginState {
   student_id: string;
@@ -18,21 +20,21 @@ interface LoginState {
 
 type loginInfo = 'id' | 'pwd';
 
-const LoginCard = styled(Card)`
-  height: auto;
-  width: 40vw;
-  min-width: 350px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-`;
-
 const Login: React.FC = () => {
-  const [form, setForm] = useForm<LoginState>({ student_id: '', password: '' });
+  const initId = localStorage.getItem('id');
+  const initPwd = localStorage.getItem('pwd');
+  const [form, setForm] = useForm<LoginState>({
+    student_id: initId ? initId : '',
+    password: initPwd ? initPwd : '',
+  });
+  const [isMuxi, setIsMuxi] = useState(false);
   const [searchParams] = useSearchParams();
   const { setUser, setToken } = useProfile();
   const { setTip, setWS } = useWS();
+
+  useDocTitle(`惠然之顾 - 论坛`);
+
+  const { student_id, password } = form;
 
   const nav = useNavigate();
 
@@ -65,6 +67,8 @@ const Login: React.FC = () => {
     if (res.code === 0) {
       message.success('登录成功');
       localStorage.setItem('token', res.data.token as string);
+      localStorage.setItem('id', student_id);
+      localStorage.setItem('pwd', password);
       initUser();
       nav('/');
     }
@@ -112,41 +116,94 @@ const Login: React.FC = () => {
     run({}, { student_id, password });
   };
 
+  const handleLoginRole = () => {
+    setIsMuxi(!isMuxi);
+  };
+
   return (
     <>
       {!oauth_code ? (
-        <style.LoginPage
+        <div
+          aria-hidden
           onKeyDown={(e) => {
-            if (e.key === 'Enter') handleLogin();
+            if (e.key === 'Enter') {
+              handleLogin();
+            }
           }}
+          className={`container ${isMuxi ? 'sign-up-mode' : ''} `}
         >
-          <style.WelcomeTitle>Welcome to Muxi-Forum</style.WelcomeTitle>
-          <LoginCard>
-            <style.InputField>
-              <i className="fa fa-user" aria-hidden={true} />
-              <style.LoginInput
-                onChange={(e) => {
-                  handleUserLogin(e.target.value, 'id');
-                }}
-                placeholder="学号"
-              />
-            </style.InputField>
-            <style.InputField>
-              <i className="fa fa-lock" aria-hidden={true} />
-              <style.LoginInput
-                onChange={(e) => {
-                  handleUserLogin(e.target.value, 'pwd');
-                }}
-                type="password"
-                placeholder="密码"
-              />
-            </style.InputField>
-            <style.LoginButtons>
-              <style.LoginButton onClick={handleLogin}>Login</style.LoginButton>
-              <style.LoginButton onClick={handleMuxierLogin}>维修工</style.LoginButton>
-            </style.LoginButtons>
-          </LoginCard>
-        </style.LoginPage>
+          <div className="forms-container">
+            <div className="signin-signup">
+              <section className="sign-in-form">
+                <h2 className="title">登录</h2>
+                <div className="input-field">
+                  <i className="fa fa-user"></i>
+                  <input
+                    value={student_id}
+                    onChange={(e) => {
+                      handleUserLogin(e.target.value, 'id');
+                    }}
+                    type="text"
+                    placeholder="用户名"
+                  />
+                </div>
+                <div className="input-field">
+                  <i className="fa fa-lock"></i>
+                  <input
+                    value={password}
+                    onChange={(e) => {
+                      handleUserLogin(e.target.value, 'pwd');
+                    }}
+                    type="password"
+                    placeholder="密码"
+                  />
+                </div>
+                <input
+                  onClick={handleLogin}
+                  type="submit"
+                  value="立即登录"
+                  className="btn solid"
+                />
+              </section>
+              <section className="sign-up-form">
+                <button onClick={handleMuxierLogin} type="submit" className="btn">
+                  木犀通行证
+                </button>
+              </section>
+            </div>
+          </div>
+
+          <div className="panels-container">
+            <div className="panel left-panel">
+              <div className="content">
+                <h3>MUXI</h3>
+                <p>木犀维修工通道</p>
+                <button
+                  onClick={handleLoginRole}
+                  className="btn transparent"
+                  id="sign-up-btn"
+                >
+                  go
+                </button>
+              </div>
+              <img src={ccnu} className="image" alt="" />
+            </div>
+            <div className="panel right-panel">
+              <div className="content">
+                <h3>CCNU</h3>
+                <p>使用已有学号登录</p>
+                <button
+                  onClick={handleLoginRole}
+                  className="btn transparent"
+                  id="sign-in-btn"
+                >
+                  GO
+                </button>
+              </div>
+              <img src={muxi} className="image" alt="" />
+            </div>
+          </div>
+        </div>
       ) : (
         <ResultPage type="login" />
       )}

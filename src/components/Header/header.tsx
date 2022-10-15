@@ -2,14 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { Badge, Tooltip, Popover, Modal } from 'antd';
 import { MenuOutlined } from '@ant-design/icons';
 import styled from 'styled-components';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Link } from 'react-router-dom';
 import useList from 'store/useList';
 import useProfile from 'store/useProfile';
 import logo from 'assets/image/logo1.png';
 import chat from 'assets/image/msg.png';
 import msgtip from 'assets/image/tip.png';
-import useRequest from 'hooks/useRequest';
 import Avatar from 'components/Avatar/avatar';
 import useWS from 'store/useWS';
 import * as style from './style';
@@ -27,7 +26,9 @@ const MenuAction = styled.div`
 `;
 
 const Header: React.FC = () => {
-  const [query, setQuery] = useState('');
+  const [searchParams] = useSearchParams();
+  const value = searchParams.get('query');
+  const [query, setQuery] = useState(value ? value : '');
   const [draftId, setDraftId] = useState(new Date().getTime());
   const [show, setShow] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -36,14 +37,15 @@ const Header: React.FC = () => {
     userProfile: { avatar, id },
   } = useProfile();
   const { tip } = useWS();
-
+  const { setList } = useList();
+  const { setTip, setWS } = useWS();
   const handleQueryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setQuery(e.target.value);
   };
 
   const handleOk = () => {
     nav('/login');
-    localStorage.clear();
+    localStorage.removeItem('token');
   };
 
   const handleSearch = () => {
@@ -78,17 +80,37 @@ const Header: React.FC = () => {
       <style.LayoutHeader>
         <style.HeaderCard show={show}>
           <style.Wrapper>
-            <style.LogoDiv>
-              <Link to="/">
-                <img src={logo} alt="logo" />
-                <span className="logo">MUXI</span>
-              </Link>
+            <style.LogoDiv
+              onClick={() => {
+                if (location.href.slice(0, -1) === location.origin) return;
+                nav('/');
+                setList([]);
+                setQuery('');
+              }}
+            >
+              <img src={logo} alt="logo" />
+              <span className="logo">MUXI</span>
               <Popover
                 trigger="click"
                 content={
                   <>
-                    <MenuAction>投稿</MenuAction>
-                    <MenuAction>查看私信</MenuAction>
+                    <MenuAction
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setDraftId(new Date().getTime());
+                        nav(`/editor/article${draftId}`);
+                      }}
+                    >
+                      投稿
+                    </MenuAction>
+                    <MenuAction
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        nav('/user/chat');
+                      }}
+                    >
+                      查看私信
+                    </MenuAction>
                     <MenuAction>查看通知</MenuAction>
                   </>
                 }
@@ -138,7 +160,14 @@ const Header: React.FC = () => {
                 >
                   <Link to="/user/chat">
                     <Badge count={tip ? 1 : 0} dot>
-                      <img src={chat} alt="msg" />
+                      <img
+                        aria-hidden
+                        onClick={() => {
+                          setTip(false);
+                        }}
+                        src={chat}
+                        alt="msg"
+                      />
                     </Badge>
                   </Link>
                 </Tooltip>
@@ -173,7 +202,7 @@ const Header: React.FC = () => {
         okText="确认"
         cancelText="取消"
       >
-        <p>确认要离开吗QAQ 呜呜呜李劲哲这样的男同舍不得你QAQ</p>
+        <p>真的要离开吗，我们会失去一个很好的表达者</p>
       </Modal>
     </>
   );

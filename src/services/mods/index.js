@@ -5,9 +5,10 @@ import * as comment from './comment';
 import * as feed from './feed';
 import * as like from './like';
 import * as post from './post';
+import * as report from './report';
 import * as user from './user';
 
-const API = {
+window.API = {
   auth,
   chat,
   collection,
@@ -15,6 +16,7 @@ const API = {
   feed,
   like,
   post,
+  report,
   user,
 };
 

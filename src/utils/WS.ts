@@ -19,6 +19,7 @@ const { parse, stringify } = JSON;
 class WS {
   ws: WebSocket;
   url = `ws://forum.muxixyz.com/api/v1/chat/ws`;
+  // url = 'ws://192.168.1.114:8081/api/v1/chat/ws';
 
   constructor(token: string) {
     this.ws = new WebSocket(this.url, token);

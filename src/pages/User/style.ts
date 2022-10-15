@@ -29,7 +29,7 @@ export const Links = styled.div`
 `;
 
 export const Tools = styled.div`
-  flex: 1;
+  flex: 2;
   display: flex;
   justify-content: space-around;
 `;

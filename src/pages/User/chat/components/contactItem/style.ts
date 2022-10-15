@@ -34,17 +34,20 @@ export const Message = styled.div`
 `;
 
 export const Info = styled.div`
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
   margin-left: 1em;
 `;
 
 export const Content = styled.div`
-  position: absolute;
   width: 50%;
   font-size: 0.8em;
   color: gray;
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
+  max-width: 25em;
 `;
 
 export const Nickname = styled.div``;

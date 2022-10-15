@@ -54,7 +54,7 @@ declare namespace defs {
   }
 
   export class Source {
-    /** Kind uint32 `json:"kind"` // 类型，1 -> 团队，2 -> 项目，3 -> 文档，4 -> 文件，6 -> 进度（5 不使用） */
+    /** id */
     id?: number;
 
     /** name */
@@ -144,11 +144,6 @@ declare namespace defs {
     signature?: string;
   }
 
-  export class chat_Id {
-    /** id */
-    id?: string;
-  }
-
   export class chat_Message {
     /** content */
     content?: string;
@@ -164,6 +159,12 @@ declare namespace defs {
   }
 
   export class comment_Comment {
+    /** be_replied_content */
+    be_replied_content?: string;
+
+    /** be_replied_user_id */
+    be_replied_user_id?: number;
+
     /** content */
     content?: string;
 
@@ -185,6 +186,9 @@ declare namespace defs {
     /** id */
     id?: number;
 
+    /** img_url */
+    img_url?: string;
+
     /** is_liked */
     is_liked?: boolean;
 
@@ -201,6 +205,9 @@ declare namespace defs {
 
     /** father_id */
     father_id?: number;
+
+    /** img_url */
+    img_url?: string;
 
     /** post_id */
     post_id?: number;
@@ -224,8 +231,11 @@ declare namespace defs {
     /** be_replied_id */
     be_replied_id?: number;
 
-    /** comment_num */
-    comment_num?: number;
+    /** be_replied_user_id */
+    be_replied_user_id?: number;
+
+    /** be_replied_user_name */
+    be_replied_user_name?: string;
 
     /** content */
     content?: string;
@@ -265,6 +275,9 @@ declare namespace defs {
     /** md or rtf */
     content_type?: string;
 
+    /** normal -> 团队外; muxi -> 团队内 (type_name暂时均填normal) */
+    domain?: string;
+
     /** summary */
     summary?: string;
 
@@ -273,9 +286,6 @@ declare namespace defs {
 
     /** title */
     title?: string;
-
-    /** normal -> 团队外; muxi -> 团队内 (type_name暂时均填normal) */
-    type_name?: string;
   }
 
   export class post_GetPostResponse {
@@ -332,6 +342,11 @@ declare namespace defs {
 
     /** title */
     title?: string;
+  }
+
+  export class post_IdResponse {
+    /** id */
+    id?: number;
   }
 
   export class post_ListMainPostResponse {
@@ -408,11 +423,11 @@ declare namespace defs {
     /** creator_name */
     creator_name?: string;
 
+    /** id */
+    id?: number;
+
     /** like_num */
     like_num?: number;
-
-    /** post_id */
-    post_id?: number;
 
     /** summary */
     summary?: string;
@@ -459,6 +474,9 @@ declare namespace defs {
     /** id */
     id?: number;
 
+    /** img_url */
+    img_url?: string;
+
     /** is_liked */
     is_liked?: boolean;
 
@@ -487,6 +505,65 @@ declare namespace defs {
 
     /** title */
     title?: string;
+  }
+
+  export class report_CreateRequest {
+    /** cause */
+    cause?: string;
+
+    /** post_id */
+    post_id?: number;
+
+    /** type_name */
+    type_name?: string;
+  }
+
+  export class report_HandleRequest {
+    /** id */
+    id?: number;
+
+    /** invalid or valid */
+    result?: string;
+  }
+
+  export class report_ListResponse {
+    /** reports */
+    reports?: Array<defs.report_Report>;
+  }
+
+  export class report_Report {
+    /** be_reported_user_id */
+    be_reported_user_id?: number;
+
+    /** be_reported_user_name */
+    be_reported_user_name?: string;
+
+    /** cause */
+    cause?: string;
+
+    /** create_time */
+    create_time?: string;
+
+    /** id */
+    id?: number;
+
+    /** post_id */
+    post_id?: number;
+
+    /** post_title */
+    post_title?: string;
+
+    /** type_name */
+    type_name?: string;
+
+    /** user_avatar */
+    user_avatar?: string;
+
+    /** user_id */
+    user_id?: number;
+
+    /** user_name */
+    user_name?: string;
   }
 
   export class user {
@@ -560,27 +637,10 @@ login the team-forum
    */
   export namespace chat {
     /**
-        * 获取该用户的uuid
-该用户发送信息前先获取自己的uuid，并放入query(id=?)，有效期24h
-        * /chat
-        */
-    export namespace getChat {
-      export class Params {}
-
-      export type HooksParams = (() => Params) | Params;
-
-      export type Response = ResponseTypeWarpper<defs.chat_Id>;
-
-      export const method: string;
-
-      export function request(params: Params, options?: any): Promise<Response>;
-    }
-
-    /**
      * 获取该用户的聊天记录
      * /chat/history/{id}
      */
-    export namespace getChatHistoryById {
+    export namespace getHistoryById {
       export class Params {
         /** limit */
         limit?: number;
@@ -604,7 +664,7 @@ login the team-forum
 建立 WebSocket 连接
         * /chat/ws
         */
-    export namespace getChatWs {
+    export namespace getWs {
       export class Params {
         /** uuid */
         id: string;
@@ -847,7 +907,7 @@ login the team-forum
 
       export type HooksParams = (() => Params) | Params;
 
-      export type Response = ResponseTypeWarpper<defs.Response>;
+      export type Response = ResponseTypeWarpper<defs.post_IdResponse>;
 
       export const method: string;
 
@@ -860,10 +920,10 @@ login the team-forum
 
     /**
         * list 主帖 api
-type_name : normal -> 团队外; muxi -> 团队内 (type_name暂时均填normal); 根据category获取主帖list
-        * /post/list/{type_name}
+根据category or tag 获取主帖list
+        * /post/list/{domain}
         */
-    export namespace getPostListByType_name {
+    export namespace getPostListByDomain {
       export class Params {
         /** limit */
         limit?: number;
@@ -879,8 +939,8 @@ type_name : normal -> 团队外; muxi -> 团队内 (type_name暂时均填normal)
         search_content?: string;
         /** tag */
         tag?: string;
-        /** type_name */
-        type_name: string;
+        /** normal -> 团队外; muxi -> 团队内 */
+        domain: string;
       }
 
       export type HooksParams = (() => Params) | Params;
@@ -899,7 +959,10 @@ type_name : normal -> 团队外; muxi -> 团队内 (type_name暂时均填normal)
         * /post/popular_tag
         */
     export namespace getPostPopular_tag {
-      export class Params {}
+      export class Params {
+        /** category */
+        category?: string;
+      }
 
       export type HooksParams = (() => Params) | Params;
 
@@ -992,6 +1055,74 @@ type_name : normal -> 团队外; muxi -> 团队内 (type_name暂时均填normal)
   }
 
   /**
+   * 举报服务
+   */
+  export namespace report {
+    /**
+     * 处理举报 api
+     * /report
+     */
+    export namespace putReport {
+      export class Params {}
+
+      export type HooksParams = (() => Params) | Params;
+
+      export type Response = ResponseTypeWarpper<defs.Response>;
+
+      export const method: string;
+
+      export function request(
+        params: Params,
+        body: defs.report_HandleRequest,
+        options?: any,
+      ): Promise<Response>;
+    }
+
+    /**
+     * 举报帖子 api
+     * /report
+     */
+    export namespace postReport {
+      export class Params {}
+
+      export type HooksParams = (() => Params) | Params;
+
+      export type Response = ResponseTypeWarpper<defs.Response>;
+
+      export const method: string;
+
+      export function request(
+        params: Params,
+        body: defs.report_CreateRequest,
+        options?: any,
+      ): Promise<Response>;
+    }
+
+    /**
+     * list举报 api
+     * /report/list
+     */
+    export namespace getReportList {
+      export class Params {
+        /** limit */
+        limit?: number;
+        /** page */
+        page?: number;
+        /** last_id */
+        last_id?: number;
+      }
+
+      export type HooksParams = (() => Params) | Params;
+
+      export type Response = ResponseTypeWarpper<defs.report_ListResponse>;
+
+      export const method: string;
+
+      export function request(params: Params, options?: any): Promise<Response>;
+    }
+  }
+
+  /**
    * 用户服务
    */
   export namespace user {
@@ -1040,7 +1171,7 @@ type_name : normal -> 团队外; muxi -> 团队内 (type_name暂时均填normal)
 
     /**
         * get 我的 profile api
-获取 my 完整 user 信息
+获取 my 完整 user 信息（权限 role: Normal-普通学生用户; NormalAdmin-学生管理员; Muxi-团队成员; MuxiAdmin-团队管理员; SuperAdmin-超级管理员）
         * /user/myprofile
         */
     export namespace getUserMyprofile {
@@ -1057,7 +1188,7 @@ type_name : normal -> 团队外; muxi -> 团队内 (type_name暂时均填normal)
 
     /**
         * 获取用户 profile api
-通过 userId 获取完整 user 信息（权限: Normal-普通学生用户; NormalAdmin-学生管理员; Muxi-团队成员; MuxiAdmin-团队管理员; SuperAdmin-超级管理员）
+通过 userId 获取完整 user 信息（权限 role: Normal-普通学生用户; NormalAdmin-学生管理员; Muxi-团队成员; MuxiAdmin-团队管理员; SuperAdmin-超级管理员）
         * /user/profile/{id}
         */
     export namespace getUserProfileById {

@@ -9,6 +9,17 @@ export const CATEGORY: Array<string> = [
   '闲聊',
 ];
 
+export const CATEGORY_EN: Array<string> = [
+  'study',
+  'gossip',
+  'roast',
+  'emotion',
+  'sport',
+  'game',
+  'art',
+  'chat',
+];
+
 export const Emoji = [
   '😀',
   '😃',

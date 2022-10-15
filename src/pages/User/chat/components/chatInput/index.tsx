@@ -36,7 +36,7 @@ const ChatInput: React.FC = () => {
       content: message?.get(selectedId) as string,
       target_user_id: selectedId,
       type_name: 'str',
-      time: moment(new Date()).format('MM-DD HH:MM:ss'),
+      time: moment(new Date()).format('YYYY-MM-DD HH:mm:ss'),
     };
     const records = [...getRecords(selectedId), newRecord];
     setRecords(records, selectedId);

@@ -8,7 +8,8 @@ const useRequest: typeof request = (service, options, plugins) => {
     ? options
     : {
         ...options,
-        onError: (e) => {
+        onError: (e: ErrorRes) => {
+          if (e.code === 20005) location.href += 'login';
           message.error(e.message);
         },
       };

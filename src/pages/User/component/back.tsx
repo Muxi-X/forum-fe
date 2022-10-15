@@ -17,7 +17,7 @@ const BackLink = styled.span`
 
 const BackCard = styled(Card)`
   margin: 24px auto 16px;
-  padding-left: 22px;
+  padding-left: 22px !important;
   height: 3.833rem;
   .ant-card-body {
     display: flex;

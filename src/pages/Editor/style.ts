@@ -61,3 +61,12 @@ export const ToggleEditor = styled.div`
   ${Tips}
   cursor: pointer;
 `;
+
+export const ItemWrapper = styled.div`
+  position: relative;
+  #tool {
+    position: absolute;
+    bottom: 0;
+    left: 385px;
+  }
+`;

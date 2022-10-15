@@ -1,8 +1,15 @@
-import React, { Fragment, useEffect, useRef, useState } from 'react';
-import { useParams } from 'react-router';
-import { Button, Comment, Form, Input, List } from 'antd';
+import React, { useEffect, useState } from 'react';
+import { Button, Comment, Form, Input, List, message, Image } from 'antd';
+import qiniupload, { observer, CompleteRes } from 'utils/qiniup';
+import { QiniuServer } from 'config';
 import Avatar from 'components/Avatar/avatar';
-import { LikeFilled, LikeOutlined, MessageOutlined } from '@ant-design/icons';
+import {
+  LikeFilled,
+  LikeOutlined,
+  MessageOutlined,
+  CloseSquareFilled,
+  createFromIconfontCN,
+} from '@ant-design/icons';
 import moment from 'utils/moment';
 import useProfile from 'store/useProfile';
 import useRequest from 'hooks/useRequest';
@@ -10,11 +17,13 @@ import * as style from './style';
 
 const { TextArea } = Input;
 
-type commentType = 'comment' | 'subComment';
+type commentType = 'comment' | 'subComment' | 'reply';
 
 interface IProps {
   commentList: defs.post_SubPost[];
   post_id: number;
+  handleAddComment: (num: number) => void;
+  commentNum: number;
 }
 
 interface EditorProps {
@@ -27,41 +36,61 @@ interface EditorProps {
   setReply?: Function;
   setContent: Function;
   setSubmitting: Function;
+  handleUpload: (src: string) => void;
+  hasImg: boolean;
 }
 
 interface CommentItemProps extends defs.post_Comment, defs.post_SubPost {
   replyName?: string | undefined;
   commentType?: commentType;
   post_id: number;
+  addReply?: (reply: defs.post_Comment) => void;
+  handleAddComment: (num: number) => void;
+  commentNum: number;
 }
 
-const SubList: React.FC<{ subComments: defs.post_Comment[]; post_id: number }> = ({
-  subComments,
-  post_id,
-}) => {
-  const { run } = useRequest(API.comment.postComment.request, {
-    manual: true,
-    onSuccess: (res) => {},
-  });
+const IconFont = createFromIconfontCN({
+  scriptUrl: '//at.alicdn.com/t/c/font_3699573_vczcgw5jf6p.js',
+});
 
-  const handleSubmit = (
-    value: string,
-    runBody: typeof API.comment.postComment.request,
-  ) => {
-    if (!value) return;
-    runBody({}, { ...runBody });
+const SubList: React.FC<{
+  subComments: defs.post_Comment[];
+  post_id: number;
+  syncSubComments: (subs: defs.post_Comment[]) => void;
+  handleAddComment: (num: number) => void;
+  commentNum: number;
+}> = ({ subComments, post_id, syncSubComments, commentNum, handleAddComment }) => {
+  if (subComments.length === 0) return <></>;
+  const [replies, setReplies] = useState(subComments);
+  const handleReply = (reply: defs.post_Comment) => {
+    setReplies([...replies, reply]);
   };
+
+  const subLen = subComments.length;
+  const rLen = replies.length;
+
+  if (subLen !== rLen) {
+    if (subLen > rLen) setReplies(subComments);
+    else syncSubComments(replies);
+  }
+
   return (
     <style.SubComments>
-      {subComments.map((sub) => (
-        <CommentItem {...sub} key={sub.id} commentType={'subComment'} post_id={post_id} />
-      ))}
+      {replies.map((reply) => {
+        return (
+          <CommentItem
+            {...reply}
+            key={reply.id}
+            commentType="subComment"
+            post_id={post_id}
+            addReply={handleReply}
+            commentNum={commentNum}
+            handleAddComment={handleAddComment}
+          />
+        );
+      })}
     </style.SubComments>
   );
-};
-
-const ReplayList: React.FC = () => {
-  return <></>;
 };
 
 const CommentItem: React.FC<CommentItemProps> = ({
@@ -70,27 +99,65 @@ const CommentItem: React.FC<CommentItemProps> = ({
   comments,
   creator_avatar,
   time,
+  is_liked,
+  like_num,
+  comment_num,
   creator_name,
   commentType = 'comment',
   post_id,
+  be_replied_content,
+  be_replied_user_name,
+  addReply,
+  commentNum,
+  handleAddComment,
+  img_url,
 }) => {
-  const [likes, setLikes] = useState(0);
+  const [likes, setLikes] = useState(like_num as number);
   const [submitting, setSubmitting] = useState(false);
-  const [action, setAction] = useState<string | null>(null);
+  const [isLiked, setIsLiked] = useState(is_liked);
+  const [subComments, setSubComments] = useState(comments ? comments : []);
   const [value, setValue] = useState('');
   const [reply, setReply] = useState(false);
+  const [img, setImg] = useState('');
+  const [replyInfo, setReplyInfo] = useState({
+    content: be_replied_content,
+    name: be_replied_user_name,
+  });
+
   const { run } = useRequest(API.comment.postComment.request, {
+    manual: true,
+    onSuccess: (res) => {
+      setTimeout(() => {
+        if (commentType === 'comment') {
+          setSubComments([...subComments, res.data]);
+          setValue('');
+          setSubmitting(false);
+          setReply(false);
+        } else {
+          setValue('');
+          setSubmitting(false);
+          setReply(false);
+          addReply && addReply(res.data);
+        }
+        handleAddComment(commentNum + 1);
+        setImg('');
+      }, 500);
+    },
+  });
+
+  const { run: zan } = useRequest(API.like.postLike.request, {
     manual: true,
   });
 
   const handleLike = () => {
-    if (action === 'liked') {
-      setLikes(0);
-      setAction(null);
+    if (isLiked) {
+      setLikes(likes - 1);
+      setIsLiked(false);
     } else {
-      setLikes(1);
-      setAction('liked');
+      setLikes(likes + 1);
+      setIsLiked(true);
     }
+    zan({}, { target_id: id, type_name: 'comment' });
   };
 
   const handleReply = () => {
@@ -99,14 +166,40 @@ const CommentItem: React.FC<CommentItemProps> = ({
   };
 
   const handleSubmit = () => {
-    // run({})
+    let type: string;
+    if (commentType === 'comment') type = 'first-level';
+    else type = 'second-level';
+
+    run(
+      {},
+      {
+        content: value,
+        post_id,
+        father_id: id,
+        type_name: type,
+        img_url: img,
+      },
+    );
+  };
+
+  const handleUpload = (src: string) => {
+    setImg(src);
   };
 
   const actions = [
     <>
       <style.CommentBack onClick={handleLike}>
-        {React.createElement(action === 'liked' ? LikeFilled : LikeOutlined)}
-        <style.Number className="comment-action">{likes}</style.Number>
+        {!isLiked ? (
+          <>
+            <LikeOutlined />
+            <style.Number>{likes}</style.Number>
+          </>
+        ) : (
+          <span className="like">
+            <LikeFilled />
+            <style.Number>{likes}</style.Number>
+          </span>
+        )}
       </style.CommentBack>
       <style.CommentBack
         onClick={(e) => {
@@ -116,28 +209,63 @@ const CommentItem: React.FC<CommentItemProps> = ({
         }}
       >
         <MessageOutlined />
-        <style.Number className="comment-action">
-          {reply ? '取消回复' : '回复'}
+        <style.Number>
+          {reply ? '取消回复' : `${comment_num ? comment_num : '回复'}`}
         </style.Number>
       </style.CommentBack>
     </>,
   ];
 
-  const getCommnets = () => {
+  const handleAddSub = (subs: defs.post_Comment[]) => {
+    setSubComments(subs);
+  };
+
+  const getComments = () => {
     switch (commentType) {
       case 'comment':
-        return <SubList subComments={comments ? comments : []} post_id={post_id} />;
+        return (
+          <SubList
+            syncSubComments={handleAddSub}
+            subComments={subComments}
+            post_id={post_id}
+            commentNum={commentNum}
+            handleAddComment={handleAddComment}
+          />
+        );
       default:
-        return <SubList subComments={comments ? comments : []} post_id={post_id} />;
+        return (
+          <>
+            {replyInfo.content ? (
+              <style.ReplyComments>{`"  ${replyInfo.content}  "`}</style.ReplyComments>
+            ) : (
+              ''
+            )}
+          </>
+        );
     }
   };
 
   return (
     <Comment
       actions={actions}
-      content={content}
+      content={
+        <>
+          <div>{content}</div>
+          {img_url ? <Image width={64} height={64} src={img_url} /> : null}
+        </>
+      }
       datetime={moment(time).fromNow()}
-      author={creator_name}
+      author={
+        replyInfo.name ? (
+          <>
+            {creator_name}
+            <b>回复了</b>
+            {replyInfo.name}
+          </>
+        ) : (
+          creator_name
+        )
+      }
       avatar={<Avatar src={creator_avatar} userId={id} />}
     >
       {reply ? (
@@ -150,10 +278,22 @@ const CommentItem: React.FC<CommentItemProps> = ({
             onSubmit={handleSubmit}
             reply={reply}
             setReply={setReply}
+            autoFocus={reply}
+            handleUpload={handleUpload}
+            hasImg={img === '' ? false : true}
           />
+          {img ? (
+            <style.Img img={img}>
+              <CloseSquareFilled
+                onClick={() => {
+                  setImg('');
+                }}
+              />
+            </style.Img>
+          ) : null}
         </div>
       ) : null}
-      {getCommnets()}
+      {getComments()}
     </Comment>
   );
 };
@@ -162,14 +302,22 @@ const CommentItem: React.FC<CommentItemProps> = ({
 const CommentList: React.FC<{
   comments: defs.post_SubPost[];
   post_id: number;
-}> = ({ comments, post_id }) => {
+  handleAddComment: (num: number) => void;
+  commentNum: number;
+}> = ({ comments, post_id, commentNum, handleAddComment }) => {
   return (
     <List
       dataSource={comments}
       header={`全部评论`}
       itemLayout="horizontal"
       renderItem={(props) => (
-        <CommentItem {...props} commentType={'comment'} post_id={post_id} />
+        <CommentItem
+          {...props}
+          commentType={'comment'}
+          post_id={post_id}
+          commentNum={commentNum}
+          handleAddComment={handleAddComment}
+        />
       )}
     />
   );
@@ -185,9 +333,11 @@ const Editor = ({
   setReply,
   setContent,
   setSubmitting,
+  handleUpload,
+  hasImg,
 }: EditorProps) => {
   const [focus, setFocus] = useState(reply);
-
+  const [upload, setUpload] = useState(false);
   const textareaStyle =
     content || (focus && !submitting)
       ? {
@@ -200,11 +350,9 @@ const Editor = ({
       : {};
 
   const handleOnBlur = () => {
-    console.log(content);
-    if (content) return;
+    if (content || upload) return;
     // 关于事件调用顺序
     setTimeout(() => {
-      console.log(submitting);
       if (submitting) {
         setSubmitting(false);
         return;
@@ -212,6 +360,7 @@ const Editor = ({
       setFocus(false);
       setReply && setReply(false);
       setContent('');
+      handleUpload('');
     });
   };
 
@@ -227,7 +376,24 @@ const Editor = ({
 
   const handleOnKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     const ctrlKey = e.ctrlKey || e.metaKey;
-    if (ctrlKey && e.key === 'Enter') onSubmit();
+    if (ctrlKey && e.key === 'Enter') {
+      setSubmitting(true);
+      onSubmit();
+    }
+  };
+
+  const Upload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (hasImg) {
+      message.warn('一条评论最多上传一张照片哦');
+      return;
+    }
+    const imgFile = e.currentTarget.files ? e.currentTarget.files[0] : null;
+    observer.complete = (res: CompleteRes) => {
+      handleUpload(QiniuServer + res.key);
+      message.success('上传成功');
+    };
+    setUpload(false);
+    qiniupload(imgFile as File, localStorage.getItem('qiniu') as string);
   };
 
   return (
@@ -266,6 +432,17 @@ const Editor = ({
           >
             评论
           </Button>
+          <style.Upload
+            onMouseDown={() => {
+              setUpload(true);
+            }}
+          >
+            <span>
+              <input onChange={Upload} type="file" />
+              <IconFont className="upload" type="icon-image" />
+              <span>图片</span>
+            </span>
+          </style.Upload>
         </Form.Item>
       ) : null}
     </div>
@@ -273,13 +450,14 @@ const Editor = ({
 };
 
 const CommentCp = (props: IProps, ref: any) => {
-  const { commentList, post_id } = props;
+  const { commentList, post_id, commentNum, handleAddComment } = props;
   const [comments, setComments] = useState<defs.post_SubPost[]>(
     commentList ? commentList : [],
   );
 
   const [content, setContent] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [img, setImg] = useState('');
 
   const {
     userProfile: { avatar, name },
@@ -292,6 +470,8 @@ const CommentCp = (props: IProps, ref: any) => {
         setComments([...comments, res.data]);
         setContent('');
         setSubmitting(false);
+        handleAddComment(commentNum + 1);
+        setImg('');
         setTimeout(() => {
           window.scrollBy({ top: document.body.scrollHeight, behavior: 'smooth' });
         });
@@ -300,7 +480,14 @@ const CommentCp = (props: IProps, ref: any) => {
   });
 
   const handleSubmit = () => {
-    run({}, { content, post_id, father_id: post_id, type_name: 'sub-post' });
+    run(
+      {},
+      { content, post_id, father_id: post_id, type_name: 'sub-post', img_url: img },
+    );
+  };
+
+  const handleUpload = (src: string) => {
+    setImg(src);
   };
 
   return (
@@ -310,16 +497,36 @@ const CommentCp = (props: IProps, ref: any) => {
         avatar={<Avatar src={avatar} />}
         author={name}
         content={
-          <Editor
-            content={content}
-            setContent={setContent}
-            submitting={submitting}
-            setSubmitting={setSubmitting}
-            onSubmit={handleSubmit}
-          />
+          <>
+            <Editor
+              content={content}
+              setContent={setContent}
+              submitting={submitting}
+              setSubmitting={setSubmitting}
+              onSubmit={handleSubmit}
+              handleUpload={handleUpload}
+              hasImg={img === '' ? false : true}
+            />
+            {img ? (
+              <style.Img img={img}>
+                <CloseSquareFilled
+                  onClick={() => {
+                    setImg('');
+                  }}
+                />
+              </style.Img>
+            ) : null}
+          </>
         }
       />
-      {comments.length > 0 && <CommentList comments={comments} post_id={post_id} />}
+      {comments.length > 0 && (
+        <CommentList
+          handleAddComment={handleAddComment}
+          commentNum={commentNum}
+          comments={comments}
+          post_id={post_id}
+        />
+      )}
     </style.Wrapper>
   );
 };

@@ -1,12 +1,16 @@
 import React from 'react';
+import useDocTitle from 'hooks/useDocTitle';
 import Result from './Result';
-import { Content } from './_layout';
+import { Content, ContentWrapper } from './_layout';
 
 const NotFount: React.FC = () => {
+  useDocTitle('页面不存在');
   return (
-    <Content>
-      <Result type="404" />
-    </Content>
+    <ContentWrapper>
+      <Content>
+        <Result type="404" />
+      </Content>
+    </ContentWrapper>
   );
 };
 

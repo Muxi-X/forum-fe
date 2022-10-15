@@ -13,7 +13,10 @@ const Post: React.FC = () => {
 
   const { data, loading, run } = useRequest(API.post.getPostPublishedByUser_id.request, {
     onSuccess: (res) => {
-      if (res.data.posts?.length === 0) {
+      if (res.code === 20103) {
+        message.error('对方打开了隐私权限哦');
+        setList([]);
+      } else if (res.data.posts?.length === 0) {
         message.warning('没有更多文章了');
         setHasMore(false);
       } else {

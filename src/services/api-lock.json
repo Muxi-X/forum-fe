@@ -3,7 +3,6 @@
     "mods": [
       {
         "description": "认证服务",
-        "name": "auth",
         "interfaces": [
           {
             "consumes": [
@@ -75,53 +74,18 @@
               }
             ]
           }
-        ]
+        ],
+        "name": "auth"
       },
       {
         "description": "聊天服务",
-        "name": "chat",
         "interfaces": [
           {
             "consumes": [
               "application/json"
             ],
-            "description": "获取该用户的uuid\n该用户发送信息前先获取自己的uuid，并放入query(id=?)，有效期24h",
-            "name": "getChat",
-            "method": "get",
-            "path": "/chat",
-            "response": {
-              "typeArgs": [],
-              "typeName": "chat_Id",
-              "isDefsType": true,
-              "templateIndex": -1,
-              "compileTemplateKeyword": "#/definitions/",
-              "enum": [],
-              "typeProperties": []
-            },
-            "parameters": [
-              {
-                "in": "header",
-                "description": "token 用户令牌",
-                "name": "Authorization",
-                "required": true,
-                "dataType": {
-                  "typeArgs": [],
-                  "typeName": "string",
-                  "isDefsType": false,
-                  "templateIndex": -1,
-                  "compileTemplateKeyword": "#/definitions/",
-                  "enum": [],
-                  "typeProperties": []
-                }
-              }
-            ]
-          },
-          {
-            "consumes": [
-              "application/json"
-            ],
             "description": "获取该用户的聊天记录",
-            "name": "getChatHistoryById",
+            "name": "getHistoryById",
             "method": "get",
             "path": "/chat/history/{id}",
             "response": {
@@ -206,7 +170,7 @@
           },
           {
             "description": "WebSocket\n建立 WebSocket 连接",
-            "name": "getChatWs",
+            "name": "getWs",
             "method": "get",
             "path": "/chat/ws",
             "response": {
@@ -236,11 +200,11 @@
               }
             ]
           }
-        ]
+        ],
+        "name": "chat"
       },
       {
         "description": "收藏服务",
-        "name": "collection",
         "interfaces": [
           {
             "consumes": [
@@ -384,7 +348,8 @@
               }
             ]
           }
-        ]
+        ],
+        "name": "collection"
       },
       {
         "description": "评论服务",
@@ -544,7 +509,6 @@
       },
       {
         "description": "动态服务",
-        "name": "feed",
         "interfaces": [
           {
             "consumes": [
@@ -638,11 +602,11 @@
               }
             ]
           }
-        ]
+        ],
+        "name": "feed"
       },
       {
         "description": "点赞服务",
-        "name": "like",
         "interfaces": [
           {
             "consumes": [
@@ -786,7 +750,8 @@
               }
             ]
           }
-        ]
+        ],
+        "name": "like"
       },
       {
         "description": "帖子服务",
@@ -851,7 +816,7 @@
             "path": "/post",
             "response": {
               "typeArgs": [],
-              "typeName": "Response",
+              "typeName": "post_IdResponse",
               "isDefsType": true,
               "templateIndex": -1,
               "compileTemplateKeyword": "#/definitions/",
@@ -895,10 +860,10 @@
             "consumes": [
               "application/json"
             ],
-            "description": "list 主帖 api\ntype_name : normal -> 团队外; muxi -> 团队内 (type_name暂时均填normal); 根据category获取主帖list",
-            "name": "getPostListByType_name",
+            "description": "list 主帖 api\n根据category or tag 获取主帖list",
+            "name": "getPostListByDomain",
             "method": "get",
-            "path": "/post/list/{type_name}",
+            "path": "/post/list/{domain}",
             "response": {
               "typeArgs": [],
               "typeName": "post_ListMainPostResponse",
@@ -1024,8 +989,8 @@
               },
               {
                 "in": "path",
-                "description": "type_name",
-                "name": "type_name",
+                "description": "normal -> 团队外; muxi -> 团队内",
+                "name": "domain",
                 "required": true,
                 "dataType": {
                   "typeArgs": [],
@@ -1072,6 +1037,20 @@
                 "description": "token 用户令牌",
                 "name": "Authorization",
                 "required": true,
+                "dataType": {
+                  "typeArgs": [],
+                  "typeName": "string",
+                  "isDefsType": false,
+                  "templateIndex": -1,
+                  "compileTemplateKeyword": "#/definitions/",
+                  "enum": [],
+                  "typeProperties": []
+                }
+              },
+              {
+                "in": "query",
+                "description": "category",
+                "name": "category",
                 "dataType": {
                   "typeArgs": [],
                   "typeName": "string",
@@ -1315,8 +1294,190 @@
         "name": "post"
       },
       {
+        "description": "举报服务",
+        "interfaces": [
+          {
+            "consumes": [
+              "application/json"
+            ],
+            "description": "处理举报 api",
+            "name": "putReport",
+            "method": "put",
+            "path": "/report",
+            "response": {
+              "typeArgs": [],
+              "typeName": "Response",
+              "isDefsType": true,
+              "templateIndex": -1,
+              "compileTemplateKeyword": "#/definitions/",
+              "enum": [],
+              "typeProperties": []
+            },
+            "parameters": [
+              {
+                "in": "header",
+                "description": "token 用户令牌",
+                "name": "Authorization",
+                "required": true,
+                "dataType": {
+                  "typeArgs": [],
+                  "typeName": "string",
+                  "isDefsType": false,
+                  "templateIndex": -1,
+                  "compileTemplateKeyword": "#/definitions/",
+                  "enum": [],
+                  "typeProperties": []
+                }
+              },
+              {
+                "in": "body",
+                "description": "handle_report_request",
+                "name": "object",
+                "required": true,
+                "dataType": {
+                  "typeArgs": [],
+                  "typeName": "report_HandleRequest",
+                  "isDefsType": true,
+                  "templateIndex": -1,
+                  "compileTemplateKeyword": "#/definitions/",
+                  "enum": [],
+                  "typeProperties": []
+                }
+              }
+            ]
+          },
+          {
+            "consumes": [
+              "application/json"
+            ],
+            "description": "举报帖子 api",
+            "name": "postReport",
+            "method": "post",
+            "path": "/report",
+            "response": {
+              "typeArgs": [],
+              "typeName": "Response",
+              "isDefsType": true,
+              "templateIndex": -1,
+              "compileTemplateKeyword": "#/definitions/",
+              "enum": [],
+              "typeProperties": []
+            },
+            "parameters": [
+              {
+                "in": "header",
+                "description": "token 用户令牌",
+                "name": "Authorization",
+                "required": true,
+                "dataType": {
+                  "typeArgs": [],
+                  "typeName": "string",
+                  "isDefsType": false,
+                  "templateIndex": -1,
+                  "compileTemplateKeyword": "#/definitions/",
+                  "enum": [],
+                  "typeProperties": []
+                }
+              },
+              {
+                "in": "body",
+                "description": "create_report_request",
+                "name": "object",
+                "required": true,
+                "dataType": {
+                  "typeArgs": [],
+                  "typeName": "report_CreateRequest",
+                  "isDefsType": true,
+                  "templateIndex": -1,
+                  "compileTemplateKeyword": "#/definitions/",
+                  "enum": [],
+                  "typeProperties": []
+                }
+              }
+            ]
+          },
+          {
+            "consumes": [
+              "application/json"
+            ],
+            "description": "list举报 api",
+            "name": "getReportList",
+            "method": "get",
+            "path": "/report/list",
+            "response": {
+              "typeArgs": [],
+              "typeName": "report_ListResponse",
+              "isDefsType": true,
+              "templateIndex": -1,
+              "compileTemplateKeyword": "#/definitions/",
+              "enum": [],
+              "typeProperties": []
+            },
+            "parameters": [
+              {
+                "in": "header",
+                "description": "token 用户令牌",
+                "name": "Authorization",
+                "required": true,
+                "dataType": {
+                  "typeArgs": [],
+                  "typeName": "string",
+                  "isDefsType": false,
+                  "templateIndex": -1,
+                  "compileTemplateKeyword": "#/definitions/",
+                  "enum": [],
+                  "typeProperties": []
+                }
+              },
+              {
+                "in": "query",
+                "description": "limit",
+                "name": "limit",
+                "dataType": {
+                  "typeArgs": [],
+                  "typeName": "number",
+                  "isDefsType": false,
+                  "templateIndex": -1,
+                  "compileTemplateKeyword": "#/definitions/",
+                  "enum": [],
+                  "typeProperties": []
+                }
+              },
+              {
+                "in": "query",
+                "description": "page",
+                "name": "page",
+                "dataType": {
+                  "typeArgs": [],
+                  "typeName": "number",
+                  "isDefsType": false,
+                  "templateIndex": -1,
+                  "compileTemplateKeyword": "#/definitions/",
+                  "enum": [],
+                  "typeProperties": []
+                }
+              },
+              {
+                "in": "query",
+                "description": "last_id",
+                "name": "last_id",
+                "dataType": {
+                  "typeArgs": [],
+                  "typeName": "number",
+                  "isDefsType": false,
+                  "templateIndex": -1,
+                  "compileTemplateKeyword": "#/definitions/",
+                  "enum": [],
+                  "typeProperties": []
+                }
+              }
+            ]
+          }
+        ],
+        "name": "report"
+      },
+      {
         "description": "用户服务",
-        "name": "user",
         "interfaces": [
           {
             "consumes": [
@@ -1449,7 +1610,7 @@
             "consumes": [
               "application/json"
             ],
-            "description": "get 我的 profile api\n获取 my 完整 user 信息",
+            "description": "get 我的 profile api\n获取 my 完整 user 信息（权限 role: Normal-普通学生用户; NormalAdmin-学生管理员; Muxi-团队成员; MuxiAdmin-团队管理员; SuperAdmin-超级管理员）",
             "name": "getUserMyprofile",
             "method": "get",
             "path": "/user/myprofile",
@@ -1484,7 +1645,7 @@
             "consumes": [
               "application/json"
             ],
-            "description": "获取用户 profile api\n通过 userId 获取完整 user 信息（权限: Normal-普通学生用户; NormalAdmin-学生管理员; Muxi-团队成员; MuxiAdmin-团队管理员; SuperAdmin-超级管理员）",
+            "description": "获取用户 profile api\n通过 userId 获取完整 user 信息（权限 role: Normal-普通学生用户; NormalAdmin-学生管理员; Muxi-团队成员; MuxiAdmin-团队管理员; SuperAdmin-超级管理员）",
             "name": "getUserProfileById",
             "method": "get",
             "path": "/user/profile/{id}",
@@ -1530,13 +1691,13 @@
               }
             ]
           }
-        ]
+        ],
+        "name": "user"
       }
     ],
     "baseClasses": [
       {
         "name": "FeedItem",
-        "templateArgs": [],
         "properties": [
           {
             "dataType": {
@@ -1617,11 +1778,11 @@
             "name": "user",
             "required": false
           }
-        ]
+        ],
+        "templateArgs": []
       },
       {
         "name": "FeedListResponse",
-        "templateArgs": [],
         "properties": [
           {
             "dataType": {
@@ -1646,11 +1807,11 @@
             "name": "list",
             "required": false
           }
-        ]
+        ],
+        "templateArgs": []
       },
       {
         "name": "ListResponse",
-        "templateArgs": [],
         "properties": [
           {
             "dataType": {
@@ -1688,7 +1849,8 @@
             "name": "list",
             "required": false
           }
-        ]
+        ],
+        "templateArgs": []
       },
       {
         "name": "Response",
@@ -1737,7 +1899,6 @@
       },
       {
         "name": "Source",
-        "templateArgs": [],
         "properties": [
           {
             "dataType": {
@@ -1750,7 +1911,6 @@
               "typeProperties": []
             },
             "name": "id",
-            "description": "Kind uint32 `json:\"kind\"` // 类型，1 -> 团队，2 -> 项目，3 -> 文档，4 -> 文件，6 -> 进度（5 不使用）",
             "required": false
           },
           {
@@ -1779,11 +1939,11 @@
             "name": "type_name",
             "required": false
           }
-        ]
+        ],
+        "templateArgs": []
       },
       {
         "name": "StudentLoginRequest",
-        "templateArgs": [],
         "properties": [
           {
             "dataType": {
@@ -1811,11 +1971,11 @@
             "name": "student_id",
             "required": true
           }
-        ]
+        ],
+        "templateArgs": []
       },
       {
         "name": "StudentLoginResponse",
-        "templateArgs": [],
         "properties": [
           {
             "dataType": {
@@ -1830,11 +1990,11 @@
             "name": "token",
             "required": false
           }
-        ]
+        ],
+        "templateArgs": []
       },
       {
         "name": "TeamLoginRequest",
-        "templateArgs": [],
         "properties": [
           {
             "dataType": {
@@ -1849,11 +2009,11 @@
             "name": "oauth_code",
             "required": false
           }
-        ]
+        ],
+        "templateArgs": []
       },
       {
         "name": "TeamLoginResponse",
-        "templateArgs": [],
         "properties": [
           {
             "dataType": {
@@ -1881,11 +2041,11 @@
             "name": "token",
             "required": false
           }
-        ]
+        ],
+        "templateArgs": []
       },
       {
         "name": "UpdateInfoRequest",
-        "templateArgs": [],
         "properties": [
           {
             "dataType": {
@@ -1952,11 +2112,11 @@
             "name": "signature",
             "required": false
           }
-        ]
+        ],
+        "templateArgs": []
       },
       {
         "name": "User",
-        "templateArgs": [],
         "properties": [
           {
             "dataType": {
@@ -1997,11 +2157,11 @@
             "name": "name",
             "required": false
           }
-        ]
+        ],
+        "templateArgs": []
       },
       {
         "name": "UserProfile",
-        "templateArgs": [],
         "properties": [
           {
             "dataType": {
@@ -2107,30 +2267,11 @@
             "name": "signature",
             "required": false
           }
-        ]
-      },
-      {
-        "name": "chat_Id",
-        "templateArgs": [],
-        "properties": [
-          {
-            "dataType": {
-              "typeArgs": [],
-              "typeName": "string",
-              "isDefsType": false,
-              "templateIndex": -1,
-              "compileTemplateKeyword": "#/definitions/",
-              "enum": [],
-              "typeProperties": []
-            },
-            "name": "id",
-            "required": false
-          }
-        ]
+        ],
+        "templateArgs": []
       },
       {
         "name": "chat_Message",
-        "templateArgs": [],
         "properties": [
           {
             "dataType": {
@@ -2184,11 +2325,38 @@
             "name": "type_name",
             "required": false
           }
-        ]
+        ],
+        "templateArgs": []
       },
       {
         "name": "comment_Comment",
         "properties": [
+          {
+            "dataType": {
+              "typeArgs": [],
+              "typeName": "string",
+              "isDefsType": false,
+              "templateIndex": -1,
+              "compileTemplateKeyword": "#/definitions/",
+              "enum": [],
+              "typeProperties": []
+            },
+            "name": "be_replied_content",
+            "required": false
+          },
+          {
+            "dataType": {
+              "typeArgs": [],
+              "typeName": "number",
+              "isDefsType": false,
+              "templateIndex": -1,
+              "compileTemplateKeyword": "#/definitions/",
+              "enum": [],
+              "typeProperties": []
+            },
+            "name": "be_replied_user_id",
+            "required": false
+          },
           {
             "dataType": {
               "typeArgs": [],
@@ -2283,6 +2451,19 @@
           {
             "dataType": {
               "typeArgs": [],
+              "typeName": "string",
+              "isDefsType": false,
+              "templateIndex": -1,
+              "compileTemplateKeyword": "#/definitions/",
+              "enum": [],
+              "typeProperties": []
+            },
+            "name": "img_url",
+            "required": false
+          },
+          {
+            "dataType": {
+              "typeArgs": [],
               "typeName": "boolean",
               "isDefsType": false,
               "templateIndex": -1,
@@ -2355,6 +2536,19 @@
           {
             "dataType": {
               "typeArgs": [],
+              "typeName": "string",
+              "isDefsType": false,
+              "templateIndex": -1,
+              "compileTemplateKeyword": "#/definitions/",
+              "enum": [],
+              "typeProperties": []
+            },
+            "name": "img_url",
+            "required": false
+          },
+          {
+            "dataType": {
+              "typeArgs": [],
               "typeName": "number",
               "isDefsType": false,
               "templateIndex": -1,
@@ -2384,7 +2578,6 @@
       },
       {
         "name": "like_Item",
-        "templateArgs": [],
         "properties": [
           {
             "dataType": {
@@ -2413,11 +2606,11 @@
             "description": "post or comment",
             "required": true
           }
-        ]
+        ],
+        "templateArgs": []
       },
       {
         "name": "post_Comment",
-        "templateArgs": [],
         "properties": [
           {
             "dataType": {
@@ -2455,7 +2648,20 @@
               "enum": [],
               "typeProperties": []
             },
-            "name": "comment_num",
+            "name": "be_replied_user_id",
+            "required": false
+          },
+          {
+            "dataType": {
+              "typeArgs": [],
+              "typeName": "string",
+              "isDefsType": false,
+              "templateIndex": -1,
+              "compileTemplateKeyword": "#/definitions/",
+              "enum": [],
+              "typeProperties": []
+            },
+            "name": "be_replied_user_name",
             "required": false
           },
           {
@@ -2562,7 +2768,8 @@
             "name": "time",
             "required": false
           }
-        ]
+        ],
+        "templateArgs": []
       },
       {
         "name": "post_CreateRequest",
@@ -2630,6 +2837,20 @@
               "enum": [],
               "typeProperties": []
             },
+            "name": "domain",
+            "description": "normal -> 团队外; muxi -> 团队内 (type_name暂时均填normal)",
+            "required": true
+          },
+          {
+            "dataType": {
+              "typeArgs": [],
+              "typeName": "string",
+              "isDefsType": false,
+              "templateIndex": -1,
+              "compileTemplateKeyword": "#/definitions/",
+              "enum": [],
+              "typeProperties": []
+            },
             "name": "summary",
             "required": true
           },
@@ -2667,20 +2888,6 @@
               "typeProperties": []
             },
             "name": "title",
-            "required": true
-          },
-          {
-            "dataType": {
-              "typeArgs": [],
-              "typeName": "string",
-              "isDefsType": false,
-              "templateIndex": -1,
-              "compileTemplateKeyword": "#/definitions/",
-              "enum": [],
-              "typeProperties": []
-            },
-            "name": "type_name",
-            "description": "normal -> 团队外; muxi -> 团队内 (type_name暂时均填normal)",
             "required": true
           }
         ],
@@ -2948,6 +3155,25 @@
         "templateArgs": []
       },
       {
+        "name": "post_IdResponse",
+        "properties": [
+          {
+            "dataType": {
+              "typeArgs": [],
+              "typeName": "number",
+              "isDefsType": false,
+              "templateIndex": -1,
+              "compileTemplateKeyword": "#/definitions/",
+              "enum": [],
+              "typeProperties": []
+            },
+            "name": "id",
+            "required": false
+          }
+        ],
+        "templateArgs": []
+      },
+      {
         "name": "post_ListMainPostResponse",
         "properties": [
           {
@@ -2978,7 +3204,6 @@
       },
       {
         "name": "post_Post",
-        "templateArgs": [],
         "properties": [
           {
             "dataType": {
@@ -3209,7 +3434,8 @@
             "name": "title",
             "required": false
           }
-        ]
+        ],
+        "templateArgs": []
       },
       {
         "name": "post_PostPartInfo",
@@ -3302,7 +3528,7 @@
               "enum": [],
               "typeProperties": []
             },
-            "name": "like_num",
+            "name": "id",
             "required": false
           },
           {
@@ -3315,7 +3541,7 @@
               "enum": [],
               "typeProperties": []
             },
-            "name": "post_id",
+            "name": "like_num",
             "required": false
           },
           {
@@ -3433,7 +3659,6 @@
       },
       {
         "name": "post_SubPost",
-        "templateArgs": [],
         "properties": [
           {
             "dataType": {
@@ -3539,6 +3764,19 @@
           {
             "dataType": {
               "typeArgs": [],
+              "typeName": "string",
+              "isDefsType": false,
+              "templateIndex": -1,
+              "compileTemplateKeyword": "#/definitions/",
+              "enum": [],
+              "typeProperties": []
+            },
+            "name": "img_url",
+            "required": false
+          },
+          {
+            "dataType": {
+              "typeArgs": [],
               "typeName": "boolean",
               "isDefsType": false,
               "templateIndex": -1,
@@ -3575,7 +3813,8 @@
             "name": "time",
             "required": false
           }
-        ]
+        ],
+        "templateArgs": []
       },
       {
         "name": "post_UpdateInfoRequest",
@@ -3672,8 +3911,263 @@
         "templateArgs": []
       },
       {
+        "name": "report_CreateRequest",
+        "properties": [
+          {
+            "dataType": {
+              "typeArgs": [],
+              "typeName": "string",
+              "isDefsType": false,
+              "templateIndex": -1,
+              "compileTemplateKeyword": "#/definitions/",
+              "enum": [],
+              "typeProperties": []
+            },
+            "name": "cause",
+            "required": true
+          },
+          {
+            "dataType": {
+              "typeArgs": [],
+              "typeName": "number",
+              "isDefsType": false,
+              "templateIndex": -1,
+              "compileTemplateKeyword": "#/definitions/",
+              "enum": [],
+              "typeProperties": []
+            },
+            "name": "post_id",
+            "required": true
+          },
+          {
+            "dataType": {
+              "typeArgs": [],
+              "typeName": "string",
+              "isDefsType": false,
+              "templateIndex": -1,
+              "compileTemplateKeyword": "#/definitions/",
+              "enum": [],
+              "typeProperties": []
+            },
+            "name": "type_name",
+            "required": true
+          }
+        ],
+        "templateArgs": []
+      },
+      {
+        "name": "report_HandleRequest",
+        "properties": [
+          {
+            "dataType": {
+              "typeArgs": [],
+              "typeName": "number",
+              "isDefsType": false,
+              "templateIndex": -1,
+              "compileTemplateKeyword": "#/definitions/",
+              "enum": [],
+              "typeProperties": []
+            },
+            "name": "id",
+            "required": true
+          },
+          {
+            "dataType": {
+              "typeArgs": [],
+              "typeName": "string",
+              "isDefsType": false,
+              "templateIndex": -1,
+              "compileTemplateKeyword": "#/definitions/",
+              "enum": [],
+              "typeProperties": []
+            },
+            "name": "result",
+            "description": "invalid or valid",
+            "required": true
+          }
+        ],
+        "templateArgs": []
+      },
+      {
+        "name": "report_ListResponse",
+        "properties": [
+          {
+            "dataType": {
+              "typeArgs": [
+                {
+                  "typeArgs": [],
+                  "typeName": "report_Report",
+                  "isDefsType": true,
+                  "templateIndex": -1,
+                  "compileTemplateKeyword": "#/definitions/",
+                  "enum": [],
+                  "typeProperties": []
+                }
+              ],
+              "typeName": "Array",
+              "isDefsType": false,
+              "templateIndex": -1,
+              "compileTemplateKeyword": "#/definitions/",
+              "enum": [],
+              "typeProperties": []
+            },
+            "name": "reports",
+            "required": false
+          }
+        ],
+        "templateArgs": []
+      },
+      {
+        "name": "report_Report",
+        "properties": [
+          {
+            "dataType": {
+              "typeArgs": [],
+              "typeName": "number",
+              "isDefsType": false,
+              "templateIndex": -1,
+              "compileTemplateKeyword": "#/definitions/",
+              "enum": [],
+              "typeProperties": []
+            },
+            "name": "be_reported_user_id",
+            "required": false
+          },
+          {
+            "dataType": {
+              "typeArgs": [],
+              "typeName": "string",
+              "isDefsType": false,
+              "templateIndex": -1,
+              "compileTemplateKeyword": "#/definitions/",
+              "enum": [],
+              "typeProperties": []
+            },
+            "name": "be_reported_user_name",
+            "required": false
+          },
+          {
+            "dataType": {
+              "typeArgs": [],
+              "typeName": "string",
+              "isDefsType": false,
+              "templateIndex": -1,
+              "compileTemplateKeyword": "#/definitions/",
+              "enum": [],
+              "typeProperties": []
+            },
+            "name": "cause",
+            "required": false
+          },
+          {
+            "dataType": {
+              "typeArgs": [],
+              "typeName": "string",
+              "isDefsType": false,
+              "templateIndex": -1,
+              "compileTemplateKeyword": "#/definitions/",
+              "enum": [],
+              "typeProperties": []
+            },
+            "name": "create_time",
+            "required": false
+          },
+          {
+            "dataType": {
+              "typeArgs": [],
+              "typeName": "number",
+              "isDefsType": false,
+              "templateIndex": -1,
+              "compileTemplateKeyword": "#/definitions/",
+              "enum": [],
+              "typeProperties": []
+            },
+            "name": "id",
+            "required": false
+          },
+          {
+            "dataType": {
+              "typeArgs": [],
+              "typeName": "number",
+              "isDefsType": false,
+              "templateIndex": -1,
+              "compileTemplateKeyword": "#/definitions/",
+              "enum": [],
+              "typeProperties": []
+            },
+            "name": "post_id",
+            "required": false
+          },
+          {
+            "dataType": {
+              "typeArgs": [],
+              "typeName": "string",
+              "isDefsType": false,
+              "templateIndex": -1,
+              "compileTemplateKeyword": "#/definitions/",
+              "enum": [],
+              "typeProperties": []
+            },
+            "name": "post_title",
+            "required": false
+          },
+          {
+            "dataType": {
+              "typeArgs": [],
+              "typeName": "string",
+              "isDefsType": false,
+              "templateIndex": -1,
+              "compileTemplateKeyword": "#/definitions/",
+              "enum": [],
+              "typeProperties": []
+            },
+            "name": "type_name",
+            "required": false
+          },
+          {
+            "dataType": {
+              "typeArgs": [],
+              "typeName": "string",
+              "isDefsType": false,
+              "templateIndex": -1,
+              "compileTemplateKeyword": "#/definitions/",
+              "enum": [],
+              "typeProperties": []
+            },
+            "name": "user_avatar",
+            "required": false
+          },
+          {
+            "dataType": {
+              "typeArgs": [],
+              "typeName": "number",
+              "isDefsType": false,
+              "templateIndex": -1,
+              "compileTemplateKeyword": "#/definitions/",
+              "enum": [],
+              "typeProperties": []
+            },
+            "name": "user_id",
+            "required": false
+          },
+          {
+            "dataType": {
+              "typeArgs": [],
+              "typeName": "string",
+              "isDefsType": false,
+              "templateIndex": -1,
+              "compileTemplateKeyword": "#/definitions/",
+              "enum": [],
+              "typeProperties": []
+            },
+            "name": "user_name",
+            "required": false
+          }
+        ],
+        "templateArgs": []
+      },
+      {
         "name": "user",
-        "templateArgs": [],
         "properties": [
           {
             "dataType": {
@@ -3740,7 +4234,8 @@
             "name": "role",
             "required": false
           }
-        ]
+        ],
+        "templateArgs": []
       }
     ],
     "name": ""

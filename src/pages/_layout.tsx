@@ -1,11 +1,15 @@
 import React, { useEffect } from 'react';
 import { useOutlet, useLocation } from 'react-router';
 import useShowHeader from 'store/useShowHeader';
+import WS, { MsgResponse } from 'utils/WS';
+import useWS from 'store/useWS';
 import styled from 'styled-components';
 import { Alert } from 'antd';
 import ErrorBoundary from 'components/ErrorBoundary';
+import Footer from 'components/Footer';
 import ResultPage from './Result';
 import media from 'styles/media';
+import useChat from 'store/useChat';
 
 export const ContentWrapper = styled.main`
   display: flex;
@@ -40,8 +44,25 @@ const Layout: React.FC = () => {
     const isPost = pathname.includes('/editor/article');
     return isLogin || isPost;
   };
+  const { setTip, setWS, ws } = useWS();
+  const { setSelectedId } = useChat();
+  const { showHeader } = useShowHeader();
+
+  const webSocketInit = () => {
+    const token = localStorage.getItem('token') as string;
+    const WebSocket = new WS(token);
+    WebSocket.ws.onmessage = (res) => {
+      const data: MsgResponse = JSON.parse(res.data);
+      setTip(true);
+      setSelectedId(data.sender);
+    };
+    setWS(WebSocket);
+  };
 
   useEffect(() => {
+    if (!ws) {
+      webSocketInit();
+    }
     if (isSpecialPage()) {
       setShowHeader(false);
     } else {
@@ -56,6 +77,7 @@ const Layout: React.FC = () => {
         <ContentWrapper>
           <Content>{children}</Content>
         </ContentWrapper>
+        {showHeader ? <Footer /> : null}
       </ErrorBoundary>
     );
   }

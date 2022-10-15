@@ -29,9 +29,11 @@ const ChatAvatar = styled(Avatar)<style.isMyMessage>`
 
 const MessageItem: React.FC<IProps> = ({ msg, contact }) => {
   const profileStore = useProfile();
-  const { userProfile } = profileStore;
+  const {
+    userProfile: { avatar, id },
+  } = profileStore;
 
-  const isMy = isMessage(msg) ? true : msg.sender === userProfile.id;
+  const isMy = isMessage(msg) ? true : msg.sender === id;
 
   return (
     <style.MessageWrapper myMessage={isMy}>
@@ -47,8 +49,8 @@ const MessageItem: React.FC<IProps> = ({ msg, contact }) => {
         <ChatAvatar
           height={40}
           width={40}
-          src={userProfile.avatar as string}
-          userId={userProfile.id as number}
+          src={isMy ? avatar : contact.avatar}
+          userId={isMy ? id : contact.id}
           myMessage={isMy}
         />
       </style.MessageItem>

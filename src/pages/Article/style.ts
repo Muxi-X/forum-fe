@@ -1,6 +1,9 @@
 import styled from 'styled-components';
+import { Card } from 'antd';
 
-export const Wrapper = styled.div``;
+export const Wrapper = styled.div`
+  position: relative;
+`;
 
 export const ArticleBody = styled.article`
   width: 100%;
@@ -43,4 +46,25 @@ export const Time = styled.div`
 export const ArticleInfo = styled.div`
   margin: 3em 0;
   width: fit-content;
+`;
+
+export const Navigation = styled(Card)`
+  height: 300px;
+  width: 350px;
+  overflow: scroll;
+  position: sticky;
+  top: 0vh;
+`;
+
+export const ArticleCard = styled(Card)`
+  width: 100%;
+  padding-left: 2em;
+  padding-right: 2em;
+  margin-bottom: 1em;
+  a {
+    cursor: pointer;
+  }
+  h1 {
+    font-size: 2.4em;
+  }
 `;

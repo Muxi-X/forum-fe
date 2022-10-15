@@ -28,9 +28,9 @@ const useChat = create<MsgListStore>((set, get) => ({
     set(() => ({ selectedId: id }));
   },
   getRecords: (id: number) => {
-    if (get().contacts.length > 0)
+    if (get().contacts.length > 0) {
       return get().contacts.filter((contact) => contact.id === id)[0].msgRecords;
-    else return [];
+    } else return [];
   },
   getContact: (id: number) => {
     if (get().contacts.length > 0)

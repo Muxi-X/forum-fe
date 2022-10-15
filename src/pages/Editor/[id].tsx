@@ -1,7 +1,18 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useDebounceFn, useRequest } from 'ahooks';
-import { Form, Button, Radio, Select, Popover, message, Tag, Input, Modal } from 'antd';
+import {
+  Form,
+  Button,
+  Radio,
+  Select,
+  Popover,
+  message,
+  Tag,
+  Input,
+  Modal,
+  Checkbox,
+} from 'antd';
 import { IDomEditor } from '@wangeditor/editor';
 import Drafts, { Draft, EditorType } from 'utils/db_drafts';
 import moment from 'utils/moment';
@@ -13,9 +24,10 @@ import RtfEditor from 'components/Editor/RtfEditor';
 import { CATEGORY } from 'config';
 import toggle from 'assets/svg/toggle.svg';
 import * as style from './style';
+import useDocTitle from 'hooks/useDocTitle';
 
 interface PostProps {
-  handlePost: (val: PostInfo) => void;
+  handlePost: (val: defs.post_CreateRequest) => void;
   content: string;
 }
 
@@ -27,6 +39,7 @@ interface PostInfo {
 
 const { Option } = Select;
 const { TextArea } = Input;
+const { useForm: newForm } = Form;
 const tagRender = (props: any) => {
   const { label, closable, onClose } = props;
   const onPreventMouseDown = (event: React.MouseEvent<HTMLSpanElement>) => {
@@ -46,31 +59,53 @@ const tagRender = (props: any) => {
   );
 };
 
-const children: React.ReactNode[] = [];
-for (let i = 10; i < 36; i++) {
-  children.push(<Option key={i.toString(36) + i}>{i.toString(36) + i}</Option>);
-}
-
 const Post: React.FC<PostProps> = ({ handlePost, content }) => {
-  const [tags, setTags] = useState(children);
-  const onFinish = (values: PostInfo) => {
-    handlePost(values);
+  const [tags, setTags] = useState<JSX.Element[]>([]);
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [value, setValue] = useState('');
+  const [isOnlyTeam, setIsOnlyTeam] = useState(false);
+  const {
+    userProfile: { role },
+  } = useProfile();
+  const { run, data: res } = useRequest(API.post.getPostPopular_tag.request, {
+    manual: true,
+    onSuccess: (res) => {
+      if (res.data) {
+        const children = res.data.map((tag, i) => <Option key={i}>{tag}</Option>);
+        setTags(children);
+      } else setTags([]);
+    },
+  });
+  const [form] = newForm();
+
+  const onFinish = (values: defs.post_CreateRequest) => {
+    handlePost({ ...values, domain: isOnlyTeam ? 'muxi' : 'normal' });
   };
 
-  const handleChooseTags = (e: string) => {
-    if (e.length === 2) {
-      setTags([]);
-      message.warn('标签已满', 1);
-    } else {
-      setTags(children);
-    }
+  const handleChooseTags = (e: string[]) => {
+    if (e.length === 2) message.warn('标签已满！');
+    setSelectedTags(e);
+    setValue('');
   };
+
+  const handleCustomTag = (val: string) => {
+    setValue(val);
+  };
+
+  const handleSummary = () => {
+    let val = content.replace(/<[^>]*>/g, '').replace('\n', ' ');
+    val = val.replace(/\r\n/g, ' ');
+    val = val.replace(/\n/g, ' ');
+    form.setFieldValue('summary', val.slice(0, 100));
+  };
+
   return (
     <Form
       onFinish={onFinish}
       labelCol={{ span: 4 }}
       wrapperCol={{ span: 12 }}
       layout="horizontal"
+      form={form}
     >
       <Form.Item
         rules={[{ required: true, message: '请给文章选择分类!' }]}
@@ -79,7 +114,13 @@ const Post: React.FC<PostProps> = ({ handlePost, content }) => {
         name="category"
         required
       >
-        <Radio.Group optionType="button" buttonStyle="solid">
+        <Radio.Group
+          optionType="button"
+          buttonStyle="solid"
+          onChange={(e) => {
+            run({ category: e.target.value });
+          }}
+        >
           {CATEGORY.map((val, i) => (
             <Radio.Button style={{ margin: 3 }} key={`${i}`} value={val}>
               {val}
@@ -87,38 +128,70 @@ const Post: React.FC<PostProps> = ({ handlePost, content }) => {
           ))}
         </Radio.Group>
       </Form.Item>
-      <Form.Item
-        rules={[{ required: true, message: '请给文章选择标签!' }]}
-        label="标签"
-        name="tags"
-        required
-      >
-        <Select
-          mode="multiple"
-          style={{ width: '100%' }}
-          tokenSeparators={[',']}
-          tagRender={tagRender}
-          placeholder="最多选择两个标签"
-          onChange={handleChooseTags}
+      <style.ItemWrapper>
+        <Form.Item
+          rules={[{ required: true, message: '请给文章选择标签!' }]}
+          label="标签"
+          name="tags"
+          required
         >
-          {tags}
-        </Select>
-      </Form.Item>
-      <Form.Item
-        label="摘要"
-        name="summary"
-        rules={[{ required: true, message: '请给文章填写摘要!' }]}
-      >
-        <TextArea
-          placeholder="摘要会显示在主页用于展示文章的主要信息"
-          maxLength={100}
-          showCount
-        />
-      </Form.Item>
+          <Select
+            mode="tags"
+            style={{ width: '100%' }}
+            tokenSeparators={[',']}
+            tagRender={tagRender}
+            placeholder="最多选择两个标签"
+            onChange={handleChooseTags}
+            onSearch={handleCustomTag}
+            searchValue={value}
+            value={selectedTags}
+            disabled={selectedTags.length >= 2}
+          >
+            {tags}
+          </Select>
+        </Form.Item>
+        <Button
+          id="tool"
+          onClick={() => {
+            setSelectedTags([]);
+            form.setFieldValue('tags', []);
+          }}
+        >
+          重置标签
+        </Button>
+      </style.ItemWrapper>
+      <style.ItemWrapper>
+        <Form.Item
+          label="摘要"
+          name="summary"
+          rules={[{ required: true, message: '请给文章填写摘要!' }]}
+        >
+          <TextArea
+            placeholder="摘要显示在主页用于展示文章的主要信息"
+            maxLength={100}
+            style={{ height: 100 }}
+            showCount
+          />
+        </Form.Item>
+        <Button id="tool" onClick={handleSummary}>
+          一键生成摘要
+        </Button>
+      </style.ItemWrapper>
       <Form.Item wrapperCol={{ offset: 8, span: 16 }}>
         <Button type="primary" htmlType="submit">
           发表
         </Button>
+        {role?.includes('Normal') ? null : (
+          <div>
+            <Checkbox
+              checked={isOnlyTeam}
+              onChange={(e) => {
+                setIsOnlyTeam(e.target.checked);
+              }}
+            />
+            是否仅团队内可见
+          </div>
+        )}
       </Form.Item>
     </Form>
   );
@@ -145,12 +218,14 @@ const EditorPage: React.FC = () => {
   const { id: draftId } = useParams();
   const { title, type, content } = form;
   const { run: post } = useRequest(API.post.postPost.request, {
-    onSuccess: () => {
+    onSuccess: (res) => {
       message.success('发布成功');
-      nav('/result', { state: { type: 'published' } });
+      nav('/result', { state: { type: 'published', id: res.data.id } });
     },
     manual: true,
   });
+
+  useDocTitle(`落笔生花 - 论坛`);
 
   // 首次进入 如果该id是草稿的话直接拿草稿setState
   useEffect(() => {
@@ -182,7 +257,7 @@ const EditorPage: React.FC = () => {
     },
   );
 
-  const postArticle = (val: PostInfo) => {
+  const postArticle = (val: defs.post_CreateRequest) => {
     if (!title) {
       message.warn('请填写标题!');
       return;
@@ -191,7 +266,7 @@ const EditorPage: React.FC = () => {
       message.warn('请填写正文内容!');
     }
     if (type === 'rtf') {
-      post({}, { ...val, title, content, type_name: 'normal', content_type: type });
+      post({}, { ...val, title, content, domain: 'normal', content_type: type });
     } else {
       post(
         {},
@@ -199,7 +274,6 @@ const EditorPage: React.FC = () => {
           ...val,
           title,
           content,
-          type_name: 'normal',
           content_type: type,
           compiled_content: mdToHtml,
         },
@@ -236,81 +310,95 @@ const EditorPage: React.FC = () => {
   };
 
   return (
-    <style.EditorPageWrapper>
-      <style.Header>
-        <style.TitleInput
-          value={title}
-          onChange={(e) => {
-            setFrom('title', e.target.value);
-            setSaveBoolean(true);
+    <>
+      <style.EditorPageWrapper>
+        <style.Header>
+          <style.TitleInput
+            value={title}
+            onChange={(e) => {
+              setFrom('title', e.target.value);
+              setSaveBoolean(true);
+            }}
+            placeholder="请输入文章标题..."
+          />
+          <style.RightBox
+            data-save={
+              saveBoolean === ''
+                ? '文章内容自动存入草稿箱'
+                : saveBoolean
+                ? '输入中...'
+                : '保存完成'
+            }
+          >
+            <Button
+              onClick={() => {
+                nav(`/user/${userId}/drafts`);
+              }}
+              loading={false}
+            >
+              草稿箱
+            </Button>
+            <Popover
+              content={
+                <Post
+                  handlePost={postArticle}
+                  content={
+                    type === 'md'
+                      ? (mdToHtml as string).slice(0, 300)
+                      : (content as string).slice(0, 300)
+                  }
+                />
+              }
+              trigger="click"
+              title={<h2>发布文章</h2>}
+              placement="bottomRight"
+            >
+              <Button type="primary" loading={false}>
+                发布文章
+              </Button>
+            </Popover>
+            <style.ToggleEditor
+              data-tip={`切换成${type === 'md' ? 'rtf' : 'md'}编辑器`}
+              onClick={selectEditor}
+            >
+              <img style={{ height: '100%' }} src={toggle} alt="toggle"></img>
+            </style.ToggleEditor>
+            <Avatar userId={userId} src={profileStore.userProfile.avatar as string} />
+          </style.RightBox>
+        </style.Header>
+        <style.EditorWrapper>
+          {type === 'rtf' ? (
+            <RtfEditor
+              token={profileStore.qiniuToken}
+              editorContent={content as string}
+              handleEditorContent={handleEditorContent}
+            />
+          ) : (
+            <MdEditor
+              token={profileStore.qiniuToken}
+              editorContent={content as string}
+              handleEditorContent={handleEditorContent}
+              onHtmlChanged={(e) => {
+                setMdToHtml(e);
+              }}
+            />
+          )}
+        </style.EditorWrapper>
+        <Modal
+          centered
+          title={`切换为${type === 'md' ? '富文本' : 'Markdown'}编辑器`}
+          open={isModalOpen}
+          onOk={handleOk}
+          onCancel={() => {
+            setIsModalOpen(false);
           }}
-          placeholder="请输入文章标题..."
-        />
-        <style.RightBox
-          data-save={
-            saveBoolean === ''
-              ? '文章内容自动存入草稿箱'
-              : saveBoolean
-              ? '输入中...'
-              : '保存完成'
-          }
+          okText="确认"
+          cancelText="取消"
         >
-          <Button
-            onClick={() => {
-              nav(`/user/${userId}/drafts`);
-            }}
-          >
-            草稿箱
-          </Button>
-          <Popover
-            content={<Post handlePost={postArticle} content={content as string} />}
-            trigger="click"
-            title={<h2>发布文章</h2>}
-            placement="bottomRight"
-          >
-            <Button type="primary">发布文章</Button>
-          </Popover>
-          <style.ToggleEditor
-            data-tip={`切换成${type === 'md' ? 'rtf' : 'md'}编辑器`}
-            onClick={selectEditor}
-          >
-            <img style={{ height: '100%' }} src={toggle} alt="toggle"></img>
-          </style.ToggleEditor>
-          <Avatar userId={userId} src={profileStore.userProfile.avatar as string} />
-        </style.RightBox>
-      </style.Header>
-      <style.EditorWrapper>
-        {type === 'rtf' ? (
-          <RtfEditor
-            token={profileStore.qiniuToken}
-            editorContent={content as string}
-            handleEditorContent={handleEditorContent}
-          />
-        ) : (
-          <MdEditor
-            token={profileStore.qiniuToken}
-            editorContent={content as string}
-            handleEditorContent={handleEditorContent}
-            onHtmlChanged={(e) => {
-              setMdToHtml(e);
-            }}
-          />
-        )}
-      </style.EditorWrapper>
-      <Modal
-        centered
-        title={`切换为${type === 'md' ? '富文本' : 'Markdown'}编辑器`}
-        open={isModalOpen}
-        onOk={handleOk}
-        onCancel={() => {
-          setIsModalOpen(false);
-        }}
-        okText="确认"
-        cancelText="取消"
-      >
-        <p>切换写作模式后，当前内容不会迁移，但会自动保存为草稿。</p>
-      </Modal>
-    </style.EditorPageWrapper>
+          <p>切换写作模式后，当前内容不会迁移，但会自动保存为草稿。</p>
+        </Modal>
+      </style.EditorPageWrapper>
+    </>
   );
 };
 

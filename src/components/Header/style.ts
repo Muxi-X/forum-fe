@@ -42,6 +42,7 @@ export const Wrapper = styled.div`
 export const LogoDiv = styled.div`
   display: flex;
   align-items: center;
+  justify-content: center;
   font-size: 1.9em;
   cursor: pointer;
   color: black;
@@ -51,14 +52,6 @@ export const LogoDiv = styled.div`
     height: 1.8em;
     width: auto;
     margin-right: 10px;
-  }
-  a {
-    color: black;
-    margin: 0 auto;
-
-    :hover {
-      color: black;
-    }
   }
 
   .logo {
@@ -96,6 +89,10 @@ export const SearchDiv = styled.div`
     height: 2.5em;
     position: relative;
     width: 100%;
+
+    :focus {
+      border: 1px solid rgba(255, 171, 0, 1);
+    }
   }
 `;
 
@@ -121,7 +118,7 @@ export const MsgTool = styled.div`
 
   img {
     cursor: pointer;
-    height: 100%;
+    height: 90%;
     width: auto;
   }
   ${media.desktop`display: none`}

@@ -5,8 +5,8 @@ import { color } from 'styles/global';
 import React from 'react';
 
 const Wrapper = styled(BackTop)`
-  font-size: 3.5em;
-  color: ${color};
+  font-size: 3.5em !important;
+  color: ${color} !important;
 `;
 
 const BackToTop: React.FC = () => {

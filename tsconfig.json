@@ -21,6 +21,6 @@
       "@/*": ["src/*"]
     }
   },
-  "include": ["vite.config.ts", "./src", "plugins"],
+  "include": ["vite.config.ts", "./src", "plugins", "iconfont.js"],
   "exclude": ["node_modules"]
 }
