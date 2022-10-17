@@ -171,11 +171,11 @@ const Header: React.FC = () => {
                     </Badge>
                   </Link>
                 </Tooltip>
-                <Tooltip color="gold" title={'你有新的通知还未查看！'}>
-                  <Link to="/">
-                    <Badge count={1} dot>
-                      <img src={msgtip} alt="tip" />
-                    </Badge>
+                <Tooltip color="gold" title={'查看通知'}>
+                  <Link to="/notice">
+                    {/* <Badge count={1} dot> */}
+                    <img src={msgtip} alt="tip" />
+                    {/* </Badge> */}
                   </Link>
                 </Tooltip>
               </style.MsgTool>

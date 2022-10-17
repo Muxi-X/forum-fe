@@ -102,14 +102,16 @@ const Admin: React.FC = () => {
       ) : res?.data.reports?.length === 0 ? (
         <Card>暂时没有举报信息</Card>
       ) : (
-        res?.data.reports?.map((report) => (
-          <>
-            <Back />
-            <WrapperCard key={report.id}>
-              <ReportItem report={report} />
-            </WrapperCard>
-          </>
-        ))
+        <>
+          <Back />
+          {res?.data.reports?.map((report) => (
+            <>
+              <WrapperCard key={report.id}>
+                <ReportItem report={report} />
+              </WrapperCard>
+            </>
+          ))}
+        </>
       )}
     </>
   );

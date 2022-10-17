@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import styled from 'styled-components';
 import logo from 'assets/image/logo1.png';
 
 const Wrapper = styled.div`
+  user-select: none;
   width: 100vw;
   text-align: center;
   line-height: 10vh;

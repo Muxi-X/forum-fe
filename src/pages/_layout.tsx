@@ -21,6 +21,7 @@ export const Content = styled.div`
   width: 60vw;
   max-width: 960px;
   min-width: 375px;
+  min-height: 75vh;
   ${media.desktop`width: 100vw`}
 `;
 

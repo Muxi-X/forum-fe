@@ -13,20 +13,21 @@ import WS, { MsgResponse } from 'utils/WS';
 import { formatYear } from 'utils/moment';
 import { Card } from 'antd';
 import media from 'styles/media';
+import useDocTitle from 'hooks/useDocTitle';
+import EmptyCard from 'components/EmptyCard';
 
 interface LocationState {
   id: string;
 }
 /* 
 进入发消息页面的三种方式
-\1. 直接从个人主页进 无事发生
+\1. 直接从主页进 拿原本的缓存就行
 \2. 从其他人主页点发消息进 contactsList ++ 且置顶 从别人主页点进来 路由传参 参数是id 然后 
 查库 有这个id 把这个id放到第一个 没这个id 就新添这个联系人然后reverse
 \3. 从小红点消息提示进 
   拿聊天记录直接set
   一进入就连上WebSocket 因为有消息推送这个需求
   联系人列表需要前端缓存
-发消息后
 */
 const ChatPage = styled.section`
   display: flex;
@@ -42,16 +43,29 @@ const ChatPage = styled.section`
 const Chat: React.FC = () => {
   const chatStore = useChat();
   const {
-    userProfile: { id: myId },
+    userProfile: { id: myId, name },
   } = useProfile();
   const { setContacts, setSelectedId, contacts, getRecords, setRecords, selectedId } =
     chatStore;
-  const { ws, setTip } = useWS();
+  const { ws, setTip, setWS } = useWS();
   const { state } = useLocation();
   const { runAsync } = useRequest(API.user.getUserProfileById.request, { manual: true });
   const { runAsync: getHistory } = useRequest(API.chat.getHistoryById.request, {
     manual: true,
   });
+
+  const webSocketInit = () => {
+    const token = localStorage.getItem('token') as string;
+    const WebSocket = new WS(token);
+    WebSocket.ws.onmessage = (e) => {
+      const res = JSON.parse(e.data);
+      const { time } = res as MsgResponse;
+      const newTime = formatYear(time, 'YYYY-MM-DD HH:MM:SS');
+      const records = [...getRecords(res.sender), { ...res, time: newTime }];
+      setRecords(records, res.sender);
+    };
+    setWS(WebSocket);
+  };
   useEffect(() => {
     // 从别人的主页点发私信的情况 拿id找用户
     if (state !== null && (state as LocationState).id !== `${myId}`) {
@@ -80,51 +94,63 @@ const Chat: React.FC = () => {
     } else {
       // 主页收到消息通知 ｜ 直接从主页点进
       Contacts.getContacts(myId as number).then((contacts) => {
-        if (contacts.length !== 0) {
-          if (selectedId !== 0) {
-            Contacts.searchContact(selectedId).then((res) => {
-              getHistory({ id: selectedId }).then((res) => {
-                setRecords(res.data as defs.chat_Message[], selectedId);
-              });
-            });
-          } else {
+        // selected === 0 说明没有新消息
+        if (selectedId === 0) {
+          // 之前有联系人列表
+          if (contacts.length !== 0) {
             setSelectedId(contacts[0].id as number);
             setContacts(contacts);
           }
         } else {
-          getHistory({ id: selectedId }).then((msgRes) => {
-            runAsync({ id: selectedId }).then((userRes) => {
-              const newContact = {
-                ...userRes.data,
-                msgRecords: msgRes.data,
-                userId: myId as number,
-              };
-              setContacts([{ ...newContact }]);
-              Contacts.addContact({ ...newContact });
-              setSelectedId(newContact.id as number);
+          console.log('消息提示');
+          // 有新消息的情况
+          Contacts.searchContact(selectedId).then((contact) => {
+            getHistory({ id: selectedId }).then((res) => {
+              if (contact) {
+                setRecords(res.data as MsgResponse[], selectedId);
+              } else {
+                runAsync({ id: selectedId }).then((userRes) => {
+                  const newContact = {
+                    ...userRes.data,
+                    msgRecords: res.data as MsgResponse[],
+                    userId: myId as number,
+                  };
+                  setContacts([{ ...newContact }]);
+                  Contacts.addContact({ ...newContact });
+                  setSelectedId(newContact.id as number);
+                });
+              }
             });
           });
         }
       });
     }
-    (ws as WS).ws.onmessage = (e) => {
-      const res = JSON.parse(e.data);
-      const { time } = res as MsgResponse;
-      const newTime = formatYear(time, 'YYYY-MM-DD HH:MM:SS');
-      const records = [...getRecords(res.sender), { ...res, time: newTime }];
-      setRecords(records, res.sender);
-    };
-    return () => {
-      (ws as WS).ws.onmessage = () => {
-        setTip(true);
-      };
-    };
-  }, [myId]);
 
+    if (ws) {
+      (ws as WS).ws.onmessage = (e) => {
+        const res = JSON.parse(e.data);
+        const { time } = res as MsgResponse;
+        const newTime = formatYear(time, 'YYYY-MM-DD HH:MM:SS');
+        const records = [...getRecords(res.sender), { ...res, time: newTime }];
+        setRecords(records, res.sender);
+      };
+    } else {
+      webSocketInit();
+    }
+
+    useDocTitle(`${name} - 轻风高谊 - 论坛`);
+    return () => {
+      if (ws)
+        (ws as WS).ws.onmessage = () => {
+          setTip(true);
+        };
+    };
+  }, [myId, ws]);
+  console.log(contacts);
   return (
     <>
       {contacts.length === 0 ? (
-        <Card>暂时还没有联系人哦～</Card>
+        <EmptyCard>暂时还没有联系人哦～</EmptyCard>
       ) : (
         <ChatPage>
           <ContactList />

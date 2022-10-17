@@ -2,6 +2,7 @@ import React from 'react';
 import Editor from 'md-editor-rt';
 import qiniupload, { observer, CompleteRes } from 'utils/qiniup';
 import { QiniuServer } from 'config';
+import DOMPurify from 'dompurify';
 import 'md-editor-rt/lib/style.css';
 import { EditorProps } from './type';
 
@@ -35,6 +36,7 @@ const MdEditor: React.FC<MdEditorProps> = ({
         previewTheme={'vuepress'}
         onUploadImg={onUploadImg}
         onHtmlChanged={onHtmlChanged}
+        sanitize={(html) => DOMPurify.sanitize(html)}
       />
     </>
   );

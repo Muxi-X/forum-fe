@@ -3,7 +3,7 @@ import { useParams } from 'react-router';
 import InfiniteScroll from 'react-infinite-scroll-component';
 import useProfile from 'store/useProfile';
 import styled from 'styled-components';
-import { Divider, message, Card, List } from 'antd';
+import { Divider, message, List } from 'antd';
 import Avatar from 'components/Avatar/avatar';
 import useRequest from 'hooks/useRequest';
 import Loading from 'components/Loading';

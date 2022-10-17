@@ -73,15 +73,10 @@ const Square: React.FC = () => {
   const [isAll, setIsAll] = useState(true);
   const [isFirst, setIsFirst] = useState(true);
 
-  if (searchQuery) useDocTitle(`${searchQuery} - 搜索 - 论坛`);
-  if (params.category && isFirst) {
-    const title = CATEGORY[CATEGORY_EN.indexOf(params.category as string)];
-    useDocTitle(`${title} - 论坛`);
-  }
-
   const { loading, run } = useRequest(API.post.getPostListByDomain.request, {
     onSuccess: (res) => {
       if (searchQuery) {
+        useDocTitle(`${searchQuery} - 搜索 - 论坛`);
         if (res.data.posts?.length === 0) {
           message.warning('没有更多文章了');
           setHasMore(false);
@@ -112,10 +107,11 @@ const Square: React.FC = () => {
     run({ ...getParams, page: temp });
   };
 
-  const getHot = () => {
+  const getArticleByHot = () => {
     if (getParams.filter === 'hot') return;
     const { filter } = getParams;
     setList([]);
+    setHasMore(true);
     setGetParams({ ...getParams, filter: 'hot', page: 0 });
     if (searchQuery) nav(`${location.search}&sort=hot`);
     else if (getParams.category) {
@@ -124,9 +120,10 @@ const Square: React.FC = () => {
     } else history.pushState({ filter }, filter as string, `/?sort=hot`);
   };
 
-  const getAll = () => {
+  const getArticleByTime = () => {
     if (getParams.filter === null) return;
     const { filter } = getParams;
+    setHasMore(true);
     setList([]);
     setGetParams({ ...getParams, filter: '', page: 0 });
     history.pushState(
@@ -136,44 +133,13 @@ const Square: React.FC = () => {
     );
   };
 
-  useEffect(() => {
-    if (searchQuery) {
-      setList([]);
-      setGetParams({ ...getParams, search_content: searchQuery });
-      run({ ...getParams, search_content: searchQuery });
-    } else if (getParams.category) {
-      run(getParams);
-    } else if (params.category && isFirst) {
-      setIsFirst(false);
-      const temp = triggerArray.fill(false);
-      const i = CATEGORY_EN.indexOf(params.category as string);
-      temp[i] = true;
-      setTriggerArray(temp);
-      setIsAll(false);
-      getTag({ category: CATEGORY[CATEGORY_EN.indexOf(params.category)] });
-      setGetParams({ ...getParams, category: CATEGORY[i] });
-    } else {
-      run(getParams);
-    }
-  }, [getParams.filter, getParams.category, getParams.tag]);
-
-  const ListHeader = (
-    <>
-      <Filter_Time onClick={getAll} trigger={getParams.filter === ''}>
-        实时
-      </Filter_Time>
-      <Filter_Hot onClick={getHot} trigger={getParams.filter === 'hot'}>
-        热门
-      </Filter_Hot>
-    </>
-  );
-
-  const handleTrigger = (index: number) => {
+  const handleGetCategory = (index: number) => {
     const temp = [...triggerArray].fill(false);
     temp[index] = true;
     setTriggerArray(temp);
     setIsAll(false);
     setList([]);
+    setHasMore(true);
     setGetParams({
       ...getParams,
       category: CATEGORY[index],
@@ -189,12 +155,59 @@ const Square: React.FC = () => {
 
   const handleGetAll = () => {
     setIsAll(true);
+    setHasMore(true);
     setTags([]);
     setTriggerArray(Array(CATEGORY.length).fill(false));
-    setGetParams({ ...getParams, category: '', filter: '', page: 0 });
+    setGetParams({ ...getParams, category: '', filter: '', tag: '', page: 0 });
     useDocTitle('木犀论坛');
     history.pushState({ category: 'all' }, 'all', '/');
   };
+
+  const handleChooseTag = (tag: string, i: number) => {
+    setGetParams({ ...getParams, tag });
+    const temp = [...tags].map((t) => {
+      return { trigger: false, tag: t.tag };
+    });
+    temp[i].trigger = true;
+    setList([]);
+    setTags(temp);
+    setHasMore(true);
+  };
+
+  useEffect(() => {
+    if (searchQuery) {
+      setList([]);
+      setGetParams({ ...getParams, search_content: searchQuery });
+      run({ ...getParams, search_content: searchQuery });
+    } else if (getParams.category) {
+      run(getParams);
+    } else if (params.category && isFirst) {
+      setIsFirst(false);
+      const temp = triggerArray.fill(false);
+      const CN = CATEGORY[CATEGORY_EN.indexOf(params.category)];
+      const i = CATEGORY_EN.indexOf(params.category as string);
+      temp[i] = true;
+      setTriggerArray(temp);
+      setIsAll(false);
+      getTag({ category: CN });
+      setGetParams({ ...getParams, category: CATEGORY[i] });
+      useDocTitle(`${CN} - 论坛`);
+    } else {
+      run(getParams);
+      useDocTitle('木犀论坛');
+    }
+  }, [getParams.filter, getParams.category, getParams.tag, searchQuery]);
+
+  const ListHeader = (
+    <>
+      <Filter_Time onClick={getArticleByTime} trigger={getParams.filter === ''}>
+        实时
+      </Filter_Time>
+      <Filter_Hot onClick={getArticleByHot} trigger={getParams.filter === 'hot'}>
+        热门
+      </Filter_Hot>
+    </>
+  );
 
   const NavList = (
     <Categories>
@@ -205,7 +218,7 @@ const Square: React.FC = () => {
         <span
           aria-hidden="true"
           onClick={() => {
-            handleTrigger(i);
+            handleGetCategory(i);
           }}
           className="wrapper"
           key={category}
@@ -216,13 +229,6 @@ const Square: React.FC = () => {
     </Categories>
   );
 
-  const handleChooseTag = (tag: string, i: number) => {
-    setGetParams({ ...getParams, tag });
-    const temp = [...tags];
-    temp[i].trigger = true;
-    setList([]);
-    setTags(temp);
-  };
   return (
     <>
       {searchQuery ? null : NavList}

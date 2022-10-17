@@ -5,6 +5,7 @@ import GlobalStyle from '../src/styles/global';
 import { PontCore } from 'services/pontCore';
 import Request from 'utils/fetchMiddleware';
 import API from 'services/mods/index.js';
+import 'react-photo-view/dist/react-photo-view.css';
 import 'antd/dist/antd.less';
 
 PontCore.useFetch(Request);

@@ -1,14 +1,14 @@
 import React, { useEffect, useRef, useState } from 'react';
-import moment from 'utils/moment';
 import { useParams } from 'react-router';
 import MarkdownNavbar from 'markdown-navbar';
+import DOMPurify from 'dompurify';
 import {
   LikeFilled,
   StarFilled,
   MessageFilled,
   createFromIconfontCN,
 } from '@ant-design/icons';
-import { Card, Affix, Badge, message, Modal, Input } from 'antd';
+import { Card, Affix, Badge, message, Modal, Input, Image } from 'antd';
 import { useNavigate } from 'react-router';
 import useRequest from 'hooks/useRequest';
 import styled from 'styled-components';
@@ -20,9 +20,10 @@ import Comment from './components/comment';
 import media from 'styles/media';
 import 'markdown-navbar/dist/navbar.css';
 import * as style from './style';
-import 'assets/theme/theme.less';
 import useDocTitle from 'hooks/useDocTitle';
 import { CATEGORY, CATEGORY_EN } from 'config';
+import moment from 'utils/moment';
+import 'assets/theme/theme.less';
 
 interface ActionProps {
   done?: boolean;
@@ -96,7 +97,8 @@ const Article: React.FC = () => {
   const [navBar, setNavBar] = useState({ show: false, content: '' });
   const [showReport, setShowReport] = useState(false);
   const [reportVal, setReportVal] = useState('');
-  const ref = useRef<HTMLDivElement>();
+  const [previewImg, setPreviewImg] = useState('');
+  const commentRef = useRef<HTMLDivElement>();
   const { article_id } = useParams();
   const nav = useNavigate();
 
@@ -115,7 +117,6 @@ const Article: React.FC = () => {
     is_liked,
     like_num,
     collection_num,
-    comment_num,
   } = articleInfo;
 
   useEffect(() => {
@@ -189,12 +190,11 @@ const Article: React.FC = () => {
     is_collection,
     collection_num: collection_num as number,
   });
-
   const [commentNum, setCommentNum] = useState<number>(0);
 
   const handleToComment = () => {
     window.scrollTo({
-      top: ref.current?.getBoundingClientRect().top,
+      top: commentRef.current?.getBoundingClientRect().top,
       behavior: 'smooth',
     });
   };
@@ -206,120 +206,161 @@ const Article: React.FC = () => {
   const handleAddComment = (num: number) => {
     setCommentNum(num);
   };
+
+  useEffect(() => {
+    let wrapper = document.querySelector('#markdown-body');
+    let imgs = wrapper?.getElementsByTagName('img');
+    const onClick = (e: MouseEvent) => {
+      setPreviewImg((e.target as HTMLImageElement).src);
+      setTimeout(() => {
+        (document.querySelector('.ant-image') as HTMLElement).click();
+      }, 100);
+    };
+    if (imgs) {
+      for (let i = 0; i < imgs.length; ++i) {
+        imgs[i].addEventListener('click', onClick);
+      }
+    }
+
+    return () => {
+      if (imgs) {
+        for (let i = 0; i < imgs.length; ++i) {
+          imgs[i].removeEventListener('click', onClick);
+        }
+      }
+      wrapper = null;
+      imgs = undefined;
+    };
+  });
+
+  const Actions = (
+    <>
+      <ActionWrapper offsetTop={200}>
+        <Badge
+          offset={[-5, 5]}
+          count={like.like_num}
+          color={like.is_liked ? 'gold' : `#8a919f`}
+          showZero
+          overflowCount={9999}
+        >
+          <Action
+            onClick={() => {
+              postLike({}, { target_id: +(article_id as string), type_name: 'post' });
+            }}
+            done={like.is_liked}
+          >
+            <LikeFilled />
+          </Action>
+        </Badge>
+      </ActionWrapper>
+      <ActionWrapper offsetTop={265}>
+        <Badge
+          offset={[-5, 5]}
+          count={collect.collection_num}
+          color={collect.is_collection ? 'gold' : `#8a919f`}
+          showZero
+          overflowCount={9999}
+        >
+          <Action
+            onClick={() => {
+              postCollect({ post_id: +(article_id as string) }, {});
+            }}
+            done={collect.is_collection}
+          >
+            <StarFilled />
+          </Action>
+        </Badge>
+      </ActionWrapper>
+      <ActionWrapper offsetTop={330}>
+        <Badge
+          offset={[-5, 5]}
+          count={commentNum}
+          color="#8a919f"
+          showZero
+          overflowCount={9999}
+        >
+          <Action onClick={handleToComment}>
+            <MessageFilled />
+          </Action>
+        </Badge>
+      </ActionWrapper>
+      <ActionWrapper offsetTop={395}>
+        <Icon type="icon-share" />
+      </ActionWrapper>
+      <ActionWrapper offsetTop={460}>
+        <Icon
+          onClick={() => {
+            setShowReport(true);
+          }}
+          type="icon-report"
+        />
+      </ActionWrapper>
+    </>
+  );
+
   return (
     <>
       {/**以后还可以做沉浸阅读等功能 */}
       {loading ? (
         <Loading />
       ) : (
-        <style.Wrapper>
-          <ActionWrapper offsetTop={200}>
-            <Badge
-              offset={[-5, 5]}
-              count={like.like_num}
-              color={like.is_liked ? 'gold' : `#8a919f`}
-              showZero
-              overflowCount={9999}
-            >
-              <Action
-                onClick={() => {
-                  postLike({}, { target_id: +(article_id as string), type_name: 'post' });
-                }}
-                done={like.is_liked}
-              >
-                <LikeFilled />
-              </Action>
-            </Badge>
-          </ActionWrapper>
-          <ActionWrapper offsetTop={265}>
-            <Badge
-              offset={[-5, 5]}
-              count={collect.collection_num}
-              color={collect.is_collection ? 'gold' : `#8a919f`}
-              showZero
-              overflowCount={9999}
-            >
-              <Action
-                onClick={() => {
-                  postCollect({ post_id: +(article_id as string) }, {});
-                }}
-                done={collect.is_collection}
-              >
-                <StarFilled />
-              </Action>
-            </Badge>
-          </ActionWrapper>
-          <ActionWrapper offsetTop={330}>
-            <Badge
-              offset={[-5, 5]}
-              count={commentNum}
-              color="#8a919f"
-              showZero
-              overflowCount={9999}
-            >
-              <Action onClick={handleToComment}>
-                <MessageFilled />
-              </Action>
-            </Badge>
-          </ActionWrapper>
-          <ActionWrapper offsetTop={395}>
-            <Icon type="icon-share" />
-          </ActionWrapper>
-          <ActionWrapper offsetTop={460}>
-            <Icon
-              onClick={() => {
-                setShowReport(true);
-              }}
-              type="icon-report"
-            />
-          </ActionWrapper>
-          <style.ArticleCard>
-            <style.ArticleBody>
-              <h1>{articleInfo.title}</h1>
-              <style.CreatorInfo>
-                <Avatar
-                  height={'3em'}
-                  width={'3em'}
-                  src={creator_avatar}
-                  userId={creator_id}
-                />
-                <div className="info">
-                  <style.Name>{creator_name}</style.Name>
-                  <style.Time>
-                    {moment(time).format('YYYY年MM月DD日 HH:MM:ss')}
-                  </style.Time>
-                </div>
-              </style.CreatorInfo>
-              <div
-                id="markdown-body"
-                dangerouslySetInnerHTML={{
-                  __html: (content_type === 'md' ? compiled_content : content) as string,
-                }}
-              ></div>
-              <style.ArticleInfo>
-                分类:
-                <ArticleCategory
-                  onClick={() => {
-                    const c = CATEGORY_EN[CATEGORY.indexOf(category as string)];
-                    nav(`/${c}`);
+        <>
+          <style.Wrapper>
+            {Actions}
+            <style.ArticleCard>
+              <Image src={previewImg} />
+              <style.ArticleBody>
+                <h1>{articleInfo.title}</h1>
+                <style.CreatorInfo>
+                  <Avatar
+                    height={'3em'}
+                    width={'3em'}
+                    src={creator_avatar}
+                    userId={creator_id}
+                  />
+                  <div className="info">
+                    <style.Name>{creator_name}</style.Name>
+                    <style.Time>
+                      {moment(time).format('YYYY年MM月DD日 HH:MM:ss')}
+                    </style.Time>
+                  </div>
+                </style.CreatorInfo>
+
+                <div
+                  id="markdown-body"
+                  dangerouslySetInnerHTML={{
+                    __html: DOMPurify.sanitize(
+                      (content_type === 'md' ? compiled_content : content) as string,
+                    ),
                   }}
-                >
-                  {category as string}
-                </ArticleCategory>
-                标签: <Tag onClick={() => {}} inArticle tag={(tags as string[])[0]}></Tag>
-              </style.ArticleInfo>
-            </style.ArticleBody>
-          </style.ArticleCard>
-          <Card>
-            <Comment
-              ref={ref}
-              commentList={sub_posts ? sub_posts : []}
-              post_id={+(article_id as string)}
-              commentNum={commentNum}
-              handleAddComment={handleAddComment}
-            />
-          </Card>
-        </style.Wrapper>
+                ></div>
+
+                <style.ArticleInfo>
+                  分类:
+                  <ArticleCategory
+                    onClick={() => {
+                      const c = CATEGORY_EN[CATEGORY.indexOf(category as string)];
+                      nav(`/${c}`);
+                    }}
+                  >
+                    {category as string}
+                  </ArticleCategory>
+                  标签:
+                  <Tag onClick={() => {}} inArticle tag={(tags as string[])[0]}></Tag>
+                </style.ArticleInfo>
+              </style.ArticleBody>
+            </style.ArticleCard>
+            <Card>
+              <Comment
+                ref={commentRef}
+                commentList={sub_posts ? sub_posts : []}
+                post_id={+(article_id as string)}
+                commentNum={commentNum}
+                handleAddComment={handleAddComment}
+              />
+            </Card>
+          </style.Wrapper>
+        </>
       )}
       <Modal
         centered

@@ -15,6 +15,9 @@ export const Header = styled.header`
   display: flex;
   width: 100vw;
   height: auto;
+  .ant-btn-loading-icon {
+    display: none;
+  }
 `;
 
 export const TitleInput = styled.input`

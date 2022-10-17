@@ -338,6 +338,7 @@ const Editor = ({
 }: EditorProps) => {
   const [focus, setFocus] = useState(reply);
   const [upload, setUpload] = useState(false);
+  const { qiniuToken } = useProfile();
   const textareaStyle =
     content || (focus && !submitting)
       ? {
@@ -393,7 +394,7 @@ const Editor = ({
       message.success('上传成功');
     };
     setUpload(false);
-    qiniupload(imgFile as File, localStorage.getItem('qiniu') as string);
+    qiniupload(imgFile as File, qiniuToken);
   };
 
   return (

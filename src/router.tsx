@@ -70,7 +70,6 @@ const App = () => {
 
   const { run: getQiniuToken } = useRequest(API.post.getPostQiniu_token.request, {
     onSuccess: (res) => {
-      localStorage.setItem('qiniu', res.data.token as string);
       setToken(res.data.token as string);
     },
     manual: true,
@@ -82,7 +81,7 @@ const App = () => {
       return;
     } else {
       getUser({});
-      if (!localStorage.getItem('qiniu')) getQiniuToken({});
+      getQiniuToken({});
     }
   }, []);
   return <SetRoutes />;

@@ -67,4 +67,8 @@ export const ArticleCard = styled(Card)`
   h1 {
     font-size: 2.4em;
   }
+  .ant-image {
+    position: absolute;
+    visibility: hidden;
+  }
 `;

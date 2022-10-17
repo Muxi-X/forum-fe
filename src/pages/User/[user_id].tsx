@@ -51,6 +51,9 @@ const User: React.FC = () => {
   const { data: user, loading } = useRequest(API.user.getUserProfileById.request, {
     defaultParams: [{ id: +(user_id as string) }],
     refreshDeps: [user_id],
+    onSuccess: (res) => {
+      useDocTitle(`${res?.data.name} - 仙风道骨 - 论坛`);
+    },
   });
 
   const isMyself = user?.data.id === id;
@@ -85,8 +88,6 @@ const User: React.FC = () => {
       ? history.pushState({ tabKey: key }, key, `/user/${user_id}`)
       : history.pushState({ tabKey: key }, key, `/user/${user_id}/${key}`);
   };
-
-  useDocTitle(`${user?.data.name} - 仙风道骨 - 论坛`);
 
   if (pathname === `/user/${user_id}/seting` || pathname === `/user/${user_id}/drafts`) {
     return (
