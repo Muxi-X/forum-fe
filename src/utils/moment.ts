@@ -20,7 +20,7 @@ const momentToZH = () => {
       llll: 'YYYY年M月D日dddd HH:mm',
     },
     meridiemParse: /凌晨|早上|上午|中午|下午|晚上/,
-    meridiemHour: function (hour, meridiem) {
+    meridiemHour: function (hour: any, meridiem: any) {
       if (hour === 12) {
         hour = 0;
       }
@@ -53,7 +53,7 @@ const momentToZH = () => {
       sameDay: '[今天]LT',
       nextDay: '[明天]LT',
       nextWeek: function (now) {
-        if (now.week() !== this.week()) {
+        if ((now as any).week() !== (this.week as any)()) {
           return '[下]dddLT';
         } else {
           return '[本]dddLT';
@@ -61,7 +61,7 @@ const momentToZH = () => {
       },
       lastDay: '[昨天]LT',
       lastWeek: function (now) {
-        if (this.week() !== now.week()) {
+        if ((this.week as any)() !== (now as any).week()) {
           return '[上]dddLT';
         } else {
           return '[本]dddLT';
@@ -70,21 +70,6 @@ const momentToZH = () => {
       sameElse: 'L',
     },
     dayOfMonthOrdinalParse: /\d{1,2}(日|月|周)/,
-    ordinal: function (number, period) {
-      switch (period) {
-        case 'd':
-        case 'D':
-        case 'DDD':
-          return number + '日';
-        case 'M':
-          return number + '月';
-        case 'w':
-        case 'W':
-          return number + '周';
-        default:
-          return number;
-      }
-    },
     relativeTime: {
       future: '%s后',
       past: '%s前',

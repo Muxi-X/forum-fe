@@ -1,4 +1,4 @@
-const Request = (url, options = {}) => {
+const Request = (url: string, options: any = {}) => {
   url = `/api/v1${url}`;
   const isFile = options.body instanceof FormData;
   options.headers = isFile
