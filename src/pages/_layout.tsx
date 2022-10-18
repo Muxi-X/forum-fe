@@ -21,7 +21,7 @@ export const Content = styled.div`
   width: 60vw;
   max-width: 960px;
   min-width: 375px;
-  min-height: 75vh;
+  min-height: 73vh;
   ${media.desktop`width: 100vw`}
 `;
 
@@ -35,9 +35,8 @@ const ErrorInfo = ({ error }: { error: Error | null }) => (
   </ContentWrapper>
 );
 
-const Layout: React.FC = () => {
+const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { pathname } = useLocation();
-  const children = useOutlet();
   const { setShowHeader } = useShowHeader();
 
   const isSpecialPage = () => {

@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router';
 import { AvatarProps } from './type';
 import { AvatarWrapper, AvatarImg, UploadImg } from './style';
-import defaultAvatar from 'assets/image/img.jpeg';
 
 enum Size {
   small = '2em',
@@ -38,7 +37,7 @@ const Avatar: React.FC<AvatarProps> = ({
   };
 
   const haveSrc = () => {
-    return src ? src : defaultAvatar;
+    return src ? src : 'http://ossforum.muxixyz.com/default/defaultAvatar.png';
   };
 
   return (

@@ -1,10 +1,10 @@
 import React from 'react';
 import { Carousel } from 'antd';
 import styled from 'styled-components';
-import banner1 from 'assets/image/banner1.jpg';
-import banner2 from 'assets/image/banner2.jpg';
-import banner3 from 'assets/image/banner3.jpg';
-import banner4 from 'assets/image/banner4.jpg';
+// import banner1 from 'assets/image/banner1.jpg';
+// import banner2 from 'assets/image/banner2.jpg';
+// import banner3 from 'assets/image/banner3.jpg';
+// import banner4 from 'assets/image/banner4.jpg';
 
 const BannerWrapper = styled.div`
   height: 40vh;
@@ -20,7 +20,7 @@ const BannerWrapper = styled.div`
 const Banner: React.FC = () => (
   <>
     <Carousel effect="fade" autoplay dots>
-      <div>
+      {/* <div>
         <img src={banner1} alt="banner" />
       </div>
       <div>
@@ -31,7 +31,7 @@ const Banner: React.FC = () => (
       </div>
       <div>
         <img src={banner4} alt="banner" />
-      </div>
+      </div> */}
     </Carousel>
   </>
 );

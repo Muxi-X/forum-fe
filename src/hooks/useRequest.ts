@@ -9,7 +9,7 @@ const useRequest: typeof request = (service, options, plugins) => {
     : {
         ...options,
         onError: (e: ErrorRes) => {
-          if (e.code === 20005) location.href += 'login';
+          if (e.code === 20005) location.href = location.origin + '/login';
           message.error(e.message);
         },
       };

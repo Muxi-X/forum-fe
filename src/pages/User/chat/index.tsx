@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import styled from 'styled-components';
 import { useLocation } from 'react-router';
 import useRequest from 'hooks/useRequest';
@@ -15,6 +15,7 @@ import { Card } from 'antd';
 import media from 'styles/media';
 import useDocTitle from 'hooks/useDocTitle';
 import EmptyCard from 'components/EmptyCard';
+import Loading from 'components/Loading';
 
 interface LocationState {
   id: string;
@@ -54,6 +55,8 @@ const Chat: React.FC = () => {
     manual: true,
   });
 
+  const [loading, setLoading] = useState(true);
+
   const webSocketInit = () => {
     const token = localStorage.getItem('token') as string;
     const WebSocket = new WS(token);
@@ -90,6 +93,7 @@ const Chat: React.FC = () => {
             });
           }
         });
+        setLoading(false);
       });
     } else {
       // 主页收到消息通知 ｜ 直接从主页点进
@@ -102,17 +106,16 @@ const Chat: React.FC = () => {
             setContacts(contacts);
           }
         } else {
-          console.log('消息提示');
           // 有新消息的情况
           Contacts.searchContact(selectedId).then((contact) => {
             getHistory({ id: selectedId }).then((res) => {
               if (contact) {
-                setRecords(res.data as MsgResponse[], selectedId);
+                setRecords(res.data.reverse() as MsgResponse[], selectedId);
               } else {
                 runAsync({ id: selectedId }).then((userRes) => {
                   const newContact = {
                     ...userRes.data,
-                    msgRecords: res.data as MsgResponse[],
+                    msgRecords: res.data.reverse() as MsgResponse[],
                     userId: myId as number,
                   };
                   setContacts([{ ...newContact }]);
@@ -123,6 +126,7 @@ const Chat: React.FC = () => {
             });
           });
         }
+        setLoading(false);
       });
     }
 
@@ -146,10 +150,13 @@ const Chat: React.FC = () => {
         };
     };
   }, [myId, ws]);
+
   console.log(contacts);
   return (
     <>
-      {contacts.length === 0 ? (
+      {loading ? (
+        <Loading />
+      ) : contacts.length === 0 ? (
         <EmptyCard>暂时还没有联系人哦～</EmptyCard>
       ) : (
         <ChatPage>

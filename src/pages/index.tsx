@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import styled from 'styled-components';
-import { message } from 'antd';
+import { message, Tooltip } from 'antd';
 import useDocTitle from 'hooks/useDocTitle';
 import { useSearchParams, useNavigate, useParams } from 'react-router-dom';
 import ArticleList from 'components/List';
@@ -9,6 +9,7 @@ import Tag from 'components/Tag/tag';
 import { CATEGORY, CATEGORY_EN } from 'config';
 import useRequest from 'hooks/useRequest';
 import useList from 'store/useList';
+import useProfile from 'store/useProfile';
 import media from 'styles/media';
 
 type isTrigger = { trigger: boolean };
@@ -53,13 +54,14 @@ const Categories = styled.div`
 `;
 
 const Square: React.FC = () => {
+  const { pathname, search } = location;
   const { setList, postList } = useList();
-  const [hasMore, setHasMore] = useState(true);
-  const [triggerArray, setTriggerArray] = useState<boolean[]>(
-    Array(CATEGORY.length).fill(false),
-  );
-  const [tags, setTags] = useState<{ tag: string; trigger: boolean }[]>([]);
-  const [searchParams] = useSearchParams();
+  const {
+    userProfile: { role },
+  } = useProfile();
+  const [hasMore, setHasMore] = useState(true); // 判断是否有更多文章
+  const [tags, setTags] = useState<string[]>([]); // Tags表
+  const [searchParams] = useSearchParams(); // query参数获取
   const nav = useNavigate();
   const params = useParams();
   const sort = searchParams.get('sort');
@@ -70,8 +72,9 @@ const Square: React.FC = () => {
     page: 0,
     filter: sort ? sort : '',
   });
-  const [isAll, setIsAll] = useState(true);
-  const [isFirst, setIsFirst] = useState(true);
+  const [isFirst, setIsFirst] = useState(true); // 是否是第一次进入根路由
+
+  const { domain, filter, tag, category } = getParams;
 
   const { loading, run } = useRequest(API.post.getPostListByDomain.request, {
     onSuccess: (res) => {
@@ -96,7 +99,7 @@ const Square: React.FC = () => {
   const { run: getTag } = useRequest(API.post.getPostPopular_tag.request, {
     manual: true,
     onSuccess: (res) => {
-      const tagArray = res.data ? res.data.map((tag) => ({ tag, trigger: false })) : [];
+      const tagArray = res.data ? res.data : [];
       setTags(tagArray);
     },
   });
@@ -113,7 +116,7 @@ const Square: React.FC = () => {
     setList([]);
     setHasMore(true);
     setGetParams({ ...getParams, filter: 'hot', page: 0 });
-    if (searchQuery) nav(`${location.search}&sort=hot`);
+    if (searchQuery) nav(`${search}&sort=hot`);
     else if (getParams.category) {
       const path = CATEGORY_EN[CATEGORY.indexOf(getParams.category)];
       history.pushState({ filter }, filter as string, `/${path}?sort=hot`);
@@ -129,15 +132,11 @@ const Square: React.FC = () => {
     history.pushState(
       filter,
       filter as string,
-      `${location.pathname}${searchQuery ? '?query=' + searchQuery : ''}`,
+      `${pathname}${searchQuery ? '?query=' + searchQuery : ''}`,
     );
   };
 
   const handleGetCategory = (index: number) => {
-    const temp = [...triggerArray].fill(false);
-    temp[index] = true;
-    setTriggerArray(temp);
-    setIsAll(false);
     setList([]);
     setHasMore(true);
     setGetParams({
@@ -146,6 +145,7 @@ const Square: React.FC = () => {
       page: 0,
       filter: '',
       tag: '',
+      domain: 'normal',
     });
     useDocTitle(CATEGORY[index] + ' - 论坛');
     const category = CATEGORY_EN[index];
@@ -154,23 +154,23 @@ const Square: React.FC = () => {
   };
 
   const handleGetAll = () => {
-    setIsAll(true);
     setHasMore(true);
     setTags([]);
-    setTriggerArray(Array(CATEGORY.length).fill(false));
-    setGetParams({ ...getParams, category: '', filter: '', tag: '', page: 0 });
+    setGetParams({
+      ...getParams,
+      domain: 'normal',
+      category: '',
+      filter: '',
+      tag: '',
+      page: 0,
+    });
     useDocTitle('木犀论坛');
     history.pushState({ category: 'all' }, 'all', '/');
   };
 
-  const handleChooseTag = (tag: string, i: number) => {
+  const handleChooseTag = (tag: string) => {
     setGetParams({ ...getParams, tag });
-    const temp = [...tags].map((t) => {
-      return { trigger: false, tag: t.tag };
-    });
-    temp[i].trigger = true;
     setList([]);
-    setTags(temp);
     setHasMore(true);
   };
 
@@ -183,12 +183,8 @@ const Square: React.FC = () => {
       run(getParams);
     } else if (params.category && isFirst) {
       setIsFirst(false);
-      const temp = triggerArray.fill(false);
       const CN = CATEGORY[CATEGORY_EN.indexOf(params.category)];
       const i = CATEGORY_EN.indexOf(params.category as string);
-      temp[i] = true;
-      setTriggerArray(temp);
-      setIsAll(false);
       getTag({ category: CN });
       setGetParams({ ...getParams, category: CATEGORY[i] });
       useDocTitle(`${CN} - 论坛`);
@@ -196,7 +192,8 @@ const Square: React.FC = () => {
       run(getParams);
       useDocTitle('木犀论坛');
     }
-  }, [getParams.filter, getParams.category, getParams.tag, searchQuery]);
+    setIsFirst(false);
+  }, [filter, category, tag, searchQuery, pathname, domain]);
 
   const ListHeader = (
     <>
@@ -212,7 +209,7 @@ const Square: React.FC = () => {
   const NavList = (
     <Categories>
       <span className="wrapper" aria-hidden="true" onClick={handleGetAll}>
-        <Category trigger={isAll}>全部</Category>
+        <Category trigger={pathname === '/'}>全部</Category>
       </span>
       {CATEGORY.map((category, i) => (
         <span
@@ -223,26 +220,65 @@ const Square: React.FC = () => {
           className="wrapper"
           key={category}
         >
-          <Category trigger={triggerArray[i]}>{category}</Category>
+          <Category trigger={pathname === `/${CATEGORY_EN[i]}`}>{category}</Category>
         </span>
       ))}
+      {role?.includes('Muxi') ? (
+        <Tooltip title="仅看团队内文章" placement="bottom" color="gold">
+          <span
+            onClick={() => {
+              setList([]);
+              setHasMore(true);
+              setGetParams({
+                ...getParams,
+                domain: 'muxi',
+                category: '',
+                filter: '',
+                tag: '',
+                page: 0,
+              });
+              setTags([]);
+              history.pushState({ domain: 'muxi' }, 'muxi', `muxi`);
+              useDocTitle('都是自己人啦~');
+            }}
+            className="wrapper"
+            aria-hidden="true"
+          >
+            <Category trigger={pathname === '/muxi'}>木犀</Category>
+          </span>
+        </Tooltip>
+      ) : null}
     </Categories>
   );
 
   return (
     <>
       {searchQuery ? null : NavList}
-      {tags.map((tag, i) => (
-        <Tag
-          onClick={() => {
-            handleChooseTag(tag.tag, i);
-          }}
-          trigger={tag.trigger}
-          key={i}
-          type="filter"
-          tag={tag.tag}
-        />
-      ))}
+      {tags.length ? (
+        <>
+          <Tag
+            tag="全部"
+            onClick={() => {
+              setHasMore(true);
+              setGetParams({ ...getParams, tag: '' });
+              setList([]);
+            }}
+            type="filter"
+            trigger={tag === ''}
+          ></Tag>
+          {tags.map((t, i) => (
+            <Tag
+              onClick={() => {
+                handleChooseTag(t);
+              }}
+              trigger={t === tag}
+              key={i}
+              type="filter"
+              tag={t}
+            />
+          ))}
+        </>
+      ) : null}
       <FilterWrapper>{ListHeader}</FilterWrapper>
       <ArticleList
         hasMore={hasMore}

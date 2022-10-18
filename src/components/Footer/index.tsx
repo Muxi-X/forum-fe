@@ -1,6 +1,5 @@
 import React from 'react';
 import styled from 'styled-components';
-import logo from 'assets/image/logo1.png';
 
 const Wrapper = styled.div`
   user-select: none;
@@ -20,7 +19,7 @@ const Wrapper = styled.div`
 const Footer: React.FC = () => {
   return (
     <Wrapper>
-      <img alt="logo" src={logo} />
+      <img alt="logo" src="http://ossforum.muxixyz.com/logo1.png" />
       谨在此对每一位认真工作的木犀人表达深刻感谢
     </Wrapper>
   );

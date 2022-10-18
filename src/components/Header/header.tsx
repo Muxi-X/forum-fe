@@ -6,9 +6,6 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Link } from 'react-router-dom';
 import useList from 'store/useList';
 import useProfile from 'store/useProfile';
-import logo from 'assets/image/logo1.png';
-import chat from 'assets/image/msg.png';
-import msgtip from 'assets/image/tip.png';
 import Avatar from 'components/Avatar/avatar';
 import useWS from 'store/useWS';
 import * as style from './style';
@@ -38,7 +35,7 @@ const Header: React.FC = () => {
   } = useProfile();
   const { tip } = useWS();
   const { setList } = useList();
-  const { setTip, setWS } = useWS();
+  const { setTip } = useWS();
   const handleQueryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setQuery(e.target.value);
   };
@@ -88,7 +85,7 @@ const Header: React.FC = () => {
                 setQuery('');
               }}
             >
-              <img src={logo} alt="logo" />
+              <img src="http://ossforum.muxixyz.com/logo1.png" alt="logo" />
               <span className="logo">MUXI</span>
               <Popover
                 trigger="click"
@@ -165,7 +162,7 @@ const Header: React.FC = () => {
                         onClick={() => {
                           setTip(false);
                         }}
-                        src={chat}
+                        src="http://ossforum.muxixyz.com/default/msg.png"
                         alt="msg"
                       />
                     </Badge>
@@ -174,7 +171,7 @@ const Header: React.FC = () => {
                 <Tooltip color="gold" title={'查看通知'}>
                   <Link to="/notice">
                     {/* <Badge count={1} dot> */}
-                    <img src={msgtip} alt="tip" />
+                    <img src="http://ossforum.muxixyz.com/default/tip.png" alt="tip" />
                     {/* </Badge> */}
                   </Link>
                 </Tooltip>

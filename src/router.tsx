@@ -1,47 +1,30 @@
-import React, { lazy, Suspense, useEffect } from 'react';
-import { BrowserRouter as Router, useRoutes, RouteObject } from 'react-router-dom';
-import routes, { parse } from 'react-auto-routes';
+import React, { Suspense, useEffect } from 'react';
+import { BrowserRouter as Router, useRoutes } from 'react-router-dom';
+import routes from '~react-pages';
 import useRequest from 'hooks/useRequest';
 import Header from 'components/Header/header';
 import useProfile from 'store/useProfile';
 import useShowHeader from 'store/useShowHeader';
-import { ContentWrapper, Content } from 'pages/_layout';
+import useWS from 'store/useWS';
+import Layout, { Content, ContentWrapper } from 'pages/_layout';
 import Loading from 'components/Loading';
 
-namespace SyncRoute {
-  export type Routes = {
-    path: string;
-    element: React.LazyExoticComponent<any>;
-    children?: Routes[];
-  };
-}
-
-const syncRouter = (table: SyncRoute.Routes[]): RouteObject[] => {
-  let mRouteTable: RouteObject[] = [];
-  table.forEach((route) => {
-    mRouteTable.push({
-      path: route.path,
-      element: (
-        <Suspense
-          fallback={
-            <ContentWrapper>
-              <Content>
-                <Loading />
-              </Content>
-            </ContentWrapper>
-          }
-        >
-          <route.element />
-        </Suspense>
-      ),
-      children: route.children && syncRouter(route.children),
-    });
-  });
-  return mRouteTable;
-};
-
 const Routes = () => {
-  return useRoutes(syncRouter(parse(routes, lazy)));
+  return (
+    <Layout>
+      <Suspense
+        fallback={
+          <ContentWrapper>
+            <Content>
+              <Loading />
+            </Content>
+          </ContentWrapper>
+        }
+      >
+        {useRoutes(routes)}
+      </Suspense>
+    </Layout>
+  );
 };
 
 const SetRoutes = () => {
@@ -67,7 +50,7 @@ const App = () => {
     manual: true,
     refreshDeps: [],
   });
-
+  const { ws } = useWS();
   const { run: getQiniuToken } = useRequest(API.post.getPostQiniu_token.request, {
     onSuccess: (res) => {
       setToken(res.data.token as string);
@@ -83,6 +66,9 @@ const App = () => {
       getUser({});
       getQiniuToken({});
     }
+    return () => {
+      ws?.close();
+    };
   }, []);
   return <SetRoutes />;
 };

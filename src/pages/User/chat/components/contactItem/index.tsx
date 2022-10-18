@@ -22,8 +22,8 @@ const ContactItem: React.FC<Contact> = ({ name, id, msgRecords, avatar }) => {
     else return msgRecords[len - 1].content;
   };
 
-  const len = msgRecords.length;
-  const time = msgRecords[len - 1] ? msgRecords[len - 1].time : '';
+  const len = msgRecords ? msgRecords.length : 0;
+  const time = len !== 0 ? msgRecords[len - 1].time : '';
 
   return (
     // <Wrapper count={5} offset={[-12, 12]} size="small">

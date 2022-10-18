@@ -6,3 +6,4 @@ dist-ssr
 node_modules/*
 pnpm-lock.yaml
 .mocks/
+tsconfig.tsbuildinfo

@@ -6,7 +6,8 @@ import Main from 'pages/index';
 
 const Category: React.FC = () => {
   const params = useParams();
-  if (!CATEGORY_EN.includes(params.category as string)) return <ResultPage type="404" />;
+  if (!CATEGORY_EN.includes(params.category as string) && params.category !== 'muxi')
+    return <ResultPage type="404" />;
   return <Main></Main>;
 };
 

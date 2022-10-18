@@ -8,7 +8,7 @@ import * as post from './post';
 import * as report from './report';
 import * as user from './user';
 
-window.API = {
+const API = {
   auth,
   chat,
   collection,

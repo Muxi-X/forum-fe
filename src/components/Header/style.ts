@@ -1,5 +1,4 @@
 import styled from 'styled-components';
-import search from 'assets/image/search.png';
 import { color } from 'styles/global';
 import media from 'styles/media';
 
@@ -72,7 +71,7 @@ export const SearchDiv = styled.div`
     content: '';
     height: 1.5em;
     width: 1.5em;
-    background-image: url(${search});
+    background-image: url('http://ossforum.muxixyz.com/default/search.png');
     background-size: cover;
     position: absolute;
     right: 1em;

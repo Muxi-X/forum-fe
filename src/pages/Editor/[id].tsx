@@ -22,7 +22,6 @@ import Avatar from 'components/Avatar/avatar';
 import MdEditor from 'components/Editor/MdEditor';
 import RtfEditor from 'components/Editor/RtfEditor';
 import { CATEGORY } from 'config';
-import toggle from 'assets/svg/toggle.svg';
 import * as style from './style';
 import useDocTitle from 'hooks/useDocTitle';
 
@@ -361,7 +360,11 @@ const EditorPage: React.FC = () => {
               data-tip={`切换成${type === 'md' ? 'rtf' : 'md'}编辑器`}
               onClick={selectEditor}
             >
-              <img style={{ height: '100%' }} src={toggle} alt="toggle"></img>
+              <img
+                style={{ height: '100%' }}
+                src="http://ossforum.muxixyz.com/default/toggle.svg"
+                alt="toggle"
+              ></img>
             </style.ToggleEditor>
             <Avatar userId={userId} src={profileStore.userProfile.avatar as string} />
           </style.RightBox>

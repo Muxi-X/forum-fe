@@ -9,8 +9,6 @@ import useProfile from 'store/useProfile';
 import useWS from 'store/useWS';
 import WS from 'utils/WS';
 import ResultPage from 'pages/Result';
-import ccnu from 'assets/svg/log.svg';
-import muxi from 'assets/svg/register.svg';
 import './index.less';
 
 interface LoginState {
@@ -40,6 +38,9 @@ const Login: React.FC = () => {
 
   const { runAsync: getUser } = useRequest(API.user.getUserMyprofile.request, {
     manual: true,
+    onSuccess: (res) => {
+      setUser(res.data);
+    },
   });
 
   const { runAsync: getQiniuToken } = useRequest(API.post.getPostQiniu_token.request, {
@@ -55,21 +56,17 @@ const Login: React.FC = () => {
     setWS(WebSocket);
   };
 
-  const initUser = async () => {
-    const user = await getUser({});
-    setUser(user.data);
-    const qiniu = await getQiniuToken({});
-    setToken(qiniu.data.token as string);
-    webSocketInit();
-  };
-
-  const successLogin = (res: API.auth.postStudent.Response) => {
+  const successLogin = async (res: API.auth.postStudent.Response) => {
     if (res.code === 0) {
       message.success('登录成功');
       localStorage.setItem('token', res.data.token as string);
       localStorage.setItem('id', student_id);
       localStorage.setItem('pwd', password);
-      initUser();
+      const user = await getUser({});
+      setUser(user.data);
+      const qiniu = await getQiniuToken({});
+      setToken(qiniu.data.token as string);
+      webSocketInit();
       nav('/');
     }
   };
@@ -121,7 +118,7 @@ const Login: React.FC = () => {
   };
 
   return (
-    <>
+    <div className="login-page">
       {!oauth_code ? (
         <div
           aria-hidden
@@ -144,7 +141,7 @@ const Login: React.FC = () => {
                       handleUserLogin(e.target.value, 'id');
                     }}
                     type="text"
-                    placeholder="用户名"
+                    placeholder="学号"
                   />
                 </div>
                 <div className="input-field">
@@ -186,7 +183,11 @@ const Login: React.FC = () => {
                   go
                 </button>
               </div>
-              <img src={ccnu} className="image" alt="" />
+              <img
+                src="http://ossforum.muxixyz.com/default/log.svg"
+                className="image"
+                alt=""
+              />
             </div>
             <div className="panel right-panel">
               <div className="content">
@@ -200,14 +201,18 @@ const Login: React.FC = () => {
                   GO
                 </button>
               </div>
-              <img src={muxi} className="image" alt="" />
+              <img
+                src="http://ossforum.muxixyz.com/default/register.svg"
+                className="image"
+                alt=""
+              />
             </div>
           </div>
         </div>
       ) : (
         <ResultPage type="login" />
       )}
-    </>
+    </div>
   );
 };
 
