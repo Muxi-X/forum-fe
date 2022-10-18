@@ -2,7 +2,7 @@
 
 本地预览 `git clone https://github.com/Muxi-X/forum-fe.git && cd forum-fe && pnpm install && pnpm dev`
 
-本地 server `pnpm build && pnpm server`
+本地 server `pnpm build && pnpm run server`
 
 # 项目目录
 
@@ -52,15 +52,19 @@
 
 React-Router v6 使用 useRoutes 配置路由，自定义插件生成 Routes 数组，具体可以参考 umi 的[约定式路由](https://v3.umijs.org/zh-CN/docs/convention-routing)
 
+**注：现已替换成[vite-plugin-pages](https://github.com/hannoeru/vite-plugin-pages)**
+
 ### 2. 状态管理方案
 
 内部状态简单的用 useState / useReducer 维护
-全局状态使用 zustand 一个极简的类 redux 库 [地址](https://github.com/pmndrs/zustand)
+全局状态使用  [zustand](https://github.com/pmndrs/zustand) 一个极简的类 redux 库
 
 全局状态为:
 
 - User: 个人信息 包括 Role, UserId, avatarUrl 等字段信息
 - ArticleList: 就是文章列表，直接放全局便于管理，不然组件间的通信会很麻烦，比如搜索框是放在 Header 组件里面的，如果不用全局状态设置文章列表的话就需要通过状态提升+callback 的形式才能拿到搜索后的文章结果
+- Ws 全局 WebSocket 对象
+- Chat 聊天记录/联系人列表
 
 ### 3. 网络请求
 
@@ -69,9 +73,15 @@ pont + useRequest
 用 pont 拉取数据源后，记得在 mods/index.js 添加 `export default window.API`
 因为 esm 的工作原理是使用才会打包，如果不 export 到 main.tsx 中去使用的话，index.js 不被会被打包执行， window.API 也不会被执行，那么全局的 API 就是 undefined
 
+**注: 如果重新生成pont, services/pontCore也需要修改， 就是把CommonJs 语法改成 esm语法**
+
 ### 4. IndexDB 使用
 
-使用 IndexDB 对文章草稿储存 直到该文章发布成功/被删除才从 IndexDB 中销毁 使用 [Dexie.js](https://dexie.org/)
+使用 [Dexie.js](https://dexie.org/)
+
+使用 IndexDB 对文章草稿储存 直到该文章发布成功/被删除才从 IndexDB 中销毁 
+
+对联系人信息进行缓存
 
 ### 工具函数的使用
 
@@ -79,8 +89,9 @@ ahooks
 
 ### 有意义的点
 
-1. 闭包陷阱的解决
+1. 闭包陷阱的解决 (Editore那里)
 2. 对 useRequest 的再封装， 全局 Loading 状态的处理
+2. ws使用等等等等
 
 # 迭代点
 
