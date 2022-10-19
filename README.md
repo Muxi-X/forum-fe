@@ -57,7 +57,7 @@ React-Router v6 使用 useRoutes 配置路由，自定义插件生成 Routes 数
 ### 2. 状态管理方案
 
 内部状态简单的用 useState / useReducer 维护
-全局状态使用  [zustand](https://github.com/pmndrs/zustand) 一个极简的类 redux 库
+全局状态使用 [zustand](https://github.com/pmndrs/zustand) 一个极简的类 redux 库
 
 全局状态为:
 
@@ -73,13 +73,13 @@ pont + useRequest
 用 pont 拉取数据源后，记得在 mods/index.js 添加 `export default window.API`
 因为 esm 的工作原理是使用才会打包，如果不 export 到 main.tsx 中去使用的话，index.js 不被会被打包执行， window.API 也不会被执行，那么全局的 API 就是 undefined
 
-**注: 如果重新生成pont, services/pontCore也需要修改， 就是把CommonJs 语法改成 esm语法**
+**注: 如果重新生成 pont, services/pontCore 也需要修改， 就是把 CommonJs 语法改成 esm 语法**
 
 ### 4. IndexDB 使用
 
 使用 [Dexie.js](https://dexie.org/)
 
-使用 IndexDB 对文章草稿储存 直到该文章发布成功/被删除才从 IndexDB 中销毁 
+使用 IndexDB 对文章草稿储存 直到该文章发布成功/被删除才从 IndexDB 中销毁
 
 对联系人信息进行缓存
 
@@ -89,9 +89,9 @@ ahooks
 
 ### 有意义的点
 
-1. 闭包陷阱的解决 (Editore那里)
+1. 闭包陷阱的解决 (Editore 那里)
 2. 对 useRequest 的再封装， 全局 Loading 状态的处理
-2. ws使用等等等等
+3. ws 使用等等等等
 
 # 迭代点
 
