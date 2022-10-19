@@ -8,5 +8,5 @@ RUN yarn config set registry https://registry.npm.taobao.org/
 RUN yarn install
 RUN yarn Build
 # Bundle app source
-EXPOSE 3000
+EXPOSE 4173
 CMD [ "yarn", "server" ]
