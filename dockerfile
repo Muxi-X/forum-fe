@@ -6,7 +6,7 @@ COPY . /usr/src/app
 # Build server file
 RUN yarn config set registry https://registry.npm.taobao.org/
 RUN yarn install
-RUN yarn Build
+RUN yarn build
 # Bundle app source
 EXPOSE 4173
 CMD [ "yarn", "server" ]
