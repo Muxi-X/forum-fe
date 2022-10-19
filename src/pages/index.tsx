@@ -55,7 +55,7 @@ const Categories = styled.div`
 
 const Square: React.FC = () => {
   const { pathname, search } = location;
-  const { setList, postList } = useList();
+  const { setList, postList, getList } = useList();
   const {
     userProfile: { role },
   } = useProfile();
@@ -74,7 +74,7 @@ const Square: React.FC = () => {
   });
   const [isFirst, setIsFirst] = useState(true); // 是否是第一次进入根路由
 
-  const { domain, filter, tag, category } = getParams;
+  const { domain, filter, tag, category, page } = getParams;
 
   const { loading, run } = useRequest(API.post.getPostListByDomain.request, {
     onSuccess: (res) => {
@@ -89,7 +89,8 @@ const Square: React.FC = () => {
           message.warning('没有更多文章了');
           setHasMore(false);
         } else {
-          setList([...postList, ...(res.data.posts as defs.post_Post[])]);
+          if (page === 0) setList(res.data.posts as defs.post_Post[]);
+          else setList([...getList(), ...(res.data.posts as defs.post_Post[])]);
         }
       }
     },
@@ -175,6 +176,9 @@ const Square: React.FC = () => {
   };
 
   useEffect(() => {
+    if (pathname === '/') {
+      handleGetAll();
+    }
     if (searchQuery) {
       setList([]);
       setGetParams({ ...getParams, search_content: searchQuery });
@@ -190,6 +194,7 @@ const Square: React.FC = () => {
       useDocTitle(`${CN} - 论坛`);
     } else {
       run(getParams);
+      setTags([]);
       useDocTitle('木犀论坛');
     }
     setIsFirst(false);
@@ -250,7 +255,6 @@ const Square: React.FC = () => {
       ) : null}
     </Categories>
   );
-
   return (
     <>
       {searchQuery ? null : NavList}

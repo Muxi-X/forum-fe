@@ -151,7 +151,6 @@ const Chat: React.FC = () => {
     };
   }, [myId, ws]);
 
-  console.log(contacts);
   return (
     <>
       {loading ? (

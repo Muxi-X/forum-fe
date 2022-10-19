@@ -42,6 +42,7 @@ export default defineConfig({
         },
       },
     },
+    host: true,
   },
   css: {
     preprocessorOptions: {
