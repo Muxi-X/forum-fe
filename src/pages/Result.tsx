@@ -19,7 +19,7 @@ const ResultCard = styled(Card)`
   }
 `;
 
-type resultType = 'published' | '404' | '500' | 'login';
+type resultType = 'published' | '404' | '500' | 'login' | 'updated';
 
 const ResultPage: React.FC<{ type?: resultType }> = ({ type }) => {
   const nav = useNavigate();
@@ -40,6 +40,8 @@ const ResultPage: React.FC<{ type?: resultType }> = ({ type }) => {
     switch (type) {
       case 'published':
         return '发布成功!';
+      case 'updated':
+        return '更新成功!';
       case '404':
         return '页面不存在';
       case 'login':
@@ -55,6 +57,8 @@ const ResultPage: React.FC<{ type?: resultType }> = ({ type }) => {
     switch (type) {
       case 'published':
         return <Result icon={<SmileOutlined />} title="发布成功!" extra={btn} />;
+      case 'updated':
+        return <Result icon={<SmileOutlined />} title="更新成功!" extra={btn} />;
       case '404':
         return <Result status="404" title="404" subTitle="页面不存在!" extra={btn} />;
       case 'login':

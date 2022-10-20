@@ -1,4 +1,5 @@
 import styled from 'styled-components';
+import media from 'styles/media';
 import { Tips } from 'styles/tips';
 
 export const EditorPageWrapper = styled.div`
@@ -9,12 +10,18 @@ export const EditorPageWrapper = styled.div`
 
 export const EditorWrapper = styled.section`
   flex: 1;
+  width: 60%;
+  align-self: center;
+  max-width: 960px;
+  min-width: 375px;
+  ${media.phone`width: 100vw`}
 `;
 
 export const Header = styled.header`
   display: flex;
   width: 100vw;
   height: auto;
+  margin-bottom: 50px;
   .ant-btn-loading-icon {
     display: none;
   }

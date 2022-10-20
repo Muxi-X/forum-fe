@@ -92,7 +92,7 @@ const ReportItem: React.FC<{ report: defs.report_Report }> = ({ report }) => {
 };
 
 const Admin: React.FC = () => {
-  useDocTitle(`明察秋毫 - 论坛`);
+  useDocTitle(`明察秋毫 - 茶馆`);
   const { data: res, loading } = useRequest(API.report.getReportList.request);
 
   return (

@@ -51,7 +51,10 @@ const Avatar: React.FC<AvatarProps> = ({
       height={height ? height : Size[size]}
       width={width ? width : Size[size]}
       className={className}
-      style={{ cursor: userId ? `pointer` : 'auto' }}
+      style={{
+        cursor: userId ? `pointer` : 'auto',
+        minWidth: width ? width : Size[size],
+      }}
       fix={fix}
     >
       <AvatarImg src={imgSrc ? imgSrc : haveSrc()} alt="图片正在加载中" />

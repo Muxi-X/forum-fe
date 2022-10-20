@@ -1,4 +1,5 @@
 import styled from 'styled-components';
+import media from 'styles/media';
 
 export const UserWrapper = styled.div``;
 
@@ -14,6 +15,10 @@ export const NameAndSign = styled.div`
   flex-direction: column;
   margin-left: 1em;
   font-size: 1.5em;
+
+  ${media.phone`
+      margin-left: 0em;
+  `}
 
   .user-signature {
     color: gray;
@@ -32,4 +37,8 @@ export const Tools = styled.div`
   flex: 2;
   display: flex;
   justify-content: space-around;
+  ${media.phone`
+      flex-direction: column;
+      height: 70%
+  `}
 `;

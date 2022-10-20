@@ -5,7 +5,7 @@ import useDocTitle from 'hooks/useDocTitle';
 
 const Search: React.FC = () => {
   const [getParams] = useSearchParams();
-  useDocTitle(`${getParams.get('query')}- 搜索 - 论坛`);
+  useDocTitle(`${getParams.get('query')}- 搜索 - 茶馆`);
   return <Main></Main>;
 };
 

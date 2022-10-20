@@ -8,14 +8,14 @@ import {
 } from '@ant-design/icons';
 import InfiniteScroll from 'react-infinite-scroll-component';
 import Loading from 'components/Loading';
-import { List, Space, Divider, Popover, message } from 'antd';
-import { Link } from 'react-router-dom';
+import { List, Space, Divider, Popover, message, Modal } from 'antd';
+import { Link, useNavigate } from 'react-router-dom';
 import moment from 'utils/moment';
 import useRequest from 'hooks/useRequest';
 import useProfile from 'store/useProfile';
 
 const { Item } = List;
-
+const { confirm } = Modal;
 type position = 'left' | 'mid' | 'right';
 
 interface IProps {
@@ -134,23 +134,42 @@ const renderItem = (
   isDel: boolean,
   setIsDel: Function,
   index: number,
+  nav: Function,
 ) => {
+  const showConfirm = () => {
+    confirm({
+      title: '删除文章',
+      content: '删除后不可回复，确认删除此文章吗',
+      onOk() {
+        del({ post_id: item.id as number }).then(() => {
+          message.success('删除成功！');
+          setIsDel(index);
+        });
+      },
+      okText: '确认',
+      cancelText: '取消',
+      centered: true,
+    });
+  };
   return (
     <>
       {isDel ? null : (
         <Wrapper>
           <Popover
-            trigger="hover"
+            trigger={['hover', 'click']}
             placement="right"
             content={
               <>
-                <Action onClick={() => {}}>编辑</Action>
                 <Action
                   onClick={() => {
-                    del({ post_id: item.id as number }).then(() => {
-                      message.success('删除成功！');
-                      setIsDel(index);
-                    });
+                    nav(`/editor/${item.id}`, { state: { isUpdate: true } });
+                  }}
+                >
+                  编辑
+                </Action>
+                <Action
+                  onClick={() => {
+                    showConfirm();
                   }}
                 >
                   删除
@@ -214,6 +233,8 @@ const ArticleList: React.FC<IProps> = ({ list, loading, run, hasMore, header }) 
     }),
   );
 
+  const nav = useNavigate();
+
   const handleDel = (i: number) => {
     const temp = [...isDel];
     temp[i].isDel = true;
@@ -253,6 +274,7 @@ const ArticleList: React.FC<IProps> = ({ list, loading, run, hasMore, header }) 
                 isDel[i] ? isDel[i].isDel : false,
                 handleDel,
                 i,
+                nav,
               )
             }
           />

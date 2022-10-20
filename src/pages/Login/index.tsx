@@ -30,7 +30,7 @@ const Login: React.FC = () => {
   const { setUser, setToken } = useProfile();
   const { setTip, setWS } = useWS();
 
-  useDocTitle(`惠然之顾 - 论坛`);
+  useDocTitle(`惠然之顾 - 茶馆`);
 
   const { student_id, password } = form;
 

@@ -41,7 +41,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
   const isSpecialPage = () => {
     const isLogin = pathname === '/login';
-    const isPost = pathname.includes('/editor/article');
+    const isPost = pathname.includes('/editor');
     return isLogin || isPost;
   };
   const { setTip, setWS, ws } = useWS();

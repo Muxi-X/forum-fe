@@ -1,5 +1,6 @@
 import React from 'react';
 import styled from 'styled-components';
+import media from 'styles/media';
 
 const Wrapper = styled.div`
   user-select: none;
@@ -9,6 +10,7 @@ const Wrapper = styled.div`
   height: 10vh;
   font-size: 16px;
   color: rgba(255, 171, 0, 1);
+  ${media.phone`font-size: 12px`}
   img {
     height: 32px;
     width: auto;

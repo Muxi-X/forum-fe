@@ -98,6 +98,7 @@ const CommentItem: React.FC<CommentItemProps> = ({
   content,
   comments,
   creator_avatar,
+  creator_id,
   time,
   is_liked,
   like_num,
@@ -266,7 +267,7 @@ const CommentItem: React.FC<CommentItemProps> = ({
           creator_name
         )
       }
-      avatar={<Avatar src={creator_avatar} userId={id} />}
+      avatar={<Avatar src={creator_avatar} userId={creator_id} />}
     >
       {reply ? (
         <div style={{ height: 'fit-content', marginBottom: '20px' }}>

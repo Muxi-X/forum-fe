@@ -3,6 +3,7 @@ import styled from 'styled-components';
 import { message, Tooltip } from 'antd';
 import useDocTitle from 'hooks/useDocTitle';
 import { useSearchParams, useNavigate, useParams } from 'react-router-dom';
+import { useDebounceFn } from 'ahooks';
 import ArticleList from 'components/List';
 import BackToTop from 'components/BackTop';
 import Tag from 'components/Tag/tag';
@@ -76,17 +77,26 @@ const Square: React.FC = () => {
 
   const { domain, filter, tag, category, page } = getParams;
 
+  const { run: tipNoMore } = useDebounceFn(
+    () => {
+      message.warning('没有更多文章了');
+    },
+    {
+      wait: 1000,
+    },
+  );
+
   const { loading, run } = useRequest(API.post.getPostListByDomain.request, {
     onSuccess: (res) => {
       if (searchQuery) {
-        useDocTitle(`${searchQuery} - 搜索 - 论坛`);
+        useDocTitle(`${searchQuery} - 搜索 - 茶馆`);
         if (res.data.posts?.length === 0) {
-          message.warning('没有更多文章了');
+          tipNoMore();
           setHasMore(false);
         } else setList([...postList, ...(res.data.posts as defs.post_Post[])]);
       } else {
         if (res.data.posts?.length === 0) {
-          message.warning('没有更多文章了');
+          tipNoMore();
           setHasMore(false);
         } else {
           if (page === 0) setList(res.data.posts as defs.post_Post[]);
@@ -148,7 +158,7 @@ const Square: React.FC = () => {
       tag: '',
       domain: 'normal',
     });
-    useDocTitle(CATEGORY[index] + ' - 论坛');
+    useDocTitle(CATEGORY[index] + ' - 茶馆');
     const category = CATEGORY_EN[index];
     history.pushState({ category }, category, `${category}`);
     getTag({ category: CATEGORY[index] });
@@ -165,7 +175,7 @@ const Square: React.FC = () => {
       tag: '',
       page: 0,
     });
-    useDocTitle('木犀论坛');
+    useDocTitle('木犀茶馆');
     history.pushState({ category: 'all' }, 'all', '/');
   };
 
@@ -176,7 +186,7 @@ const Square: React.FC = () => {
   };
 
   useEffect(() => {
-    if (pathname === '/') {
+    if (pathname === '/' && filter === '') {
       handleGetAll();
     }
     if (searchQuery) {
@@ -191,11 +201,11 @@ const Square: React.FC = () => {
       const i = CATEGORY_EN.indexOf(params.category as string);
       getTag({ category: CN });
       setGetParams({ ...getParams, category: CATEGORY[i] });
-      useDocTitle(`${CN} - 论坛`);
+      useDocTitle(`${CN} - 茶馆`);
     } else {
       run(getParams);
       setTags([]);
-      useDocTitle('木犀论坛');
+      useDocTitle('木犀茶馆');
     }
     setIsFirst(false);
   }, [filter, category, tag, searchQuery, pathname, domain]);

@@ -142,7 +142,7 @@ const Chat: React.FC = () => {
       webSocketInit();
     }
 
-    useDocTitle(`${name} - 轻风高谊 - 论坛`);
+    useDocTitle(`${name} - 轻风高谊 - 茶馆`);
     return () => {
       if (ws)
         (ws as WS).ws.onmessage = () => {

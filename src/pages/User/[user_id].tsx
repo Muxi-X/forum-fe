@@ -39,7 +39,7 @@ const User: React.FC = () => {
   const { pathname } = useLocation();
   const { user_id } = useParams();
   const {
-    userProfile: { id, avatar },
+    userProfile: { id, avatar, signature, name },
   } = useProfile();
   const nav = useNavigate();
   const outlet = useOutlet();
@@ -52,7 +52,7 @@ const User: React.FC = () => {
     defaultParams: [{ id: +(user_id as string) }],
     refreshDeps: [user_id],
     onSuccess: (res) => {
-      useDocTitle(`${res?.data.name} - 仙风道骨 - 论坛`);
+      useDocTitle(`${res?.data.name} - 仙风道骨 - 茶馆`);
     },
   });
 
@@ -112,8 +112,10 @@ const User: React.FC = () => {
                 userId={+(user_id as string)}
               />
               <style.NameAndSign>
-                <div className="user-name">{user?.data.name}</div>
-                <div className="user-signature">{user?.data.signature}</div>
+                <div className="user-name">{isMyself ? name : user?.data.name}</div>
+                <div className="user-signature">
+                  {isMyself ? signature : user?.data.signature}
+                </div>
               </style.NameAndSign>
             </style.Info>
 

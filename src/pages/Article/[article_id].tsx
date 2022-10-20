@@ -142,7 +142,7 @@ const Article: React.FC = () => {
         } else if (response.data.content_type === 'rtf') {
           setArticleInfo(response.data);
         }
-        useDocTitle(`${response.data.title} - 论坛`);
+        useDocTitle(`${response.data.title} - 茶馆`);
         setArticleInfo(response.data);
         setLike({
           is_liked: response.data.is_liked,

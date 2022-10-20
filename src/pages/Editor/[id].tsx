@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useDebounceFn, useRequest } from 'ahooks';
 import {
   Form,
@@ -28,12 +28,9 @@ import useDocTitle from 'hooks/useDocTitle';
 interface PostProps {
   handlePost: (val: defs.post_CreateRequest) => void;
   content: string;
-}
-
-interface PostInfo {
   category: string;
-  tags: string[];
-  summay: string;
+  oldTags: string[];
+  summary: string;
 }
 
 const { Option } = Select;
@@ -58,7 +55,13 @@ const tagRender = (props: any) => {
   );
 };
 
-const Post: React.FC<PostProps> = ({ handlePost, content }) => {
+const Post: React.FC<PostProps> = ({
+  handlePost,
+  content,
+  oldTags,
+  category,
+  summary,
+}) => {
   const [tags, setTags] = useState<JSX.Element[]>([]);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [value, setValue] = useState('');
@@ -103,6 +106,7 @@ const Post: React.FC<PostProps> = ({ handlePost, content }) => {
       onFinish={onFinish}
       labelCol={{ span: 4 }}
       wrapperCol={{ span: 12 }}
+      initialValues={{ category, tags: oldTags, summary }}
       layout="horizontal"
       form={form}
     >
@@ -211,6 +215,10 @@ const EditorPage: React.FC = () => {
   const [saveBoolean, setSaveBoolean] = useState<'' | boolean>(''); // 显示是否正在保存中
   const [mdToHtml, setMdToHtml] = useState(''); // 存储Markdown下的html内容
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const { state } = useLocation();
+
+  const isUpdate = state ? (state.isUpdate as boolean) : false;
+
   const profileStore = useProfile();
 
   const nav = useNavigate();
@@ -220,23 +228,48 @@ const EditorPage: React.FC = () => {
     onSuccess: (res) => {
       message.success('发布成功');
       nav('/result', { state: { type: 'published', id: res.data.id } });
+      // 发布成功后删除草稿
+      Drafts.deleteDraft(draftId as string);
     },
     manual: true,
   });
 
-  useDocTitle(`落笔生花 - 论坛`);
+  const { run: put } = useRequest(API.post.putPost.request, {
+    manual: true,
+    onSuccess: () => {
+      message.success('更新成功');
+      nav('/result', { state: { type: 'updated', id: +(draftId as string) } });
+    },
+  });
+
+  const { run: get, data: article } = useRequest(API.post.getPostByPost_id.request, {
+    manual: true,
+    onSuccess: (res) => {
+      setFrom({
+        title: res.data.title,
+        content: res.data.content,
+        type: res.data.content_type as EditorType,
+      });
+    },
+  });
+
+  useDocTitle(`落笔生花 - 茶馆`);
 
   // 首次进入 如果该id是草稿的话直接拿草稿setState
   useEffect(() => {
     (async () => {
-      const draft = await Drafts.searchDraft(draftId as string);
-      if (!draft) return;
-      setFrom({ title: draft.title, content: draft.content, type: draft.type });
+      if (isUpdate) get({ post_id: +(draftId as string) });
+      else {
+        const draft = await Drafts.searchDraft(draftId as string);
+        if (!draft) return;
+        setFrom({ title: draft.title, content: draft.content, type: draft.type });
+      }
     })();
   }, []);
 
   // 编辑后将数据存入IndexDB中
   useEffect(() => {
+    if (isUpdate) return;
     if (!title && !content) return;
     putDraftData(draftId, form);
   }, [content, title]);
@@ -264,19 +297,35 @@ const EditorPage: React.FC = () => {
     if (!content) {
       message.warn('请填写正文内容!');
     }
-    if (type === 'rtf') {
-      post({}, { ...val, title, content, domain: 'normal', content_type: type });
+    if (isUpdate) {
+      if (type === 'rtf') {
+        put({}, { ...val, title, content, id: +(draftId as string) });
+      } else {
+        put(
+          {},
+          {
+            ...val,
+            title,
+            content,
+            id: +(draftId as string),
+          },
+        );
+      }
     } else {
-      post(
-        {},
-        {
-          ...val,
-          title,
-          content,
-          content_type: type,
-          compiled_content: mdToHtml,
-        },
-      );
+      if (type === 'rtf') {
+        post({}, { ...val, title, content, domain: 'normal', content_type: type });
+      } else {
+        post(
+          {},
+          {
+            ...val,
+            title,
+            content,
+            content_type: type,
+            compiled_content: mdToHtml,
+          },
+        );
+      }
     }
   };
 
@@ -307,6 +356,15 @@ const EditorPage: React.FC = () => {
     setIsModalOpen(false);
     nav(`/editor/article${new Date().getTime()}`); // 用nav跳转 拿到新id 开启新草稿
   };
+
+  let category = '';
+  let oldTags: string[] = [];
+  let summary = '';
+  if (article?.data) {
+    category = article?.data.category as string;
+    oldTags = article.data.tags as string[];
+    summary = article.data.summary as string;
+  }
 
   return (
     <>
@@ -341,6 +399,9 @@ const EditorPage: React.FC = () => {
               content={
                 <Post
                   handlePost={postArticle}
+                  category={category}
+                  oldTags={oldTags}
+                  summary={summary}
                   content={
                     type === 'md'
                       ? (mdToHtml as string).slice(0, 300)
@@ -349,11 +410,11 @@ const EditorPage: React.FC = () => {
                 />
               }
               trigger="click"
-              title={<h2>发布文章</h2>}
+              title={<h2> {isUpdate ? '更新文章' : '发布文章'}</h2>}
               placement="bottomRight"
             >
               <Button type="primary" loading={false}>
-                发布文章
+                {isUpdate ? '更新文章' : '发布文章'}
               </Button>
             </Popover>
             <style.ToggleEditor

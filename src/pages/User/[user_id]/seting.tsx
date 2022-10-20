@@ -51,6 +51,7 @@ const Seting: React.FC = () => {
   const { run } = useRequest(API.user.putUser.request, {
     manual: true,
     onSuccess: () => {
+      console.log({ ...userProfile, ...formValues, avatar: avatarUrl });
       setUser({ ...userProfile, ...formValues, avatar: avatarUrl });
       message.success('修改成功!');
       nav(`/user/${userProfile.id}`);

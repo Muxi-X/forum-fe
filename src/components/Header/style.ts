@@ -78,6 +78,7 @@ export const SearchDiv = styled.div`
     top: 50%;
     transform: translateY(-50%);
     cursor: pointer;
+    ${media.phone`background-image: url('')`}
   }
 
   & > input {
