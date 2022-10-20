@@ -135,7 +135,7 @@ const Square: React.FC = () => {
   };
 
   const getArticleByTime = () => {
-    if (getParams.filter === null) return;
+    if (getParams.filter === '') return;
     const { filter } = getParams;
     setHasMore(true);
     setList([]);
