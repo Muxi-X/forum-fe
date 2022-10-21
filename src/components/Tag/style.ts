@@ -18,6 +18,8 @@ const tag = css`
   cursor: pointer;
   font-size: 1rem;
   border-radius: 999px;
+  min-width: 3rem;
+  text-align: center;
   user-select: none;
 `;
 

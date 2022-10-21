@@ -148,6 +148,7 @@ const Square: React.FC = () => {
   };
 
   const handleGetCategory = (index: number) => {
+    if (pathname === `/${CATEGORY_EN[index]}`) return;
     setList([]);
     setHasMore(true);
     setGetParams({
@@ -180,6 +181,7 @@ const Square: React.FC = () => {
   };
 
   const handleChooseTag = (tag: string) => {
+    if (getParams.tag === tag) return;
     setGetParams({ ...getParams, tag });
     setList([]);
     setHasMore(true);
@@ -273,6 +275,7 @@ const Square: React.FC = () => {
           <Tag
             tag="全部"
             onClick={() => {
+              if (tag === '') return;
               setHasMore(true);
               setGetParams({ ...getParams, tag: '' });
               setList([]);
