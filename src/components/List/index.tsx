@@ -8,7 +8,7 @@ import {
 } from '@ant-design/icons';
 import InfiniteScroll from 'react-infinite-scroll-component';
 import Loading from 'components/Loading';
-import { List, Space, Divider, Popover, message, Modal } from 'antd';
+import { List, Space, Divider, Popover, message, Modal, Button } from 'antd';
 import { Link, useNavigate } from 'react-router-dom';
 import moment from 'utils/moment';
 import useRequest from 'hooks/useRequest';
@@ -25,6 +25,12 @@ interface IProps {
   header?: React.ReactElement;
   run: () => void;
 }
+interface ActionProps {
+  done?: boolean;
+}
+const Actio = styled.div<ActionProps>`
+  cursor: pointer;
+`;
 
 const fakeStyle = `
 content: '';
@@ -41,7 +47,6 @@ const PostList = styled(List)`
 `;
 
 const ArticleItem = styled(Item)`
-  cursor: pointer;
   position: relative;
 
   h2 {
@@ -56,6 +61,7 @@ const ArticleItem = styled(Item)`
     white-space: nowrap;
     /*当文本溢出包含元素时，以省略号表示超出的文本*/
     text-overflow: ellipsis;
+    color: black;
   }
 `;
 
@@ -136,6 +142,55 @@ const renderItem = (
   index: number,
   nav: Function,
 ) => {
+  const [articleInfo, setArticleInfo] = useState<defs.post_GetPostResponse>({});
+
+  const {
+    content_type,
+    creator_name,
+    creator_avatar,
+    creator_id,
+    compiled_content,
+    category,
+    tags,
+    time,
+    content,
+    sub_posts,
+    is_collection,
+    is_liked,
+    like_num,
+    collection_num,
+  } = articleInfo;
+
+  const [like, setLike] = useState({
+    is_liked: is_liked as boolean,
+    like_num: like_num as number,
+  });
+
+  const { run: postLike } = useRequest(API.like.postLike.request, {
+    manual: true,
+    onSuccess: () => {
+      const likeBoolean = !like.is_liked;
+      const newNum = likeBoolean ? like.like_num + 1 : like.like_num - 1;
+      setLike({ is_liked: likeBoolean, like_num: newNum });
+    },
+  });
+
+  const [collect, setCollect] = useState({
+    is_collection,
+    collection_num: collection_num as number,
+  });
+
+  const { run: postCollect } = useRequest(API.collection.postByPost_id.request, {
+    manual: true,
+    onSuccess: () => {
+      const collectBoolean = !collect.is_collection;
+      const newNum = collectBoolean
+        ? collect.collection_num + 1
+        : collect.collection_num - 1;
+      setCollect({ is_collection: collectBoolean, collection_num: newNum });
+    },
+  });
+
   const showConfirm = () => {
     confirm({
       title: '删除文章',
@@ -183,36 +238,66 @@ const renderItem = (
               </div>
             ) : null}
           </Popover>
-          <Link to={`/article/${item.id}`} target={'_blank'}>
-            <ArticleItem
-              key={item.title}
-              actions={[
+
+          <ArticleItem
+            key={item.title}
+            actions={[
+              <Button
+                block
+                type="text"
+                key="list-vertical-star-o"
+                onClick={() => {
+                  postCollect({ post_id: +(item.id as number) }, {});
+                }}
+              >
                 <IconText
                   icon={StarOutlined}
-                  text={`${item.collection_num ? item.collection_num : 0}`}
-                  key="list-vertical-star-o"
-                />,
+                  text={`${
+                    collect.is_collection
+                      ? item.is_collection
+                        ? (item.collection_num as number) - 1
+                        : (item.collection_num as number) + 1
+                      : item.collection_num
+                  }`}
+                />
+              </Button>,
+
+              <Button
+                block
+                type="text"
+                key="list-vertical-like-o"
+                onClick={() => {
+                  postLike({}, { target_id: +(item.id as number), type_name: 'post' });
+                }}
+              >
                 <IconText
                   icon={LikeOutlined}
-                  text={`${item.like_num ? item.like_num : 0}`}
-                  key="list-vertical-like-o"
-                />,
-                <IconText
-                  icon={MessageOutlined}
-                  text={`${item.comment_num ? item.comment_num : 0}`}
-                  key="list-vertical-message"
-                />,
-              ]}
-            >
-              <ArticleInfo position="left">{item.creator_name}</ArticleInfo>
-              <ArticleInfo position="mid">{moment(item.time).fromNow()}</ArticleInfo>
-              <ArticleInfo position="right">{`${item.category} · ${
-                item ? (item.tags as any)[0] : ''
-              }`}</ArticleInfo>
+                  text={`${
+                    like.is_liked
+                      ? item.is_liked
+                        ? (item.like_num as number) - 1
+                        : (item.like_num as number) + 1
+                      : item.like_num
+                  }`}
+                />
+              </Button>,
+              <IconText
+                icon={MessageOutlined}
+                text={`${item.comment_num ? item.comment_num : 0}`}
+                key="list-vertical-message"
+              />,
+            ]}
+          >
+            <ArticleInfo position="left">{item.creator_name}</ArticleInfo>
+            <ArticleInfo position="mid">{moment(item.time).fromNow()}</ArticleInfo>
+            <ArticleInfo position="right">{`${item.category} · ${
+              item ? (item.tags as any)[0] : ''
+            }`}</ArticleInfo>
+            <Link to={`/article/${item.id}`} target={'_blank'}>
               <h2>{item.title}</h2>
               <p>{item.summary}</p>
-            </ArticleItem>
-          </Link>
+            </Link>
+          </ArticleItem>
         </Wrapper>
       )}
     </>

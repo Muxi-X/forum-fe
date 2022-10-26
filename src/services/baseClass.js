@@ -571,3 +571,13 @@ export class user {
   /** role */
   role = '';
 }
+
+export class user_CreateMessageRequest {
+  /** message */
+  message = '';
+}
+
+export class user_ListMessageResponse {
+  /** messages */
+  messages = [];
+}

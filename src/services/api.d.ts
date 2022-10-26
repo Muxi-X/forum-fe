@@ -582,6 +582,16 @@ declare namespace defs {
     /** role */
     role?: string;
   }
+
+  export class user_CreateMessageRequest {
+    /** message */
+    message?: string;
+  }
+
+  export class user_ListMessageResponse {
+    /** messages */
+    messages?: Array<string>;
+  }
 }
 
 declare namespace API {
@@ -1163,6 +1173,42 @@ login the team-forum
       export type HooksParams = (() => Params) | Params;
 
       export type Response = ResponseTypeWarpper<defs.ListResponse>;
+
+      export const method: string;
+
+      export function request(params: Params, options?: any): Promise<Response>;
+    }
+
+    /**
+     * 创建 公共 message api
+     * /user/message
+     */
+    export namespace postUserMessage {
+      export class Params {}
+
+      export type HooksParams = (() => Params) | Params;
+
+      export type Response = ResponseTypeWarpper<defs.Response>;
+
+      export const method: string;
+
+      export function request(
+        params: Params,
+        body: defs.user_CreateMessageRequest,
+        options?: any,
+      ): Promise<Response>;
+    }
+
+    /**
+     * list user message api
+     * /user/message/list
+     */
+    export namespace getUserMessageList {
+      export class Params {}
+
+      export type HooksParams = (() => Params) | Params;
+
+      export type Response = ResponseTypeWarpper<defs.user_ListMessageResponse>;
 
       export const method: string;
 
