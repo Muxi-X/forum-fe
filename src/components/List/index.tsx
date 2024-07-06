@@ -338,32 +338,33 @@ const ArticleList: React.FC<IProps> = ({ list, loading, run, hasMore, header }) 
       {loading ? (
         <Loading />
       ) : (
-        <InfiniteScroll
-          dataLength={list.length}
-          next={run}
-          hasMore={hasMore}
-          loader={<></>}
-          endMessage={<Divider plain>It is all, nothing more 🤐</Divider>}
-          scrollableTarget="scrollableDiv"
-        >
-          <PostList
-            header={header ? header : ''}
-            itemLayout="vertical"
-            size="small"
-            dataSource={list}
-            renderItem={(item, i) =>
-              renderItem(
-                item as any,
-                id as number,
-                delArticle,
-                isDel[i] ? isDel[i].isDel : false,
-                handleDel,
-                i,
-                nav,
-              )
-            }
-          />
-        </InfiniteScroll>
+        <PostList
+          header={header ? header : ''}
+          itemLayout="vertical"
+          size="small"
+          dataSource={list || []}
+          renderItem={(item, i) =>
+            renderItem(
+              item as any,
+              id as number,
+              delArticle,
+              isDel[i] ? isDel[i].isDel : false,
+              handleDel,
+              i,
+              nav,
+            )
+          }
+        />
+        // <InfiniteScroll
+        //   dataLength={list.length}
+        //   next={run}
+        //   hasMore={hasMore}
+        //   loader={<></>}
+        //   endMessage={<Divider plain>It is all, nothing more 🤐</Divider>}
+        //   scrollableTarget="scrollableDiv"
+        // >
+
+        // </InfiniteScroll>
       )}
     </>
   );
