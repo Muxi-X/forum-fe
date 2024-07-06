@@ -270,7 +270,7 @@ const Square: React.FC = () => {
   return (
     <>
       {searchQuery ? null : NavList}
-      {tags.length ? (
+      {tags?.length ? (
         <>
           <Tag
             tag="全部"
