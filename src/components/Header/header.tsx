@@ -85,7 +85,7 @@ const Header: React.FC = () => {
                 setQuery('');
               }}
             >
-              <img src="http://ossforum.muxixyz.com/logo1.png" alt="logo" />
+              <img src="https://ossforum.muxixyz.com/logo1.png" alt="logo" />
               <span className="logo">MUXI</span>
               <Popover
                 trigger="click"
@@ -162,7 +162,7 @@ const Header: React.FC = () => {
                         onClick={() => {
                           setTip(false);
                         }}
-                        src="http://ossforum.muxixyz.com/default/msg.png"
+                        src="https://ossforum.muxixyz.com/default/msg.png"
                         alt="msg"
                       />
                     </Badge>
@@ -171,7 +171,7 @@ const Header: React.FC = () => {
                 <Tooltip color="gold" title={'查看通知'}>
                   <Link to="/notice">
                     {/* <Badge count={1} dot> */}
-                    <img src="http://ossforum.muxixyz.com/default/tip.png" alt="tip" />
+                    <img src="https://ossforum.muxixyz.com/default/tip.png" alt="tip" />
                     {/* </Badge> */}
                   </Link>
                 </Tooltip>

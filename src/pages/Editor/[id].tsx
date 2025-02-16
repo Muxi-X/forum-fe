@@ -423,7 +423,7 @@ const EditorPage: React.FC = () => {
             >
               <img
                 style={{ height: '100%' }}
-                src="http://ossforum.muxixyz.com/default/toggle.svg"
+                src="https://ossforum.muxixyz.com/default/toggle.svg"
                 alt="toggle"
               ></img>
             </style.ToggleEditor>

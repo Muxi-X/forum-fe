@@ -37,7 +37,7 @@ const Avatar: React.FC<AvatarProps> = ({
   };
 
   const haveSrc = () => {
-    return src ? src : 'http://ossforum.muxixyz.com/default/defaultAvatar.png';
+    return src ? src : 'https://ossforum.muxixyz.com/default/defaultAvatar.png';
   };
 
   return (

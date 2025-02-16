@@ -184,7 +184,7 @@ const Login: React.FC = () => {
                 </button>
               </div>
               <img
-                src="http://ossforum.muxixyz.com/default/log.svg"
+                src="https://ossforum.muxixyz.com/default/log.svg"
                 className="image"
                 alt=""
               />
@@ -202,7 +202,7 @@ const Login: React.FC = () => {
                 </button>
               </div>
               <img
-                src="http://ossforum.muxixyz.com/default/register.svg"
+                src="https://ossforum.muxixyz.com/default/register.svg"
                 className="image"
                 alt=""
               />

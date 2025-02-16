@@ -34,8 +34,8 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'http://forum.muxixyz.com/api',
-        // target: 'http://192.168.1.114:8081/api',
+        target: 'https://api.forum.muxixyz.com/api/v1',
+        // target: 'http://localhost:8080/api',
         changeOrigin: true,
         rewrite: (path) => {
           return path.replace(/^\/api/, '');
