@@ -11,6 +11,8 @@ RUN yarn build
 EXPOSE 4173
 CMD [ "yarn", "server" ]
 
+
+
 # 暂时不使用下面的,下面的打包方式会导致article/编号 页面出现404
 ## 第一阶段：构建阶段
 #FROM node:14.18.1 AS builder

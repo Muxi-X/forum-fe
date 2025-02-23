@@ -34,7 +34,7 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'https://api.forum.muxixyz.com/api/v1',
+        target: 'https://forum.muxistudio.xyz/api',
         // target: 'http://localhost:8080/api',
         changeOrigin: true,
         rewrite: (path) => {
