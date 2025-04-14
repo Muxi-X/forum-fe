@@ -313,7 +313,7 @@ const EditorPage: React.FC = () => {
       }
     } else {
       if (type === 'rtf') {
-        post({}, { ...val, title, content, domain: 'normal', content_type: type });
+        post({}, { ...val, title, content, content_type: type });
       } else {
         post(
           {},
