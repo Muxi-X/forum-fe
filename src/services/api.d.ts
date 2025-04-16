@@ -511,8 +511,8 @@ declare namespace defs {
     /** cause */
     cause?: string;
 
-    /** post_id */
-    post_id?: number;
+    /** id */
+    id?: number;
 
     /** type_name */
     type_name?: string;

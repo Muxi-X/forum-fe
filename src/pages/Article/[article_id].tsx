@@ -219,7 +219,7 @@ const Article: React.FC = () => {
   };
 
   const handleReport = () => {
-    report({}, { cause: reportVal, post_id: +(article_id as string), type_name: 'post' });
+    report({}, { cause: reportVal, id: +(article_id as string), type_name: 'post' });
   };
 
   const handleAddComment = (num: number) => {
