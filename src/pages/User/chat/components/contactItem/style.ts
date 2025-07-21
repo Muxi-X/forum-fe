@@ -15,13 +15,13 @@ export const Item = styled.div<IProps>`
 
   &::after {
     content: '';
-    width: 90%;
+    width: 100%;
     height: 1px;
     background-color: rgb(230, 230, 230);
     position: absolute;
     bottom: 0px;
     left: 50%;
-    margin-left: -45%;
+    margin-left: -50%;
   }
 
   &:hover {
@@ -31,13 +31,15 @@ export const Item = styled.div<IProps>`
 
 export const Message = styled.div`
   display: flex;
+  flex: 1;
+  min-width: 0;
 `;
 
 export const Info = styled.div`
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  margin-left: 1em;
+  margin-left: 0.15em;
 `;
 
 export const Content = styled.div`
@@ -47,12 +49,20 @@ export const Content = styled.div`
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
-  max-width: 25em;
+  max-width: 12em;
 `;
 
-export const Nickname = styled.div``;
+export const Nickname = styled.div`
+  max-width: 6em;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+`;
 
 export const ChatDate = styled.div`
+  margin-left: 0.5em;
   font-size: 0.8em;
   color: gray;
+  white-space: nowrap;
+  flex-shrink: 0;
 `;

@@ -64,6 +64,9 @@ const Login: React.FC = () => {
       localStorage.setItem('pwd', password);
       const user = await getUser({});
       setUser(user.data);
+      if (user.data.id !== undefined) {
+        localStorage.setItem('userId', user.data.id.toString());
+      }
       const qiniu = await getQiniuToken({});
       setToken(qiniu.data.token as string);
       webSocketInit();

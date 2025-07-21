@@ -99,7 +99,9 @@ export const formatYear = (time: string, format?: string) => {
   // 有年代表是前几年的
   if (moment(time).fromNow().includes('年')) {
     return moment(time).format('YYYY-' + format);
-  } else return moment(time).format(format ? format : 'MM-DD');
+  } else {
+    return moment(time).format(format ? format : 'MM-DD');
+  }
 };
 
 momentToZH();

@@ -4,7 +4,7 @@ import media from 'styles/media';
 
 const Wrapper = styled.div`
   user-select: none;
-  width: 100vw;
+  width: 100%;
   text-align: center;
   line-height: 10vh;
   height: 10vh;

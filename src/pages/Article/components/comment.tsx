@@ -465,21 +465,30 @@ const CommentCp = (props: IProps, ref: any) => {
     userProfile: { avatar, name },
   } = useProfile();
 
+  const descOrder = (comments: Array<defs.post_Comment>) => {
+    return [...comments].sort((a, b) => {
+      const timeA = a.time ? new Date(a.time).getTime() : 0;
+      const timeB = b.time ? new Date(b.time).getTime() : 0;
+      return timeB - timeA;
+    });
+  };
+
   const { run } = useRequest(API.comment.postComment.request, {
     manual: true,
     onSuccess: (res) => {
+      const newComment = {
+        ...res.data,
+        time: res.data.create_time,
+      }; //因为res.data没有time属性，这里统一度量衡
       setTimeout(() => {
-        setComments([...comments, res.data]);
+        setComments(descOrder([...comments, newComment]));
         setContent('');
         setSubmitting(false);
         handleAddComment(commentNum + 1);
         setImg('');
-        setTimeout(() => {
-          window.scrollBy({ top: document.body.scrollHeight, behavior: 'smooth' });
-        });
       }, 500);
     },
-  });
+  }); //这是用于处理根评论
 
   const handleSubmit = () => {
     run(
@@ -525,7 +534,7 @@ const CommentCp = (props: IProps, ref: any) => {
         <CommentList
           handleAddComment={handleAddComment}
           commentNum={commentNum}
-          comments={comments}
+          comments={descOrder(comments)}
           post_id={post_id}
         />
       )}

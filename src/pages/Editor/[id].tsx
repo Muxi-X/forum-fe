@@ -215,6 +215,7 @@ const EditorPage: React.FC = () => {
   const [saveBoolean, setSaveBoolean] = useState<'' | boolean>(''); // 显示是否正在保存中
   const [mdToHtml, setMdToHtml] = useState(''); // 存储Markdown下的html内容
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const { state } = useLocation();
 
   const isUpdate = state ? (state.isUpdate as boolean) : false;
@@ -290,6 +291,8 @@ const EditorPage: React.FC = () => {
   );
 
   const postArticle = (val: defs.post_CreateRequest) => {
+    if (submitting) return;
+    setSubmitting(true);
     if (!title) {
       message.warn('请填写标题!');
       return;

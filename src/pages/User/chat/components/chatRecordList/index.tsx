@@ -3,6 +3,7 @@ import styled from 'styled-components';
 import { Image } from 'antd';
 import useChat, { Contact } from 'store/useChat';
 import useProfile from 'store/useProfile';
+import { formatYear } from 'utils/moment';
 import { MsgResponse, Message } from 'utils/WS';
 import Avatar from 'components/Avatar/avatar';
 import * as style from './style';
@@ -39,7 +40,9 @@ const MessageItem: React.FC<IProps> = ({ msg, contact }) => {
     <style.MessageWrapper myMessage={isMy}>
       <style.MessageItem myMessage={isMy}>
         <style.Message>
-          <style.MessageTime myMessage={isMy}>{msg.time}</style.MessageTime>
+          <style.MessageTime myMessage={isMy}>
+            {formatYear(msg.time as string, 'MM-DD')}
+          </style.MessageTime>
           {msg.type_name === 'str' ? (
             <style.MessageContent myMessage={isMy}>{msg.content}</style.MessageContent>
           ) : (

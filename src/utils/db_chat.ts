@@ -11,7 +11,7 @@ class ContactsDatabase extends Dexie {
   constructor() {
     super('contactsDatabase');
     this.version(1).stores({
-      contact: 'id, avatar, name, msgRecord, userId',
+      contact: 'id, avatar, name, msgRecords, userId',
     });
   }
 }
@@ -20,13 +20,13 @@ const db = new ContactsDatabase();
 
 const Contacts = {
   // 增加新联系人
-  addContact: (contact: ContactWithUserId) => {
-    db.contact.put({ ...contact });
+  addContact: async (contact: ContactWithUserId) => {
+    return await db.contact.put({ ...contact });
   },
 
   // 删除联系人
   deleteContact: async (id: number) => {
-    db.contact.delete(id);
+    return await db.contact.delete(id);
   },
 
   // 获得联系人列表
@@ -42,10 +42,25 @@ const Contacts = {
   },
 
   // 更新聊天记录
-  putRecords: (records: MessageList, id: number) => {
-    db.contact.get(id).then((res) => {
-      db.contact.put({ ...(res as ContactWithUserId), msgRecords: records });
-    });
+  putRecords: async (records: MessageList, id: number) => {
+    try {
+      const contact = await db.contact.get(id);
+      if (!contact) {
+        console.error(`未找到 ID 为 ${id} 的联系人`);
+        return false;
+      }
+
+      await db.contact.update(id, {
+        msgRecords: records,
+      });
+
+      const updatedContact = await db.contact.get(id);
+      // console.log('我明明更新了:', updatedContact);
+      return true;
+    } catch (error) {
+      console.error('更新失败:', error);
+      return false;
+    }
   },
 };
 

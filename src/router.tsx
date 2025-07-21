@@ -2,6 +2,7 @@ import React, { Suspense, useEffect } from 'react';
 import { BrowserRouter as Router, useRoutes } from 'react-router-dom';
 import routes from '~react-pages';
 import useRequest from 'hooks/useRequest';
+import NotifListener from 'components/Notice';
 import Header from 'components/Header/header';
 import useProfile from 'store/useProfile';
 import useShowHeader from 'store/useShowHeader';
@@ -33,6 +34,7 @@ const SetRoutes = () => {
   return (
     <Router>
       {showHeader ? <Header /> : null}
+      {/* <NotifListener /> */}
       <Routes />
     </Router>
   );

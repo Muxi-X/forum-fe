@@ -53,8 +53,10 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const WebSocket = new WS(token);
     WebSocket.ws.onmessage = (res) => {
       const data: MsgResponse = JSON.parse(res.data);
-      setTip(true);
-      setSelectedId(data.sender);
+      if (typeof data?.sender === 'number') {
+        setTip(true);
+        setSelectedId(data.sender);
+      }
     };
     setWS(WebSocket);
   };

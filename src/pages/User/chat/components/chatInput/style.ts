@@ -15,7 +15,7 @@ export const InputArea = styled.textarea`
   outline: none;
   flex: 1;
   resize: none;
-  padding: 10px;
+  padding: 6px;
   font-size: 13px;
   letter-spacing: 2px;
   &::placeholder {

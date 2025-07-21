@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { message } from 'antd';
 import styled from 'styled-components';
 import { useLocation } from 'react-router';
 import useRequest from 'hooks/useRequest';
@@ -58,6 +59,7 @@ const Chat: React.FC = () => {
   const [loading, setLoading] = useState(true);
 
   const webSocketInit = () => {
+    console.log('孩子们我重连了');
     const token = localStorage.getItem('token') as string;
     const WebSocket = new WS(token);
     WebSocket.ws.onmessage = (e) => {
@@ -68,67 +70,150 @@ const Chat: React.FC = () => {
       setRecords(records, res.sender);
     };
     setWS(WebSocket);
+    console.log(WebSocket);
   };
   useEffect(() => {
-    // 从别人的主页点发私信的情况 拿id找用户
-    if (state !== null && (state as LocationState).id !== `${myId}`) {
-      const { id } = state as LocationState; // 从本地搜索目标用户
-      Contacts.getContacts(myId as number).then((contacts) => {
-        Contacts.searchContact(+id).then((contact) => {
-          // 如果有 直接选择该用户
+    // // 从别人的主页点发私信的情况 拿id找用户
+    // if (state !== null && (state as LocationState).id !== `${myId}`) {
+    //   const { id } = state as LocationState; // 从本地搜索目标用户
+    //   Contacts.getContacts(myId as number).then((contacts) => {
+    //     Contacts.searchContact(+id).then((contact) => {
+    //       // 如果有 直接选择该用户
+    //       if (contact) {
+    //         setSelectedId(contact.id as number);
+    //         setContacts(contacts);
+    //       } else {
+    //         // 如果没有该用户 就把该用户信息添加到本地中
+    //         runAsync({ id: +(id as string) }).then((res) => {
+    //           const newContact = { ...res.data, msgRecords: [], userId: myId as number };
+    //           Contacts.getContacts(myId as number).then((contacts) => {
+    //             if (contacts.length !== 0) {
+    //               setContacts([{ ...res.data, msgRecords: [] }, ...contacts]);
+    //             } else setContacts([{ ...newContact }]);
+    //           });
+    //           Contacts.addContact({ ...newContact });
+    //           setSelectedId(newContact.id as number);
+    //         });
+    //       }
+    //     });
+    //     setLoading(false);
+    //   });
+    // } else {
+    //   // 主页收到消息通知 ｜ 直接从主页点进
+    //   Contacts.getContacts(myId as number).then((contacts) => {
+    //     // selected === 0 说明没有新消息
+    //     if (selectedId === 0) {
+    //       // 之前有联系人列表
+    //       if (contacts.length !== 0) {
+    //         setSelectedId(contacts[0].id as number);
+    //         setContacts(contacts);
+    //       }
+    //     } else {
+    //       // 有新消息的情况
+    //       Contacts.searchContact(selectedId).then((contact) => {
+    //         getHistory({ id: selectedId }).then((res) => {
+    //           if (contact) {
+    //             console.log(res.data);
+    //             setRecords(res.data.reverse() as MsgResponse[], selectedId);
+    //           } else {
+    //             runAsync({ id: selectedId }).then((userRes) => {
+    //               const newContact = {
+    //                 ...userRes.data,
+    //                 msgRecords: res.data.reverse() as MsgResponse[],
+    //                 userId: myId as number,
+    //               };
+    //               setContacts([{ ...newContact }]);
+    //               Contacts.addContact({ ...newContact });
+    //               setSelectedId(newContact.id as number);
+    //             });
+    //           }
+    //         });
+    //       });
+    //     }
+    //     setLoading(false);
+    //   });
+    // }
+
+    const initContacts = async () => {
+      try {
+        // 从别人的主页点发私信的情况 拿 id 找用户
+        if (state !== null && (state as LocationState).id !== `${myId}`) {
+          const { id } = state as LocationState;
+          // 从本地搜索目标用户
+          const localContacts = await Contacts.getContacts(myId as number);
+          const contact = await Contacts.searchContact(+id);
+
           if (contact) {
+            // 如果有，直接选择该用户
+            setContacts(localContacts);
             setSelectedId(contact.id as number);
-            setContacts(contacts);
           } else {
-            // 如果没有该用户 就把该用户信息添加到本地中
-            runAsync({ id: +(id as string) }).then((res) => {
-              const newContact = { ...res.data, msgRecords: [], userId: myId as number };
-              Contacts.getContacts(myId as number).then((contacts) => {
-                if (contacts.length !== 0) {
-                  setContacts([{ ...res.data, msgRecords: [] }, ...contacts]);
-                } else setContacts([{ ...newContact }]);
-              });
-              Contacts.addContact({ ...newContact });
-              setSelectedId(newContact.id as number);
-            });
+            // 如果没有该用户，就从接口拿信息并添加到本地中
+            const res = await runAsync({ id: +(id as string) });
+            const newContact = { ...res.data, msgRecords: [], userId: myId as number };
+
+            const updatedContacts = await Contacts.getContacts(myId as number);
+            if (updatedContacts.length !== 0) {
+              setContacts([...updatedContacts, { ...res.data, msgRecords: [] }]);
+            } else {
+              setContacts([{ ...newContact }]);
+            }
+
+            await Contacts.addContact({ ...newContact });
+            setSelectedId(newContact.id as number);
           }
-        });
-        setLoading(false);
-      });
-    } else {
-      // 主页收到消息通知 ｜ 直接从主页点进
-      Contacts.getContacts(myId as number).then((contacts) => {
-        // selected === 0 说明没有新消息
-        if (selectedId === 0) {
-          // 之前有联系人列表
-          if (contacts.length !== 0) {
-            setSelectedId(contacts[0].id as number);
-            setContacts(contacts);
-          }
+
+          setLoading(false);
         } else {
-          // 有新消息的情况
-          Contacts.searchContact(selectedId).then((contact) => {
-            getHistory({ id: selectedId }).then((res) => {
-              if (contact) {
-                setRecords(res.data.reverse() as MsgResponse[], selectedId);
+          // 主页收到消息通知 ｜ 直接从主页点进
+          const localContacts = await Contacts.getContacts(myId as number);
+
+          // selected === 0 说明没有新消息
+          if (selectedId === 0) {
+            if (localContacts.length !== 0) {
+              // 之前有联系人列表
+              setContacts(localContacts);
+              setSelectedId(localContacts[0].id as number);
+            }
+          } else {
+            // 有新消息的情况
+            const localContacts = await Contacts.getContacts(myId as number);
+            const contact = await Contacts.searchContact(selectedId);
+            const res = await getHistory({ id: selectedId });
+            console.log(res);
+
+            if (contact) {
+              if (res.data) {
+                const reversedData = [...res.data].reverse() as MsgResponse[];
+                setRecords([...getRecords(selectedId), ...reversedData], selectedId);
+                await Contacts.putRecords(
+                  [...getRecords(selectedId), ...reversedData],
+                  selectedId,
+                );
               } else {
-                runAsync({ id: selectedId }).then((userRes) => {
-                  const newContact = {
-                    ...userRes.data,
-                    msgRecords: res.data.reverse() as MsgResponse[],
-                    userId: myId as number,
-                  };
-                  setContacts([{ ...newContact }]);
-                  Contacts.addContact({ ...newContact });
-                  setSelectedId(newContact.id as number);
-                });
+                setRecords(getRecords(selectedId) ?? [], selectedId);
               }
-            });
-          });
+              setContacts(localContacts);
+            } else {
+              const userRes = await runAsync({ id: selectedId });
+              const newContact = {
+                ...userRes.data,
+                msgRecords: res.data.reverse() as MsgResponse[],
+                userId: myId as number,
+              };
+              setContacts([...localContacts, { ...newContact }]);
+              await Contacts.addContact({ ...newContact });
+              setSelectedId(newContact.id as number);
+            }
+          }
+          setLoading(false);
         }
-        setLoading(false);
-      });
-    }
+      } catch (err) {
+        console.log('获取聊天记录错误:', err);
+        message.error('获取聊天记录错误');
+      }
+    };
+    initContacts();
 
     if (ws) {
       (ws as WS).ws.onmessage = (e) => {
@@ -142,14 +227,15 @@ const Chat: React.FC = () => {
       webSocketInit();
     }
 
-    useDocTitle(`${name} - 轻风高谊 - 茶馆`);
+    name ? useDocTitle(`${name} - 轻风高谊 - 茶馆`) : useDocTitle(`轻风高谊 - 茶馆`);
+
     return () => {
       if (ws)
         (ws as WS).ws.onmessage = () => {
           setTip(true);
         };
     };
-  }, [myId, ws]);
+  }, [loading, myId, ws, name]);
 
   return (
     <>

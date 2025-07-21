@@ -58,7 +58,7 @@ const Square: React.FC = () => {
   const { pathname, search } = location;
   const { setList, postList, getList } = useList();
   const {
-    userProfile: { role },
+    userProfile: { role, id },
   } = useProfile();
   const [hasMore, setHasMore] = useState(true); // 判断是否有更多文章
   const [tags, setTags] = useState<string[]>([]); // Tags表

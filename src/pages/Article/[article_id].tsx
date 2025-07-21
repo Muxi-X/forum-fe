@@ -159,7 +159,7 @@ const Article: React.FC = () => {
             content: `#${response.data.title}\n${response.data.content}`,
           });
         } else if (response.data.content_type === 'rtf') {
-          setArticleInfo(response.data);
+          setArticleInfo(response.data); //为什么调用两次？暂时不懂
         }
         useDocTitle(`${response.data.title} - 茶馆`);
         setArticleInfo(response.data);

@@ -8,6 +8,7 @@ import useList from 'store/useList';
 import useProfile from 'store/useProfile';
 import Avatar from 'components/Avatar/avatar';
 import useWS from 'store/useWS';
+import useNotification from 'store/useNotification';
 import * as style from './style';
 
 const HeaderAvatar = styled(Avatar)`
@@ -36,6 +37,8 @@ const Header: React.FC = () => {
   const { tip } = useWS();
   const { setList } = useList();
   const { setTip } = useWS();
+  const { unreadCount } = useNotification();
+
   const handleQueryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setQuery(e.target.value);
   };
@@ -170,9 +173,9 @@ const Header: React.FC = () => {
                 </Tooltip>
                 <Tooltip color="gold" title={'查看通知'}>
                   <Link to="/notice">
-                    {/* <Badge count={1} dot> */}
-                    <img src="https://ossforum.muxixyz.com/default/tip.png" alt="tip" />
-                    {/* </Badge> */}
+                    <Badge count={unreadCount} dot>
+                      <img src="https://ossforum.muxixyz.com/default/tip.png" alt="tip" />
+                    </Badge>
                   </Link>
                 </Tooltip>
               </style.MsgTool>
