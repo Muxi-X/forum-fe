@@ -59,7 +59,6 @@ const Chat: React.FC = () => {
   const [loading, setLoading] = useState(true);
 
   const webSocketInit = () => {
-    console.log('孩子们我重连了');
     const token = localStorage.getItem('token') as string;
     const WebSocket = new WS(token);
     WebSocket.ws.onmessage = (e) => {
@@ -135,6 +134,7 @@ const Chat: React.FC = () => {
     // }
 
     const initContacts = async () => {
+      if (!myId) return;
       try {
         // 从别人的主页点发私信的情况 拿 id 找用户
         if (state !== null && (state as LocationState).id !== `${myId}`) {
@@ -150,7 +150,12 @@ const Chat: React.FC = () => {
           } else {
             // 如果没有该用户，就从接口拿信息并添加到本地中
             const res = await runAsync({ id: +(id as string) });
-            const newContact = { ...res.data, msgRecords: [], userId: myId as number };
+            const newContact = {
+              ...res.data,
+              msgRecords: [],
+              userId: myId as number,
+              lastModified: Date.now(),
+            };
 
             const updatedContacts = await Contacts.getContacts(myId as number);
             if (updatedContacts.length !== 0) {
@@ -166,21 +171,21 @@ const Chat: React.FC = () => {
           setLoading(false);
         } else {
           // 主页收到消息通知 ｜ 直接从主页点进
-          const localContacts = await Contacts.getContacts(myId as number);
-
+          const localContacts = (await Contacts.getContacts(myId as number)) || [];
           // selected === 0 说明没有新消息
           if (selectedId === 0) {
             if (localContacts.length !== 0) {
               // 之前有联系人列表
               setContacts(localContacts);
-              setSelectedId(localContacts[0].id as number);
+              setTimeout(() => {
+                setSelectedId(localContacts[0].id as number);
+              }, 0);
             }
           } else {
             // 有新消息的情况
             const localContacts = await Contacts.getContacts(myId as number);
             const contact = await Contacts.searchContact(selectedId);
             const res = await getHistory({ id: selectedId });
-            console.log(res);
 
             if (contact) {
               if (res.data) {
@@ -200,6 +205,7 @@ const Chat: React.FC = () => {
                 ...userRes.data,
                 msgRecords: res.data.reverse() as MsgResponse[],
                 userId: myId as number,
+                lastModified: Date.now(),
               };
               setContacts([...localContacts, { ...newContact }]);
               await Contacts.addContact({ ...newContact });
@@ -231,11 +237,15 @@ const Chat: React.FC = () => {
 
     return () => {
       if (ws)
-        (ws as WS).ws.onmessage = () => {
-          setTip(true);
+        (ws as WS).ws.onmessage = (res) => {
+          const data: MsgResponse = JSON.parse(res.data);
+          if (typeof data?.sender === 'number') {
+            setTip(true);
+            setSelectedId(data.sender);
+          }
         };
     };
-  }, [loading, myId, ws, name]);
+  }, [myId, ws, name]);
 
   return (
     <>

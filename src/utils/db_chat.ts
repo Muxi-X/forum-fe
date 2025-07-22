@@ -3,6 +3,7 @@ import { Contact, MessageList } from 'store/useChat';
 
 interface ContactWithUserId extends Contact {
   userId: number | undefined;
+  lastModified: number;
 }
 
 class ContactsDatabase extends Dexie {
@@ -10,8 +11,8 @@ class ContactsDatabase extends Dexie {
 
   constructor() {
     super('contactsDatabase');
-    this.version(1).stores({
-      contact: 'id, avatar, name, msgRecords, userId',
+    this.version(4).stores({
+      contact: 'id, avatar, name, userId, lastModified',
     });
   }
 }
@@ -21,7 +22,7 @@ const db = new ContactsDatabase();
 const Contacts = {
   // 增加新联系人
   addContact: async (contact: ContactWithUserId) => {
-    return await db.contact.put({ ...contact });
+    return await db.contact.put({ ...contact, lastModified: Date.now() });
   },
 
   // 删除联系人
@@ -31,7 +32,7 @@ const Contacts = {
 
   // 获得联系人列表
   getContacts: async (userId: number) => {
-    const list = await db.contact.where('userId').equals(userId).toArray();
+    const list = await db.contact.where('userId').equals(userId).sortBy('lastModified');
     return list.reverse();
   },
 
@@ -44,22 +45,12 @@ const Contacts = {
   // 更新聊天记录
   putRecords: async (records: MessageList, id: number) => {
     try {
-      const contact = await db.contact.get(id);
-      if (!contact) {
-        console.error(`未找到 ID 为 ${id} 的联系人`);
-        return false;
-      }
-
       await db.contact.update(id, {
         msgRecords: records,
+        lastModified: Date.now(),
       });
-
-      const updatedContact = await db.contact.get(id);
-      // console.log('我明明更新了:', updatedContact);
-      return true;
     } catch (error) {
       console.error('更新失败:', error);
-      return false;
     }
   },
 };
