@@ -41,7 +41,7 @@ const MessageItem: React.FC<IProps> = ({ msg, contact }) => {
       <style.MessageItem myMessage={isMy}>
         <style.Message>
           <style.MessageTime myMessage={isMy}>
-            {formatYear(msg.time as string, 'MM-DD')}
+            {formatYear(msg.time as string, 'MM-DD HH:mm')}
           </style.MessageTime>
           {msg.type_name === 'str' ? (
             <style.MessageContent myMessage={isMy}>{msg.content}</style.MessageContent>
