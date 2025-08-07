@@ -7,6 +7,7 @@ import { Message } from 'utils/WS';
 import Contacts from 'utils/db_chat';
 import ChatToolbar from '../chatToolbar';
 import * as style from './style';
+import useProfile from 'store/useProfile';
 
 const cloneMap = (map: Map<number, string>) => {
   const newMap = new Map();
@@ -20,6 +21,8 @@ const ChatInput: React.FC = () => {
   const [message, setMessage] = useState<Map<number, string>>(new Map());
   const chatStore = useChat();
 
+  const { userProfile } = useProfile();
+  const myId = userProfile.id as number;
   const { selectedId, setRecords, getRecords, contacts } = chatStore;
   const { ws } = useWS();
 
@@ -39,10 +42,10 @@ const ChatInput: React.FC = () => {
       type_name: 'str',
       time: moment(new Date()).format('YYYY-MM-DD HH:mm:ss'),
     };
-    const records = [...getRecords(selectedId), newRecord];
-    setRecords(records, selectedId);
+    const records = [...getRecords(selectedId, myId), newRecord];
+    setRecords(records, selectedId, myId);
     setMessage(cloneMap(message)?.set(selectedId, ''));
-    Contacts.putRecords(records, selectedId);
+    Contacts.putRecords(records, selectedId, myId);
     ws?.send(newRecord);
   };
 
@@ -59,9 +62,9 @@ const ChatInput: React.FC = () => {
       type_name: 'file',
       time: moment(new Date()).format('YYYY-MM-DD HH:MM:ss'),
     };
-    const records = [...getRecords(selectedId), newRecord];
-    setRecords(records, selectedId);
-    Contacts.putRecords(records, selectedId);
+    const records = [...getRecords(selectedId, myId), newRecord];
+    setRecords(records, selectedId, myId);
+    Contacts.putRecords(records, selectedId, myId);
     ws?.send(newRecord);
   };
 

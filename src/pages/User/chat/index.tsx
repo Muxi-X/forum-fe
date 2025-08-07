@@ -10,7 +10,7 @@ import ContactList from './components/contactList';
 import useWS from 'store/useWS';
 import Contacts from 'utils/db_chat';
 import { w } from 'styles/global';
-import WS, { MsgResponse } from 'utils/WS';
+import WS, { Message, MsgResponse } from 'utils/WS';
 import { formatYear } from 'utils/moment';
 import { Card } from 'antd';
 import media from 'styles/media';
@@ -44,9 +44,9 @@ const ChatPage = styled.section`
 
 const Chat: React.FC = () => {
   const chatStore = useChat();
-  const {
-    userProfile: { id: myId, name },
-  } = useProfile();
+  const { userProfile } = useProfile();
+  const myId = userProfile.id as number;
+  const name = userProfile.name;
   const { setContacts, setSelectedId, contacts, getRecords, setRecords, selectedId } =
     chatStore;
   const { ws, setTip, setWS } = useWS();
@@ -61,16 +61,35 @@ const Chat: React.FC = () => {
   const webSocketInit = () => {
     const token = localStorage.getItem('token') as string;
     const WebSocket = new WS(token);
-    WebSocket.ws.onmessage = (e) => {
-      const res = JSON.parse(e.data);
-      const { time } = res as MsgResponse;
-      const newTime = formatYear(time, 'YYYY-MM-DD HH:MM:SS');
-      const records = [...getRecords(res.sender), { ...res, time: newTime }];
-      setRecords(records, res.sender);
-    };
+    if (WebSocket.ws) {
+      WebSocket.ws.onmessage = (e) => {
+        const res = JSON.parse(e.data);
+        const { time } = res as MsgResponse;
+        const newTime = formatYear(time, 'YYYY-MM-DD HH:MM:SS');
+        const records = [...getRecords(res.sender, myId), { ...res, time: newTime }];
+        setRecords(records, res.sender, myId);
+      };
+    }
     setWS(WebSocket);
     console.log(WebSocket);
   };
+
+  const messageMerge = (messages: (MsgResponse | Message)[]) => {
+    const mergedMessages = new Map<string, MsgResponse | Message>();
+    for (const message of messages) {
+      const key = `${message.time}-${message.content}`;
+      if (!mergedMessages.has(key)) {
+        mergedMessages.set(key, message);
+      }
+    }
+
+    return Array.from(mergedMessages.values()).sort((a, b) => {
+      const timeA = new Date(a.time).getTime();
+      const timeB = new Date(b.time).getTime();
+      return timeA - timeB;
+    });
+  };
+
   useEffect(() => {
     // // 从别人的主页点发私信的情况 拿id找用户
     // if (state !== null && (state as LocationState).id !== `${myId}`) {
@@ -140,9 +159,8 @@ const Chat: React.FC = () => {
         if (state !== null && (state as LocationState).id !== `${myId}`) {
           const { id } = state as LocationState;
           // 从本地搜索目标用户
-          const localContacts = await Contacts.getContacts(myId as number);
-          const contact = await Contacts.searchContact(+id);
-
+          const localContacts = await Contacts.getContacts(myId);
+          const contact = await Contacts.searchContact(+id, myId);
           if (contact) {
             // 如果有，直接选择该用户
             setContacts(localContacts);
@@ -156,10 +174,9 @@ const Chat: React.FC = () => {
               userId: myId as number,
               lastModified: Date.now(),
             };
-
-            const updatedContacts = await Contacts.getContacts(myId as number);
-            if (updatedContacts.length !== 0) {
-              setContacts([...updatedContacts, { ...res.data, msgRecords: [] }]);
+            const localContacts = await Contacts.getContacts(myId as number);
+            if (localContacts.length !== 0) {
+              setContacts([...localContacts, { ...newContact }]);
             } else {
               setContacts([{ ...newContact }]);
             }
@@ -183,27 +200,27 @@ const Chat: React.FC = () => {
             }
           } else {
             // 有新消息的情况
-            const localContacts = await Contacts.getContacts(myId as number);
-            const contact = await Contacts.searchContact(selectedId);
+            const contact = await Contacts.searchContact(selectedId, +myId);
+            const localMessages = getRecords(selectedId, myId);
             const res = await getHistory({ id: selectedId });
 
             if (contact) {
               if (res.data) {
-                const reversedData = [...res.data].reverse() as MsgResponse[];
-                setRecords([...getRecords(selectedId), ...reversedData], selectedId);
-                await Contacts.putRecords(
-                  [...getRecords(selectedId), ...reversedData],
-                  selectedId,
-                );
+                const newData = [...res.data].reverse() as MsgResponse[];
+                const mergedMessages = messageMerge([...localMessages, ...newData]);
+                setRecords(mergedMessages, selectedId, myId);
+                await Contacts.putRecords(mergedMessages, selectedId, myId as number);
               } else {
-                setRecords(getRecords(selectedId) ?? [], selectedId);
+                setRecords(localMessages ?? [], selectedId, myId);
               }
-              setContacts(localContacts);
+              const updatedContacts = await Contacts.getContacts(myId as number);
+              setContacts(updatedContacts);
             } else {
               const userRes = await runAsync({ id: selectedId });
+              const msgRecords = Array.isArray(res.data) ? res.data.reverse() : [];
               const newContact = {
                 ...userRes.data,
-                msgRecords: res.data.reverse() as MsgResponse[],
+                msgRecords: msgRecords as MsgResponse[],
                 userId: myId as number,
                 lastModified: Date.now(),
               };
@@ -222,12 +239,12 @@ const Chat: React.FC = () => {
     initContacts();
 
     if (ws) {
-      (ws as WS).ws.onmessage = (e) => {
+      (ws as WS).ws!.onmessage = (e) => {
         const res = JSON.parse(e.data);
         const { time } = res as MsgResponse;
         const newTime = formatYear(time, 'YYYY-MM-DD HH:MM:SS');
-        const records = [...getRecords(res.sender), { ...res, time: newTime }];
-        setRecords(records, res.sender);
+        const records = [...getRecords(res.sender, myId), { ...res, time: newTime }];
+        setRecords(records, res.sender, myId);
       };
     } else {
       webSocketInit();
@@ -237,7 +254,7 @@ const Chat: React.FC = () => {
 
     return () => {
       if (ws)
-        (ws as WS).ws.onmessage = (res) => {
+        (ws as WS).ws!.onmessage = (res) => {
           const data: MsgResponse = JSON.parse(res.data);
           if (typeof data?.sender === 'number') {
             setTip(true);

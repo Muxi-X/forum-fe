@@ -4,6 +4,7 @@ import { MenuOutlined } from '@ant-design/icons';
 import styled from 'styled-components';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Link } from 'react-router-dom';
+import useChat from 'store/useChat';
 import useList from 'store/useList';
 import useProfile from 'store/useProfile';
 import Avatar from 'components/Avatar/avatar';
@@ -24,6 +25,7 @@ const MenuAction = styled.div`
 `;
 
 const Header: React.FC = () => {
+  const { setSelectedId, setContacts } = useChat();
   const [searchParams] = useSearchParams();
   const value = searchParams.get('query');
   const [query, setQuery] = useState(value ? value : '');
@@ -34,7 +36,7 @@ const Header: React.FC = () => {
   const {
     userProfile: { avatar, id },
   } = useProfile();
-  const { tip } = useWS();
+  const { ws, tip } = useWS();
   const { setList } = useList();
   const { setTip } = useWS();
   const { unreadCount } = useNotification();
@@ -44,8 +46,11 @@ const Header: React.FC = () => {
   };
 
   const handleOk = () => {
-    nav('/login');
+    ws?.close();
+    setContacts([]);
+    setSelectedId(0);
     localStorage.removeItem('token');
+    nav('/login');
   };
 
   const handleSearch = () => {

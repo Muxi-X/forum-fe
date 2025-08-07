@@ -2,6 +2,7 @@ import React from 'react';
 import styled from 'styled-components';
 import useChat from 'store/useChat';
 import { Card } from 'antd';
+import type { Contact } from 'store/useChat';
 import ContactItem from 'pages/User/chat/components/contactItem';
 
 const ListCard = styled(Card)`
@@ -17,21 +18,25 @@ const ContactList: React.FC = () => {
   const chatStore = useChat();
   const { contacts } = chatStore;
 
+  function descSortByTime(contacts: Contact[]) {
+    return [...contacts].sort((a, b) => {
+      const lastMsgA = a.msgRecords[a.msgRecords.length - 1];
+      const lastMsgB = b.msgRecords[b.msgRecords.length - 1];
+
+      const timeA = lastMsgA?.time ? new Date(lastMsgA.time).getTime() : 0;
+      const timeB = lastMsgB?.time ? new Date(lastMsgB.time).getTime() : 0;
+
+      return timeB - timeA;
+    });
+  }
+
   return (
     <ListCard>
-      {contacts
-        ? contacts
-            .sort((a, b) => {
-              const lastMsgA = a.msgRecords[a.msgRecords.length - 1];
-              const lastMsgB = b.msgRecords[b.msgRecords.length - 1]; //获取最后一条消息
-
-              const timeA = lastMsgA?.time ? new Date(lastMsgA.time).getTime() : 0;
-              const timeB = lastMsgB?.time ? new Date(lastMsgB.time).getTime() : 0; //转换为时间戳
-
-              return timeB - timeA;
-            })
-            .map((contact, i) => <ContactItem key={contact.id} {...contact} />) //对contact根据日期降序排序
-        : null}
+      {contacts &&
+        contacts.length > 0 &&
+        descSortByTime(contacts).map((contact) =>
+          contact?.id ? <ContactItem key={contact.id} {...contact} /> : null,
+        )}
     </ListCard>
   );
 };

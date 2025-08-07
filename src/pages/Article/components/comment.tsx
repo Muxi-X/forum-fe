@@ -69,10 +69,15 @@ const SubList: React.FC<{
   const subLen = subComments.length;
   const rLen = replies.length;
 
-  if (subLen !== rLen) {
-    if (subLen > rLen) setReplies(subComments);
-    else syncSubComments(replies);
-  }
+  useEffect(() => {
+    if (subLen !== rLen) {
+      if (subLen > rLen) {
+        setReplies(subComments);
+      } else {
+        syncSubComments(replies);
+      }
+    }
+  }, [subComments, replies]);
 
   return (
     <style.SubComments>
@@ -124,7 +129,6 @@ const CommentItem: React.FC<CommentItemProps> = ({
     content: be_replied_content,
     name: be_replied_user_name,
   });
-
   const { run } = useRequest(API.comment.postComment.request, {
     manual: true,
     onSuccess: (res) => {
@@ -314,6 +318,7 @@ const CommentList: React.FC<{
       renderItem={(props) => (
         <CommentItem
           {...props}
+          key={props.id}
           commentType={'comment'}
           post_id={post_id}
           commentNum={commentNum}
@@ -478,10 +483,11 @@ const CommentCp = (props: IProps, ref: any) => {
     onSuccess: (res) => {
       const newComment = {
         ...res.data,
-        time: res.data.create_time,
-      }; //因为res.data没有time属性，这里统一度量衡
+        time: res.data.create_time, //因为res.data没有time属性，这里用于倒序排列
+      };
+      const updatedComments = descOrder([...comments, newComment]);
       setTimeout(() => {
-        setComments(descOrder([...comments, newComment]));
+        setComments(updatedComments);
         setContent('');
         setSubmitting(false);
         handleAddComment(commentNum + 1);

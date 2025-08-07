@@ -50,10 +50,12 @@ const Login: React.FC = () => {
   const webSocketInit = () => {
     const token = localStorage.getItem('token') as string;
     const WebSocket = new WS(token);
-    WebSocket.ws.onmessage = () => {
-      setTip(true);
-    };
-    setWS(WebSocket);
+    if (WebSocket.ws) {
+      WebSocket.ws.onmessage = () => {
+        setTip(true);
+      };
+      setWS(WebSocket);
+    }
   };
 
   const successLogin = async (res: API.auth.postStudent.Response) => {

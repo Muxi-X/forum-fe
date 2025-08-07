@@ -62,12 +62,11 @@ const MessageItem: React.FC<IProps> = ({ msg, contact }) => {
 };
 
 const ChatRecordList: React.FC = () => {
+  const { userProfile } = useProfile();
+  const myId = userProfile.id as number;
   const chatStore = useChat();
   const messageEnd = useRef<HTMLUListElement>(null);
   const { getContact, getRecords, selectedId } = chatStore;
-  const records = getRecords(selectedId);
-  const contact = getContact(selectedId);
-
   const scrollBottom = () => {
     if (messageEnd?.current) {
       messageEnd.current.scrollTop = messageEnd.current.scrollHeight + 150;
@@ -82,8 +81,8 @@ const ChatRecordList: React.FC = () => {
     <style.RecordList>
       <style.Header>聊天记录</style.Header>
       <style.Items ref={messageEnd}>
-        {records.map((record, i) => (
-          <MessageItem key={i} msg={record} contact={contact} />
+        {getRecords(selectedId, myId).map((record, i) => (
+          <MessageItem key={i} msg={record} contact={getContact(selectedId, myId)} />
         ))}
       </style.Items>
     </style.RecordList>
