@@ -55,17 +55,25 @@ const tagRender = (props: any) => {
   );
 };
 
-const Post: React.FC<PostProps> = ({
+const Post: React.FC<
+  PostProps & {
+    isOnlyTeam: boolean;
+    setIsOnlyTeam: React.Dispatch<React.SetStateAction<boolean>>;
+    fromQuickNew?: boolean;
+  }
+> = ({
   handlePost,
   content,
   oldTags,
   category,
   summary,
+  isOnlyTeam,
+  setIsOnlyTeam,
+  fromQuickNew = false,
 }) => {
   const [tags, setTags] = useState<JSX.Element[]>([]);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [value, setValue] = useState('');
-  const [isOnlyTeam, setIsOnlyTeam] = useState(false);
   const {
     userProfile: { role },
   } = useProfile();
@@ -188,8 +196,9 @@ const Post: React.FC<PostProps> = ({
           <div>
             <Checkbox
               checked={isOnlyTeam}
+              disabled={fromQuickNew ? true : false}
               onChange={(e) => {
-                setIsOnlyTeam(e.target.checked);
+                if (!fromQuickNew) setIsOnlyTeam(e.target.checked);
               }}
             />
             是否仅团队内可见
@@ -217,6 +226,8 @@ const EditorPage: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const { state } = useLocation();
+  const fromQuickNew = state && state.fromQuickNew;
+  const [isOnlyTeam, setIsOnlyTeam] = useState(fromQuickNew ? true : false);
 
   const isUpdate = state ? (state.isUpdate as boolean) : false;
 
@@ -262,8 +273,17 @@ const EditorPage: React.FC = () => {
       if (isUpdate) get({ post_id: +(draftId as string) });
       else {
         const draft = await Drafts.searchDraft(draftId as string);
-        if (!draft) return;
-        setFrom({ title: draft.title, content: draft.content, type: draft.type });
+        // 优先使用 state.title 初始化标题
+        let initTitle = state && state.title ? state.title : '';
+        if (!draft) {
+          setFrom({ title: initTitle, content: '', type });
+          return;
+        }
+        setFrom({
+          title: draft.title || initTitle,
+          content: draft.content,
+          type: draft.type,
+        });
       }
     })();
   }, []);
@@ -410,6 +430,9 @@ const EditorPage: React.FC = () => {
                       ? (mdToHtml as string).slice(0, 300)
                       : (content as string).slice(0, 300)
                   }
+                  isOnlyTeam={isOnlyTeam}
+                  setIsOnlyTeam={setIsOnlyTeam}
+                  fromQuickNew={fromQuickNew}
                 />
               }
               trigger="click"
