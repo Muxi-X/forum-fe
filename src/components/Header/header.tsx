@@ -139,7 +139,7 @@ const Header: React.FC = () => {
                   e.stopPropagation();
                 }}
                 value={query}
-                placeholder="输入感兴趣的内容哦 :D"
+                placeholder="输入感兴趣的内容哦"
               />
             </style.SearchDiv>
             <style.ToolDiv>
