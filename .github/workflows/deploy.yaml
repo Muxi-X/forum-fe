@@ -42,7 +42,7 @@ jobs:
         run: |
           ssh -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER }} << EOF
             cd ~/forum
-            docker rm -f ${SERVICE_NAME}
-            docker rmi -f ${{ secrets.IMAGE_REPO }}/${SERVICE_NAME}:latest
-            docker-compose up -d ${SERVICE_NAME}
+            docker rm -f forum_fe
+            docker rmi -f ${{ secrets.IMAGE_REPO }}/forum_fe:latest
+            docker-compose up -d forum_fe
           EOF
