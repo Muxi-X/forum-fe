@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import useProfile from 'store/useProfile';
 import useRequest from 'hooks/useRequest';
@@ -10,8 +10,25 @@ const QuickNew: React.FC = () => {
   const {
     userProfile: { role, id },
   } = useProfile();
+  const [isLoading, setIsLoading] = useState(true);
 
   const isMuxi = role?.includes('Muxi');
+  useEffect(() => {
+    const checkUserProfile = () => {
+      // 检查一下token防止有人没登录过茶馆 直接从招新系统跳过来
+      const token = localStorage.getItem('token');
+      if (!token) {
+        navigate('/login', { replace: true });
+        return;
+      }
+      if (role === undefined) {
+        return;
+      }
+      setIsLoading(false);
+    };
+
+    checkUserProfile();
+  }, [role, navigate]);
 
   const { run: searchPosts } = useRequest(API.post.getPostListByDomain.request, {
     manual: true,
@@ -46,8 +63,8 @@ const QuickNew: React.FC = () => {
   });
 
   useEffect(() => {
-    // 如果 role 还没有加载，等待加载完成
-    if (role === undefined) {
+    // 等待用户信息加载完成
+    if (isLoading) {
       return;
     }
 
@@ -72,7 +89,13 @@ const QuickNew: React.FC = () => {
       const draftId = 'article' + new Date().getTime();
       navigate(`/editor/${draftId}`, { state: { title: '', fromQuickNew: true } });
     }
-  }, [location, isMuxi, navigate, role, searchPosts]);
+  }, [location, isMuxi, navigate, isLoading, searchPosts]);
+
+  if (isLoading) {
+    return (
+      <div style={{ textAlign: 'center', marginTop: '100px' }}>正在加载用户信息...</div>
+    );
+  }
 
   return (
     <div style={{ textAlign: 'center', marginTop: '100px' }}>
