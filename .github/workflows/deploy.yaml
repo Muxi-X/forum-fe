@@ -46,4 +46,3 @@ jobs:
             docker rmi -f ${{ secrets.IMAGE_REPO }}/${SERVICE_NAME}:latest
             docker compose up -d ${SERVICE_NAME}
           EOF
-
