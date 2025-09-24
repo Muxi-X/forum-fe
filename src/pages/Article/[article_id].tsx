@@ -365,7 +365,7 @@ const Article: React.FC = () => {
                     {category as string}
                   </ArticleCategory>
                   标签:
-                  <Tag onClick={() => {}} inArticle tag={(tags as string[])[0]}></Tag>
+                  <Tag onClick={() => {}} inArticle tags={tags as string[]}></Tag>
                 </style.ArticleInfo>
               </style.ArticleBody>
             </style.ArticleCard>
