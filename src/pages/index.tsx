@@ -273,7 +273,7 @@ const Square: React.FC = () => {
       {tags?.length ? (
         <>
           <Tag
-            tag="全部"
+            tags={['全部']}
             onClick={() => {
               if (tag === '') return;
               setHasMore(true);
@@ -291,7 +291,7 @@ const Square: React.FC = () => {
               trigger={t === tag}
               key={i}
               type="filter"
-              tag={t}
+              tags={[t]}
             />
           ))}
         </>
