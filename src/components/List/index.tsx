@@ -206,9 +206,11 @@ const renderItem = (
             >
               <ArticleInfo position="left">{item.creator_name}</ArticleInfo>
               <ArticleInfo position="mid">{moment(item.time).fromNow()}</ArticleInfo>
-              <ArticleInfo position="right">{`${item.category} · ${
-                item ? (item.tags as any)[0] : ''
-              }`}</ArticleInfo>
+              <ArticleInfo position="mid">{item.category}</ArticleInfo>
+
+              {item.tags && item.tags.length > 0 && (
+                <ArticleInfo position="right"> {item.tags.join(' · ')}</ArticleInfo>
+              )}
               <h2>{item.title}</h2>
               <p>{item.summary}</p>
             </ArticleItem>

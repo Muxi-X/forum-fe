@@ -2,7 +2,7 @@ import React from 'react';
 import * as style from './style';
 
 interface TagProps {
-  tag: string;
+  tags: string[];
   size?: 'small' | 'normal' | 'big';
   count?: number;
   onClick?: any;
@@ -32,21 +32,26 @@ const Category: React.FC<CategoryProps> = ({
 };
 
 const TagCp: React.FC<TagProps> = ({
-  tag,
+  tags,
   trigger = false,
   type = 'tag',
   onClick,
   inArticle = false,
 }) => {
   return (
-    <style.TagWarpper
-      inArticle={inArticle}
-      type={type}
-      trigger={trigger}
-      onClick={onClick}
-    >
-      {tag}
-    </style.TagWarpper>
+    <>
+      {tags.map((tag, index) => (
+        <style.TagWarpper
+          key={index}
+          inArticle={inArticle}
+          type={type}
+          trigger={trigger}
+          onClick={onClick}
+        >
+          {tag}
+        </style.TagWarpper>
+      ))}
+    </>
   );
 };
 
