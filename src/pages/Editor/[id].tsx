@@ -81,9 +81,15 @@ const Post: React.FC<
     manual: true,
     onSuccess: (res) => {
       if (res.data) {
-        const children = res.data.map((tag, i) => <Option key={i}>{tag}</Option>);
+        const children = res.data.map((tag: string) => (
+          <Option key={tag} value={tag}>
+            {tag}
+          </Option>
+        ));
         setTags(children);
-      } else setTags([]);
+      } else {
+        setTags([]);
+      }
     },
   });
   const [form] = newForm();
