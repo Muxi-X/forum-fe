@@ -74,9 +74,17 @@ export const ToggleEditor = styled.div`
 
 export const ItemWrapper = styled.div`
   position: relative;
+
   #tool {
     position: absolute;
-    bottom: 0;
-    left: 385px;
+    left: 425px;
+  }
+
+  #tool.reset-tags {
+    top: 0;
+  }
+
+  #tool.generate-summary {
+    top: 68px;
   }
 `;

@@ -169,6 +169,7 @@ const Post: React.FC<
         </Form.Item>
         <Button
           id="tool"
+          className="reset-tags"
           onClick={() => {
             setSelectedTags([]);
             form.setFieldValue('tags', []);
@@ -190,7 +191,7 @@ const Post: React.FC<
             showCount
           />
         </Form.Item>
-        <Button id="tool" onClick={handleSummary}>
+        <Button id="tool" className="generate-summary" onClick={handleSummary}>
           一键生成摘要
         </Button>
       </style.ItemWrapper>
