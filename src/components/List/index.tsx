@@ -112,11 +112,16 @@ const Wrapper = styled.div`
 const Action = styled.div`
   user-select: none;
   color: #909090;
-  font-size: 0.8rem;
-  padding: 0 1rem;
+  font-size: 0.85rem;
+  padding: 6px 12px;
   cursor: pointer;
+  min-width: 50px;
+  text-align: center;
+  border-radius: 3px;
+  transition: all 0.2s ease;
   :hover {
     color: rgb(255 208 4);
+    background-color: rgba(255, 208, 4, 0.1);
   }
 `;
 
@@ -158,8 +163,9 @@ const renderItem = (
           <Popover
             trigger={['hover', 'click']}
             placement="right"
+            overlayStyle={{ minWidth: '80px' }}
             content={
-              <>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
                 <Action
                   onClick={() => {
                     nav(`/editor/${item.id}`, { state: { isUpdate: true } });
@@ -174,7 +180,7 @@ const renderItem = (
                 >
                   删除
                 </Action>
-              </>
+              </div>
             }
           >
             {item.creator_id === id ? (

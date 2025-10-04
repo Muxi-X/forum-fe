@@ -44,12 +44,12 @@ const Categories = styled.div`
   width: 60vw;
   max-width: 960px;
   min-width: 375px;
-  padding: 0 1rem;
+  padding: 0.5rem 1rem;
   ${media.desktop`width: 100vw`}
   top: 5rem;
   .wrapper {
-    margin: 0.5rem;
-    ${media.phone`margin: 0`}
+    margin: 0.3rem;
+    ${media.phone`margin: 0.2rem`}
   }
   user-select: none;
 `;
