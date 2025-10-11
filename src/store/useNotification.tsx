@@ -3,8 +3,7 @@ import create from 'zustand';
 export interface Notification {
   id: string;
   postId: number;
-  postTitle: string;
-  type: 'like' | 'comment' | 'collection';
+  type: 'like' | 'comment' | 'collection' | 'reply_comment';
   content: string;
   read: boolean;
   timestamp: number;
@@ -13,32 +12,22 @@ export interface Notification {
 interface NotificationStore {
   notifications: Notification[];
   unreadCount: number;
-  addNotification: (notification: Notification) => void;
-  deleteNotification: () => void;
+
+  addNotifications: (notifications: Notification[]) => void;
   markAsRead: (id: string) => void;
   markAllAsRead: () => void;
+  resetNotifications: () => void;
 }
 
 const useNotification = create<NotificationStore>((set, get) => ({
   notifications: [],
   unreadCount: 0,
 
-  addNotification: (notification) => {
+  addNotifications: (newNotifications) => {
     const { notifications, unreadCount } = get();
     set(() => ({
-      notifications: [...notifications, notification],
-      unreadCount: unreadCount + 1,
-    }));
-  },
-
-  deleteNotification: () => {
-    const { notifications } = get();
-    const unreadNotifications = notifications.filter(
-      (notification) => !notification.read,
-    );
-    set(() => ({
-      notifications: unreadNotifications,
-      unreadCount: unreadNotifications.length,
+      notifications: [...notifications, ...newNotifications],
+      unreadCount: unreadCount + newNotifications.length,
     }));
   },
 
@@ -47,10 +36,9 @@ const useNotification = create<NotificationStore>((set, get) => ({
     const updatedNotifications = notifications.map((notification) =>
       notification.id === id ? { ...notification, read: true } : notification,
     );
-    const newUnreadCount = Math.max(0, unreadCount - 1);
     set(() => ({
       notifications: updatedNotifications,
-      unreadCount: newUnreadCount,
+      unreadCount: unreadCount - 1,
     }));
   },
 
@@ -62,6 +50,15 @@ const useNotification = create<NotificationStore>((set, get) => ({
     }));
     set(() => ({
       notifications: updatedNotifications,
+      unreadCount: 0,
+    }));
+  },
+
+  resetNotifications: () => {
+    const { notifications } = get();
+    const readNotifications = notifications.filter((notification) => notification.read);
+    set(() => ({
+      notifications: readNotifications,
       unreadCount: 0,
     }));
   },

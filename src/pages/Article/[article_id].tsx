@@ -215,6 +215,10 @@ const Article: React.FC = () => {
       const likeBoolean = !like.is_liked;
       const newNum = likeBoolean ? like.like_num + 1 : like.like_num - 1;
       setLike({ is_liked: likeBoolean, like_num: newNum });
+
+      if (likeBoolean) {
+        sendNotification('like');
+      }
     },
   });
 
@@ -226,8 +230,40 @@ const Article: React.FC = () => {
         ? collect.collection_num + 1
         : collect.collection_num - 1;
       setCollect({ is_collection: collectBoolean, collection_num: newNum });
+
+      if (collectBoolean) {
+        sendNotification('collection');
+      }
     },
   });
+
+  const { run: postPrivateMessage } = useRequest(
+    API.user.postUserPrivateMessage.request,
+    {
+      manual: true,
+    },
+  );
+
+  // 私信通知方法
+  const sendNotification = (
+    type: 'comment' | 'like' | 'collection' | 'reply_comment',
+    content?: string,
+    comment_id?: number,
+  ) => {
+    const params = {
+      post_id: +(article_id as string),
+      receive_userid: creator_id,
+      type: type,
+      content,
+      comment_id,
+    };
+
+    try {
+      postPrivateMessage({}, params);
+    } catch (error) {
+      console.error('通知发送失败:', error);
+    }
+  };
 
   const [like, setLike] = useState({ is_liked, like_num: like_num as number });
   const [collect, setCollect] = useState({
@@ -247,8 +283,17 @@ const Article: React.FC = () => {
     report({}, { cause: reportVal, id: +(article_id as string), type_name: 'post' });
   };
 
-  const handleAddComment = (num: number) => {
+  const handleAddComment = (num: number, content?: string, comment_id?: number) => {
     setCommentNum(num);
+
+    // 如果有评论内容，先判断是根评论还是子评论再发送
+    if (content) {
+      if (comment_id) {
+        sendNotification('reply_comment', content, comment_id);
+      } else {
+        sendNotification('comment', content);
+      }
+    }
   };
 
   useEffect(() => {

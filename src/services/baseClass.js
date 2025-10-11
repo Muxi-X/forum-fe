@@ -581,3 +581,25 @@ export class user_ListMessageResponse {
   /** messages */
   messages = [];
 }
+
+export class user_CreatePrivateMessageRequest {
+  /** comment_id */
+  comment_id = undefined;
+
+  /** content */
+  content = '';
+
+  /** post_id */
+  post_id = undefined;
+
+  /** receive_userid */
+  receive_userid = undefined;
+
+  /** type */
+  type = '';
+}
+
+export class user_PrivateMessageListResponse {
+  /** messages */
+  messages = [];
+}
