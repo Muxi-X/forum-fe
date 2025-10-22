@@ -508,13 +508,16 @@ declare namespace defs {
   }
 
   export class report_CreateRequest {
+    /** category */
+    category?: string;
+
     /** cause */
     cause?: string;
 
-    /** post_id */
-    post_id?: number;
+    /** id */
+    id?: number;
 
-    /** type_name */
+    /** post or comment */
     type_name?: string;
   }
 
@@ -532,11 +535,17 @@ declare namespace defs {
   }
 
   export class report_Report {
+    /** be_reported_content */
+    be_reported_content?: string;
+
     /** be_reported_user_id */
     be_reported_user_id?: number;
 
     /** be_reported_user_name */
     be_reported_user_name?: string;
+
+    /** category */
+    category?: string;
 
     /** cause */
     cause?: string;
@@ -550,8 +559,8 @@ declare namespace defs {
     /** post_id */
     post_id?: number;
 
-    /** post_title */
-    post_title?: string;
+    /** target_id */
+    target_id?: number;
 
     /** type_name */
     type_name?: string;
@@ -581,6 +590,16 @@ declare namespace defs {
 
     /** role */
     role?: string;
+  }
+
+  export class user_CreateMessageRequest {
+    /** message */
+    message?: string;
+  }
+
+  export class user_ListMessageResponse {
+    /** messages */
+    messages?: Array<string>;
   }
 }
 
@@ -1163,6 +1182,42 @@ login the team-forum
       export type HooksParams = (() => Params) | Params;
 
       export type Response = ResponseTypeWarpper<defs.ListResponse>;
+
+      export const method: string;
+
+      export function request(params: Params, options?: any): Promise<Response>;
+    }
+
+    /**
+     * 创建 公共 message api
+     * /user/message
+     */
+    export namespace postUserMessage {
+      export class Params {}
+
+      export type HooksParams = (() => Params) | Params;
+
+      export type Response = ResponseTypeWarpper<defs.Response>;
+
+      export const method: string;
+
+      export function request(
+        params: Params,
+        body: defs.user_CreateMessageRequest,
+        options?: any,
+      ): Promise<Response>;
+    }
+
+    /**
+     * list user message api
+     * /user/message/list
+     */
+    export namespace getUserMessageList {
+      export class Params {}
+
+      export type HooksParams = (() => Params) | Params;
+
+      export type Response = ResponseTypeWarpper<defs.user_ListMessageResponse>;
 
       export const method: string;
 

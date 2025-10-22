@@ -3,6 +3,7 @@
     "mods": [
       {
         "description": "认证服务",
+        "name": "auth",
         "interfaces": [
           {
             "consumes": [
@@ -74,11 +75,11 @@
               }
             ]
           }
-        ],
-        "name": "auth"
+        ]
       },
       {
         "description": "聊天服务",
+        "name": "chat",
         "interfaces": [
           {
             "consumes": [
@@ -200,11 +201,11 @@
               }
             ]
           }
-        ],
-        "name": "chat"
+        ]
       },
       {
         "description": "收藏服务",
+        "name": "collection",
         "interfaces": [
           {
             "consumes": [
@@ -348,11 +349,11 @@
               }
             ]
           }
-        ],
-        "name": "collection"
+        ]
       },
       {
         "description": "评论服务",
+        "name": "comment",
         "interfaces": [
           {
             "consumes": [
@@ -504,11 +505,11 @@
               }
             ]
           }
-        ],
-        "name": "comment"
+        ]
       },
       {
         "description": "动态服务",
+        "name": "feed",
         "interfaces": [
           {
             "consumes": [
@@ -602,11 +603,11 @@
               }
             ]
           }
-        ],
-        "name": "feed"
+        ]
       },
       {
         "description": "点赞服务",
+        "name": "like",
         "interfaces": [
           {
             "consumes": [
@@ -750,11 +751,11 @@
               }
             ]
           }
-        ],
-        "name": "like"
+        ]
       },
       {
         "description": "帖子服务",
+        "name": "post",
         "interfaces": [
           {
             "consumes": [
@@ -1290,11 +1291,11 @@
               }
             ]
           }
-        ],
-        "name": "post"
+        ]
       },
       {
         "description": "举报服务",
+        "name": "report",
         "interfaces": [
           {
             "consumes": [
@@ -1473,11 +1474,11 @@
               }
             ]
           }
-        ],
-        "name": "report"
+        ]
       },
       {
         "description": "用户服务",
+        "name": "user",
         "interfaces": [
           {
             "consumes": [
@@ -1610,6 +1611,91 @@
             "consumes": [
               "application/json"
             ],
+            "description": "创建 公共 message api",
+            "name": "postUserMessage",
+            "method": "post",
+            "path": "/user/message",
+            "response": {
+              "typeArgs": [],
+              "typeName": "Response",
+              "isDefsType": true,
+              "templateIndex": -1,
+              "compileTemplateKeyword": "#/definitions/",
+              "enum": [],
+              "typeProperties": []
+            },
+            "parameters": [
+              {
+                "in": "header",
+                "description": "token 用户令牌",
+                "name": "Authorization",
+                "required": true,
+                "dataType": {
+                  "typeArgs": [],
+                  "typeName": "string",
+                  "isDefsType": false,
+                  "templateIndex": -1,
+                  "compileTemplateKeyword": "#/definitions/",
+                  "enum": [],
+                  "typeProperties": []
+                }
+              },
+              {
+                "in": "body",
+                "description": "create_message_request",
+                "name": "object",
+                "required": true,
+                "dataType": {
+                  "typeArgs": [],
+                  "typeName": "user_CreateMessageRequest",
+                  "isDefsType": true,
+                  "templateIndex": -1,
+                  "compileTemplateKeyword": "#/definitions/",
+                  "enum": [],
+                  "typeProperties": []
+                }
+              }
+            ]
+          },
+          {
+            "consumes": [
+              "application/json"
+            ],
+            "description": "list user message api",
+            "name": "getUserMessageList",
+            "method": "get",
+            "path": "/user/message/list",
+            "response": {
+              "typeArgs": [],
+              "typeName": "user_ListMessageResponse",
+              "isDefsType": true,
+              "templateIndex": -1,
+              "compileTemplateKeyword": "#/definitions/",
+              "enum": [],
+              "typeProperties": []
+            },
+            "parameters": [
+              {
+                "in": "header",
+                "description": "token 用户令牌",
+                "name": "Authorization",
+                "required": true,
+                "dataType": {
+                  "typeArgs": [],
+                  "typeName": "string",
+                  "isDefsType": false,
+                  "templateIndex": -1,
+                  "compileTemplateKeyword": "#/definitions/",
+                  "enum": [],
+                  "typeProperties": []
+                }
+              }
+            ]
+          },
+          {
+            "consumes": [
+              "application/json"
+            ],
             "description": "get 我的 profile api\n获取 my 完整 user 信息（权限 role: Normal-普通学生用户; NormalAdmin-学生管理员; Muxi-团队成员; MuxiAdmin-团队管理员; SuperAdmin-超级管理员）",
             "name": "getUserMyprofile",
             "method": "get",
@@ -1691,13 +1777,13 @@
               }
             ]
           }
-        ],
-        "name": "user"
+        ]
       }
     ],
     "baseClasses": [
       {
         "name": "FeedItem",
+        "templateArgs": [],
         "properties": [
           {
             "dataType": {
@@ -1778,11 +1864,11 @@
             "name": "user",
             "required": false
           }
-        ],
-        "templateArgs": []
+        ]
       },
       {
         "name": "FeedListResponse",
+        "templateArgs": [],
         "properties": [
           {
             "dataType": {
@@ -1807,11 +1893,11 @@
             "name": "list",
             "required": false
           }
-        ],
-        "templateArgs": []
+        ]
       },
       {
         "name": "ListResponse",
+        "templateArgs": [],
         "properties": [
           {
             "dataType": {
@@ -1849,11 +1935,11 @@
             "name": "list",
             "required": false
           }
-        ],
-        "templateArgs": []
+        ]
       },
       {
         "name": "Response",
+        "templateArgs": [],
         "properties": [
           {
             "dataType": {
@@ -1894,11 +1980,11 @@
             "name": "message",
             "required": false
           }
-        ],
-        "templateArgs": []
+        ]
       },
       {
         "name": "Source",
+        "templateArgs": [],
         "properties": [
           {
             "dataType": {
@@ -1939,11 +2025,11 @@
             "name": "type_name",
             "required": false
           }
-        ],
-        "templateArgs": []
+        ]
       },
       {
         "name": "StudentLoginRequest",
+        "templateArgs": [],
         "properties": [
           {
             "dataType": {
@@ -1971,11 +2057,11 @@
             "name": "student_id",
             "required": true
           }
-        ],
-        "templateArgs": []
+        ]
       },
       {
         "name": "StudentLoginResponse",
+        "templateArgs": [],
         "properties": [
           {
             "dataType": {
@@ -1990,11 +2076,11 @@
             "name": "token",
             "required": false
           }
-        ],
-        "templateArgs": []
+        ]
       },
       {
         "name": "TeamLoginRequest",
+        "templateArgs": [],
         "properties": [
           {
             "dataType": {
@@ -2009,11 +2095,11 @@
             "name": "oauth_code",
             "required": false
           }
-        ],
-        "templateArgs": []
+        ]
       },
       {
         "name": "TeamLoginResponse",
+        "templateArgs": [],
         "properties": [
           {
             "dataType": {
@@ -2041,11 +2127,11 @@
             "name": "token",
             "required": false
           }
-        ],
-        "templateArgs": []
+        ]
       },
       {
         "name": "UpdateInfoRequest",
+        "templateArgs": [],
         "properties": [
           {
             "dataType": {
@@ -2112,11 +2198,11 @@
             "name": "signature",
             "required": false
           }
-        ],
-        "templateArgs": []
+        ]
       },
       {
         "name": "User",
+        "templateArgs": [],
         "properties": [
           {
             "dataType": {
@@ -2157,11 +2243,11 @@
             "name": "name",
             "required": false
           }
-        ],
-        "templateArgs": []
+        ]
       },
       {
         "name": "UserProfile",
+        "templateArgs": [],
         "properties": [
           {
             "dataType": {
@@ -2267,11 +2353,11 @@
             "name": "signature",
             "required": false
           }
-        ],
-        "templateArgs": []
+        ]
       },
       {
         "name": "chat_Message",
+        "templateArgs": [],
         "properties": [
           {
             "dataType": {
@@ -2325,11 +2411,11 @@
             "name": "type_name",
             "required": false
           }
-        ],
-        "templateArgs": []
+        ]
       },
       {
         "name": "comment_Comment",
+        "templateArgs": [],
         "properties": [
           {
             "dataType": {
@@ -2501,11 +2587,11 @@
             "description": "first-level -> 一级评论; second-level -> 其它级",
             "required": false
           }
-        ],
-        "templateArgs": []
+        ]
       },
       {
         "name": "comment_CreateRequest",
+        "templateArgs": [],
         "properties": [
           {
             "dataType": {
@@ -2573,11 +2659,11 @@
             "description": "sub-post -> 从帖; first-level -> 一级评论; second-level -> 其它级",
             "required": true
           }
-        ],
-        "templateArgs": []
+        ]
       },
       {
         "name": "like_Item",
+        "templateArgs": [],
         "properties": [
           {
             "dataType": {
@@ -2606,11 +2692,11 @@
             "description": "post or comment",
             "required": true
           }
-        ],
-        "templateArgs": []
+        ]
       },
       {
         "name": "post_Comment",
+        "templateArgs": [],
         "properties": [
           {
             "dataType": {
@@ -2768,11 +2854,11 @@
             "name": "time",
             "required": false
           }
-        ],
-        "templateArgs": []
+        ]
       },
       {
         "name": "post_CreateRequest",
+        "templateArgs": [],
         "properties": [
           {
             "dataType": {
@@ -2890,11 +2976,11 @@
             "name": "title",
             "required": true
           }
-        ],
-        "templateArgs": []
+        ]
       },
       {
         "name": "post_GetPostResponse",
+        "templateArgs": [],
         "properties": [
           {
             "dataType": {
@@ -3151,11 +3237,11 @@
             "name": "title",
             "required": false
           }
-        ],
-        "templateArgs": []
+        ]
       },
       {
         "name": "post_IdResponse",
+        "templateArgs": [],
         "properties": [
           {
             "dataType": {
@@ -3170,11 +3256,11 @@
             "name": "id",
             "required": false
           }
-        ],
-        "templateArgs": []
+        ]
       },
       {
         "name": "post_ListMainPostResponse",
+        "templateArgs": [],
         "properties": [
           {
             "dataType": {
@@ -3199,11 +3285,11 @@
             "name": "posts",
             "required": false
           }
-        ],
-        "templateArgs": []
+        ]
       },
       {
         "name": "post_Post",
+        "templateArgs": [],
         "properties": [
           {
             "dataType": {
@@ -3434,11 +3520,11 @@
             "name": "title",
             "required": false
           }
-        ],
-        "templateArgs": []
+        ]
       },
       {
         "name": "post_PostPartInfo",
+        "templateArgs": [],
         "properties": [
           {
             "dataType": {
@@ -3606,11 +3692,11 @@
             "name": "title",
             "required": false
           }
-        ],
-        "templateArgs": []
+        ]
       },
       {
         "name": "post_PostPartInfoResponse",
+        "templateArgs": [],
         "properties": [
           {
             "dataType": {
@@ -3635,11 +3721,11 @@
             "name": "posts",
             "required": false
           }
-        ],
-        "templateArgs": []
+        ]
       },
       {
         "name": "post_QiNiuToken",
+        "templateArgs": [],
         "properties": [
           {
             "dataType": {
@@ -3654,11 +3740,11 @@
             "name": "token",
             "required": false
           }
-        ],
-        "templateArgs": []
+        ]
       },
       {
         "name": "post_SubPost",
+        "templateArgs": [],
         "properties": [
           {
             "dataType": {
@@ -3813,11 +3899,11 @@
             "name": "time",
             "required": false
           }
-        ],
-        "templateArgs": []
+        ]
       },
       {
         "name": "post_UpdateInfoRequest",
+        "templateArgs": [],
         "properties": [
           {
             "dataType": {
@@ -3907,12 +3993,25 @@
             "name": "title",
             "required": true
           }
-        ],
-        "templateArgs": []
+        ]
       },
       {
         "name": "report_CreateRequest",
+        "templateArgs": [],
         "properties": [
+          {
+            "dataType": {
+              "typeArgs": [],
+              "typeName": "string",
+              "isDefsType": false,
+              "templateIndex": -1,
+              "compileTemplateKeyword": "#/definitions/",
+              "enum": [],
+              "typeProperties": []
+            },
+            "name": "category",
+            "required": true
+          },
           {
             "dataType": {
               "typeArgs": [],
@@ -3936,7 +4035,7 @@
               "enum": [],
               "typeProperties": []
             },
-            "name": "post_id",
+            "name": "id",
             "required": true
           },
           {
@@ -3950,13 +4049,14 @@
               "typeProperties": []
             },
             "name": "type_name",
+            "description": "post or comment",
             "required": true
           }
-        ],
-        "templateArgs": []
+        ]
       },
       {
         "name": "report_HandleRequest",
+        "templateArgs": [],
         "properties": [
           {
             "dataType": {
@@ -3985,11 +4085,11 @@
             "description": "invalid or valid",
             "required": true
           }
-        ],
-        "templateArgs": []
+        ]
       },
       {
         "name": "report_ListResponse",
+        "templateArgs": [],
         "properties": [
           {
             "dataType": {
@@ -4014,12 +4114,25 @@
             "name": "reports",
             "required": false
           }
-        ],
-        "templateArgs": []
+        ]
       },
       {
         "name": "report_Report",
+        "templateArgs": [],
         "properties": [
+          {
+            "dataType": {
+              "typeArgs": [],
+              "typeName": "string",
+              "isDefsType": false,
+              "templateIndex": -1,
+              "compileTemplateKeyword": "#/definitions/",
+              "enum": [],
+              "typeProperties": []
+            },
+            "name": "be_reported_content",
+            "required": false
+          },
           {
             "dataType": {
               "typeArgs": [],
@@ -4044,6 +4157,19 @@
               "typeProperties": []
             },
             "name": "be_reported_user_name",
+            "required": false
+          },
+          {
+            "dataType": {
+              "typeArgs": [],
+              "typeName": "string",
+              "isDefsType": false,
+              "templateIndex": -1,
+              "compileTemplateKeyword": "#/definitions/",
+              "enum": [],
+              "typeProperties": []
+            },
+            "name": "category",
             "required": false
           },
           {
@@ -4101,14 +4227,14 @@
           {
             "dataType": {
               "typeArgs": [],
-              "typeName": "string",
+              "typeName": "number",
               "isDefsType": false,
               "templateIndex": -1,
               "compileTemplateKeyword": "#/definitions/",
               "enum": [],
               "typeProperties": []
             },
-            "name": "post_title",
+            "name": "target_id",
             "required": false
           },
           {
@@ -4163,11 +4289,11 @@
             "name": "user_name",
             "required": false
           }
-        ],
-        "templateArgs": []
+        ]
       },
       {
         "name": "user",
+        "templateArgs": [],
         "properties": [
           {
             "dataType": {
@@ -4234,8 +4360,55 @@
             "name": "role",
             "required": false
           }
-        ],
-        "templateArgs": []
+        ]
+      },
+      {
+        "name": "user_CreateMessageRequest",
+        "templateArgs": [],
+        "properties": [
+          {
+            "dataType": {
+              "typeArgs": [],
+              "typeName": "string",
+              "isDefsType": false,
+              "templateIndex": -1,
+              "compileTemplateKeyword": "#/definitions/",
+              "enum": [],
+              "typeProperties": []
+            },
+            "name": "message",
+            "required": true
+          }
+        ]
+      },
+      {
+        "name": "user_ListMessageResponse",
+        "templateArgs": [],
+        "properties": [
+          {
+            "dataType": {
+              "typeArgs": [
+                {
+                  "typeArgs": [],
+                  "typeName": "string",
+                  "isDefsType": false,
+                  "templateIndex": -1,
+                  "compileTemplateKeyword": "#/definitions/",
+                  "enum": [],
+                  "typeProperties": []
+                }
+              ],
+              "typeName": "Array",
+              "isDefsType": false,
+              "templateIndex": -1,
+              "compileTemplateKeyword": "#/definitions/",
+              "enum": [],
+              "typeProperties": []
+            },
+            "name": "messages",
+            "required": false
+          }
+        ]
       }
     ],
     "name": ""
