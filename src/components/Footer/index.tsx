@@ -4,7 +4,7 @@ import media from 'styles/media';
 
 const Wrapper = styled.div`
   user-select: none;
-  width: 100vw;
+  width: 100%;
   text-align: center;
   line-height: 10vh;
   height: 10vh;
@@ -21,7 +21,7 @@ const Wrapper = styled.div`
 const Footer: React.FC = () => {
   return (
     <Wrapper>
-      <img alt="logo" src="http://ossforum.muxixyz.com/logo1.png" />
+      <img alt="logo" src="https://ossforum.muxixyz.com/logo1.png" />
       谨在此对每一位认真工作的木犀人表达深刻感谢
     </Wrapper>
   );

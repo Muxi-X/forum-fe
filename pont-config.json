@@ -1,5 +1,5 @@
 {
-  "originUrl": "http://forum.muxixyz.com/swagger/doc.json",
+  "originUrl": "https://forum.muxixyz.com/swagger/doc.json",
   "templatePath": "./pontTemplate",
   "outDir": "./src/services",
   "mocks": {

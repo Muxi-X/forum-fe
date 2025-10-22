@@ -78,6 +78,7 @@ const ImgPopover: React.FC<ImgPopoverProps> = ({ className, onUploadImg }) => {
       onUploadImg && onUploadImg(QiniuServer + res.key);
     };
     qiniupload(imgFile as File, profileStore.qiniuToken);
+    e.target.value = '';
   };
   return (
     <>

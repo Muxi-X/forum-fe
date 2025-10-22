@@ -44,12 +44,12 @@ const Categories = styled.div`
   width: 60vw;
   max-width: 960px;
   min-width: 375px;
-  padding: 0 1rem;
+  padding: 0.5rem 1rem;
   ${media.desktop`width: 100vw`}
   top: 5rem;
   .wrapper {
-    margin: 0.5rem;
-    ${media.phone`margin: 0`}
+    margin: 0.3rem;
+    ${media.phone`margin: 0.2rem`}
   }
   user-select: none;
 `;
@@ -58,7 +58,7 @@ const Square: React.FC = () => {
   const { pathname, search } = location;
   const { setList, postList, getList } = useList();
   const {
-    userProfile: { role },
+    userProfile: { role, id },
   } = useProfile();
   const [hasMore, setHasMore] = useState(true); // 判断是否有更多文章
   const [tags, setTags] = useState<string[]>([]); // Tags表
@@ -270,10 +270,10 @@ const Square: React.FC = () => {
   return (
     <>
       {searchQuery ? null : NavList}
-      {tags.length ? (
+      {tags?.length ? (
         <>
           <Tag
-            tag="全部"
+            tags={['全部']}
             onClick={() => {
               if (tag === '') return;
               setHasMore(true);
@@ -291,7 +291,7 @@ const Square: React.FC = () => {
               trigger={t === tag}
               key={i}
               type="filter"
-              tag={t}
+              tags={[t]}
             />
           ))}
         </>

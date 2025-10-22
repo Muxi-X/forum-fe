@@ -71,7 +71,7 @@ export const SearchDiv = styled.div`
     content: '';
     height: 1.5em;
     width: 1.5em;
-    background-image: url('http://ossforum.muxixyz.com/default/search.png');
+    background-image: url('https://ossforum.muxixyz.com/default/search.png');
     background-size: cover;
     position: absolute;
     right: 1em;

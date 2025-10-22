@@ -55,17 +55,25 @@ const tagRender = (props: any) => {
   );
 };
 
-const Post: React.FC<PostProps> = ({
+const Post: React.FC<
+  PostProps & {
+    isOnlyTeam: boolean;
+    setIsOnlyTeam: React.Dispatch<React.SetStateAction<boolean>>;
+    fromQuickNew?: boolean;
+  }
+> = ({
   handlePost,
   content,
   oldTags,
   category,
   summary,
+  isOnlyTeam,
+  setIsOnlyTeam,
+  fromQuickNew = false,
 }) => {
   const [tags, setTags] = useState<JSX.Element[]>([]);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [value, setValue] = useState('');
-  const [isOnlyTeam, setIsOnlyTeam] = useState(false);
   const {
     userProfile: { role },
   } = useProfile();
@@ -73,9 +81,15 @@ const Post: React.FC<PostProps> = ({
     manual: true,
     onSuccess: (res) => {
       if (res.data) {
-        const children = res.data.map((tag, i) => <Option key={i}>{tag}</Option>);
+        const children = res.data.map((tag: string) => (
+          <Option key={tag} value={tag}>
+            {tag}
+          </Option>
+        ));
         setTags(children);
-      } else setTags([]);
+      } else {
+        setTags([]);
+      }
     },
   });
   const [form] = newForm();
@@ -155,6 +169,7 @@ const Post: React.FC<PostProps> = ({
         </Form.Item>
         <Button
           id="tool"
+          className="reset-tags"
           onClick={() => {
             setSelectedTags([]);
             form.setFieldValue('tags', []);
@@ -176,7 +191,7 @@ const Post: React.FC<PostProps> = ({
             showCount
           />
         </Form.Item>
-        <Button id="tool" onClick={handleSummary}>
+        <Button id="tool" className="generate-summary" onClick={handleSummary}>
           一键生成摘要
         </Button>
       </style.ItemWrapper>
@@ -188,8 +203,9 @@ const Post: React.FC<PostProps> = ({
           <div>
             <Checkbox
               checked={isOnlyTeam}
+              disabled={fromQuickNew ? true : false}
               onChange={(e) => {
-                setIsOnlyTeam(e.target.checked);
+                if (!fromQuickNew) setIsOnlyTeam(e.target.checked);
               }}
             />
             是否仅团队内可见
@@ -215,7 +231,10 @@ const EditorPage: React.FC = () => {
   const [saveBoolean, setSaveBoolean] = useState<'' | boolean>(''); // 显示是否正在保存中
   const [mdToHtml, setMdToHtml] = useState(''); // 存储Markdown下的html内容
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const { state } = useLocation();
+  const fromQuickNew = state && state.fromQuickNew;
+  const [isOnlyTeam, setIsOnlyTeam] = useState(fromQuickNew ? true : false);
 
   const isUpdate = state ? (state.isUpdate as boolean) : false;
 
@@ -261,8 +280,17 @@ const EditorPage: React.FC = () => {
       if (isUpdate) get({ post_id: +(draftId as string) });
       else {
         const draft = await Drafts.searchDraft(draftId as string);
-        if (!draft) return;
-        setFrom({ title: draft.title, content: draft.content, type: draft.type });
+        // 优先使用 state.title 初始化标题
+        let initTitle = state && state.title ? state.title : '';
+        if (!draft) {
+          setFrom({ title: initTitle, content: '', type });
+          return;
+        }
+        setFrom({
+          title: draft.title || initTitle,
+          content: draft.content,
+          type: draft.type,
+        });
       }
     })();
   }, []);
@@ -290,6 +318,8 @@ const EditorPage: React.FC = () => {
   );
 
   const postArticle = (val: defs.post_CreateRequest) => {
+    if (submitting) return;
+    setSubmitting(true);
     if (!title) {
       message.warn('请填写标题!');
       return;
@@ -313,7 +343,7 @@ const EditorPage: React.FC = () => {
       }
     } else {
       if (type === 'rtf') {
-        post({}, { ...val, title, content, domain: 'normal', content_type: type });
+        post({}, { ...val, title, content, content_type: type });
       } else {
         post(
           {},
@@ -407,6 +437,9 @@ const EditorPage: React.FC = () => {
                       ? (mdToHtml as string).slice(0, 300)
                       : (content as string).slice(0, 300)
                   }
+                  isOnlyTeam={isOnlyTeam}
+                  setIsOnlyTeam={setIsOnlyTeam}
+                  fromQuickNew={fromQuickNew}
                 />
               }
               trigger="click"
@@ -423,7 +456,7 @@ const EditorPage: React.FC = () => {
             >
               <img
                 style={{ height: '100%' }}
-                src="http://ossforum.muxixyz.com/default/toggle.svg"
+                src="https://ossforum.muxixyz.com/default/toggle.svg"
                 alt="toggle"
               ></img>
             </style.ToggleEditor>

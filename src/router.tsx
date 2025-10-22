@@ -33,6 +33,7 @@ const SetRoutes = () => {
   return (
     <Router>
       {showHeader ? <Header /> : null}
+      {/* <NotifListener /> */}
       <Routes />
     </Router>
   );

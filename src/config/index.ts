@@ -7,6 +7,7 @@ export const CATEGORY: Array<string> = [
   '游戏',
   '艺术',
   '闲聊',
+  '面评',
 ];
 
 export const CATEGORY_EN: Array<string> = [
@@ -18,6 +19,7 @@ export const CATEGORY_EN: Array<string> = [
   'game',
   'art',
   'chat',
+  'interview',
 ];
 
 export const Emoji = [
@@ -109,4 +111,4 @@ export const Emoji = [
   '🤕',
 ];
 
-export const QiniuServer = 'http://ossforum.muxixyz.com/';
+export const QiniuServer = 'https://ossforum.muxixyz.com/';

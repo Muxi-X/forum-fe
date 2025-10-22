@@ -4,10 +4,12 @@ import { MenuOutlined } from '@ant-design/icons';
 import styled from 'styled-components';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Link } from 'react-router-dom';
+import useChat from 'store/useChat';
 import useList from 'store/useList';
 import useProfile from 'store/useProfile';
 import Avatar from 'components/Avatar/avatar';
 import useWS from 'store/useWS';
+import useNotification from 'store/useNotification';
 import * as style from './style';
 
 const HeaderAvatar = styled(Avatar)`
@@ -23,6 +25,7 @@ const MenuAction = styled.div`
 `;
 
 const Header: React.FC = () => {
+  const { setSelectedId, setContacts } = useChat();
   const [searchParams] = useSearchParams();
   const value = searchParams.get('query');
   const [query, setQuery] = useState(value ? value : '');
@@ -33,16 +36,21 @@ const Header: React.FC = () => {
   const {
     userProfile: { avatar, id },
   } = useProfile();
-  const { tip } = useWS();
+  const { ws, tip } = useWS();
   const { setList } = useList();
   const { setTip } = useWS();
+  const { unreadCount } = useNotification();
+
   const handleQueryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setQuery(e.target.value);
   };
 
   const handleOk = () => {
-    nav('/login');
+    ws?.close();
+    setContacts([]);
+    setSelectedId(0);
     localStorage.removeItem('token');
+    nav('/login');
   };
 
   const handleSearch = () => {
@@ -85,7 +93,7 @@ const Header: React.FC = () => {
                 setQuery('');
               }}
             >
-              <img src="http://ossforum.muxixyz.com/logo1.png" alt="logo" />
+              <img src="https://ossforum.muxixyz.com/logo1.png" alt="logo" />
               <span className="logo">MUXI</span>
               <Popover
                 trigger="click"
@@ -131,7 +139,7 @@ const Header: React.FC = () => {
                   e.stopPropagation();
                 }}
                 value={query}
-                placeholder="输入感兴趣的内容哦 :D"
+                placeholder="输入感兴趣的内容哦"
               />
             </style.SearchDiv>
             <style.ToolDiv>
@@ -162,7 +170,7 @@ const Header: React.FC = () => {
                         onClick={() => {
                           setTip(false);
                         }}
-                        src="http://ossforum.muxixyz.com/default/msg.png"
+                        src="https://ossforum.muxixyz.com/default/msg.png"
                         alt="msg"
                       />
                     </Badge>
@@ -170,9 +178,9 @@ const Header: React.FC = () => {
                 </Tooltip>
                 <Tooltip color="gold" title={'查看通知'}>
                   <Link to="/notice">
-                    {/* <Badge count={1} dot> */}
-                    <img src="http://ossforum.muxixyz.com/default/tip.png" alt="tip" />
-                    {/* </Badge> */}
+                    <Badge count={unreadCount} dot>
+                      <img src="https://ossforum.muxixyz.com/default/tip.png" alt="tip" />
+                    </Badge>
                   </Link>
                 </Tooltip>
               </style.MsgTool>

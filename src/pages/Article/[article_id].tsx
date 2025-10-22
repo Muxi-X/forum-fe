@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useParams } from 'react-router';
 import MarkdownNavbar from 'markdown-navbar';
 import DOMPurify from 'dompurify';
+import MarkdownIt from 'markdown-it';
 import {
   LikeFilled,
   StarFilled,
@@ -121,6 +122,30 @@ const Article: React.FC = () => {
   const { article_id } = useParams();
   const nav = useNavigate();
 
+  // 之前对于md语法没有解析，新增一个函数来处理
+  const getContentToRender = () => {
+    // 先指定md解析器配置，创建实例
+    const md = new MarkdownIt({
+      html: true, // 允许解析和输出 HTML 标签
+      linkify: true, // 自动把类似 URL 的文本变成可点击的链接
+      typographer: true, // 启用智能排版
+    });
+
+    // 如果有compiled_content，优先使用
+    if (compiled_content && compiled_content.trim()) {
+      return compiled_content;
+    }
+
+    // 对于md文本需要解析为html使用
+    if (content_type === 'md' && content) {
+      const newContent = md.render(content);
+      return newContent;
+    }
+
+    // 如果不是md，则为rtf，直接使用即可
+    return content || '';
+  };
+
   const {
     content_type,
     creator_name,
@@ -159,7 +184,7 @@ const Article: React.FC = () => {
             content: `#${response.data.title}\n${response.data.content}`,
           });
         } else if (response.data.content_type === 'rtf') {
-          setArticleInfo(response.data);
+          setArticleInfo(response.data); //为什么调用两次？暂时不懂
         }
         useDocTitle(`${response.data.title} - 茶馆`);
         setArticleInfo(response.data);
@@ -219,7 +244,7 @@ const Article: React.FC = () => {
   };
 
   const handleReport = () => {
-    report({}, { cause: reportVal, post_id: +(article_id as string), type_name: 'post' });
+    report({}, { cause: reportVal, id: +(article_id as string), type_name: 'post' });
   };
 
   const handleAddComment = (num: number) => {
@@ -348,9 +373,7 @@ const Article: React.FC = () => {
                 <div
                   id="markdown-body"
                   dangerouslySetInnerHTML={{
-                    __html: DOMPurify.sanitize(
-                      (content_type === 'md' ? compiled_content : content) as string,
-                    ),
+                    __html: DOMPurify.sanitize(getContentToRender()),
                   }}
                 ></div>
 
@@ -365,7 +388,7 @@ const Article: React.FC = () => {
                     {category as string}
                   </ArticleCategory>
                   标签:
-                  <Tag onClick={() => {}} inArticle tag={(tags as string[])[0]}></Tag>
+                  <Tag onClick={() => {}} inArticle tags={tags as string[]}></Tag>
                 </style.ArticleInfo>
               </style.ArticleBody>
             </style.ArticleCard>

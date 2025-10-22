@@ -7,8 +7,8 @@ import * as style from './style';
 
 const ContentCard = styled(Card)`
   width: 75%;
-  overflow-y: scroll;
-  padding-top: 1em;
+  overflow-y: hidden;
+  padding-top: 0em;
   .ant-card-body {
     padding: 10px;
   }

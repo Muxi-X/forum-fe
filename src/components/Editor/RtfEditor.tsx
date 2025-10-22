@@ -20,7 +20,7 @@ const RtfEditor: React.FC<EditorProps> = ({
   };
 
   (editorConfig.MENU_CONF as any)['uploadImage'] = {
-    server: 'http://upload-z2.qiniup.com',
+    server: 'https://upload-z2.qiniup.com',
     customInsert(res: any, insertFn: any) {
       // 从 res 中找到 url alt href ，然后插入图片
       insertFn(`${QiniuServer}${res.key}`);

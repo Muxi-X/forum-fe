@@ -69,10 +69,15 @@ const SubList: React.FC<{
   const subLen = subComments.length;
   const rLen = replies.length;
 
-  if (subLen !== rLen) {
-    if (subLen > rLen) setReplies(subComments);
-    else syncSubComments(replies);
-  }
+  useEffect(() => {
+    if (subLen !== rLen) {
+      if (subLen > rLen) {
+        setReplies(subComments);
+      } else {
+        syncSubComments(replies);
+      }
+    }
+  }, [subComments, replies]);
 
   return (
     <style.SubComments>
@@ -124,7 +129,6 @@ const CommentItem: React.FC<CommentItemProps> = ({
     content: be_replied_content,
     name: be_replied_user_name,
   });
-
   const { run } = useRequest(API.comment.postComment.request, {
     manual: true,
     onSuccess: (res) => {
@@ -314,6 +318,7 @@ const CommentList: React.FC<{
       renderItem={(props) => (
         <CommentItem
           {...props}
+          key={props.id}
           commentType={'comment'}
           post_id={post_id}
           commentNum={commentNum}
@@ -465,21 +470,31 @@ const CommentCp = (props: IProps, ref: any) => {
     userProfile: { avatar, name },
   } = useProfile();
 
+  const descOrder = (comments: Array<defs.post_Comment>) => {
+    return [...comments].sort((a, b) => {
+      const timeA = a.time ? new Date(a.time).getTime() : 0;
+      const timeB = b.time ? new Date(b.time).getTime() : 0;
+      return timeB - timeA;
+    });
+  };
+
   const { run } = useRequest(API.comment.postComment.request, {
     manual: true,
     onSuccess: (res) => {
+      const newComment = {
+        ...res.data,
+        time: res.data.create_time, //因为res.data没有time属性，这里用于倒序排列
+      };
+      const updatedComments = descOrder([...comments, newComment]);
       setTimeout(() => {
-        setComments([...comments, res.data]);
+        setComments(updatedComments);
         setContent('');
         setSubmitting(false);
         handleAddComment(commentNum + 1);
         setImg('');
-        setTimeout(() => {
-          window.scrollBy({ top: document.body.scrollHeight, behavior: 'smooth' });
-        });
       }, 500);
     },
-  });
+  }); //这是用于处理根评论
 
   const handleSubmit = () => {
     run(
@@ -525,7 +540,7 @@ const CommentCp = (props: IProps, ref: any) => {
         <CommentList
           handleAddComment={handleAddComment}
           commentNum={commentNum}
-          comments={comments}
+          comments={descOrder(comments)}
           post_id={post_id}
         />
       )}

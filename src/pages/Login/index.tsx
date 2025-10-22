@@ -50,10 +50,12 @@ const Login: React.FC = () => {
   const webSocketInit = () => {
     const token = localStorage.getItem('token') as string;
     const WebSocket = new WS(token);
-    WebSocket.ws.onmessage = () => {
-      setTip(true);
-    };
-    setWS(WebSocket);
+    if (WebSocket.ws) {
+      WebSocket.ws.onmessage = () => {
+        setTip(true);
+      };
+      setWS(WebSocket);
+    }
   };
 
   const successLogin = async (res: API.auth.postStudent.Response) => {
@@ -64,6 +66,9 @@ const Login: React.FC = () => {
       localStorage.setItem('pwd', password);
       const user = await getUser({});
       setUser(user.data);
+      if (user.data.id !== undefined) {
+        localStorage.setItem('userId', user.data.id.toString());
+      }
       const qiniu = await getQiniuToken({});
       setToken(qiniu.data.token as string);
       webSocketInit();
@@ -184,7 +189,7 @@ const Login: React.FC = () => {
                 </button>
               </div>
               <img
-                src="http://ossforum.muxixyz.com/default/log.svg"
+                src="https://ossforum.muxixyz.com/default/log.svg"
                 className="image"
                 alt=""
               />
@@ -202,7 +207,7 @@ const Login: React.FC = () => {
                 </button>
               </div>
               <img
-                src="http://ossforum.muxixyz.com/default/register.svg"
+                src="https://ossforum.muxixyz.com/default/register.svg"
                 className="image"
                 alt=""
               />

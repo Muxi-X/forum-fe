@@ -17,6 +17,10 @@ const useWS = create<WSStore>((set, get) => ({
   setTip: (isTip: boolean) => {
     set(() => ({ tip: isTip }));
   },
+  close: () => {
+    get().ws?.close();
+    set({ ws: null });
+  },
 }));
 
 export default useWS;

@@ -51,11 +51,16 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const webSocketInit = () => {
     const token = localStorage.getItem('token') as string;
     const WebSocket = new WS(token);
-    WebSocket.ws.onmessage = (res) => {
-      const data: MsgResponse = JSON.parse(res.data);
-      setTip(true);
-      setSelectedId(data.sender);
-    };
+    if (WebSocket.ws) {
+      WebSocket.ws.onmessage = (res) => {
+        console.log(res.data);
+        const data: MsgResponse = JSON.parse(res.data);
+        if (typeof data?.sender === 'number') {
+          setTip(true);
+          setSelectedId(data.sender);
+        }
+      };
+    }
     setWS(WebSocket);
   };
 

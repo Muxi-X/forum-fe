@@ -42,7 +42,7 @@ const ActionWrapper = styled.span`
 const Action = styled.div`
   user-select: none;
   color: #909090;
-  font-size: 0.8rem;
+  font-size: 1rem;
   padding: 0 1rem;
   cursor: pointer;
   :hover {
