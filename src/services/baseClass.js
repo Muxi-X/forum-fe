@@ -497,13 +497,16 @@ export class post_UpdateInfoRequest {
 }
 
 export class report_CreateRequest {
+  /** category */
+  category = '';
+
   /** cause */
   cause = '';
 
-  /** post_id */
-  post_id = undefined;
+  /** id */
+  id = undefined;
 
-  /** type_name */
+  /** post or comment */
   type_name = '';
 }
 
@@ -521,11 +524,17 @@ export class report_ListResponse {
 }
 
 export class report_Report {
+  /** be_reported_content */
+  be_reported_content = '';
+
   /** be_reported_user_id */
   be_reported_user_id = undefined;
 
   /** be_reported_user_name */
   be_reported_user_name = '';
+
+  /** category */
+  category = '';
 
   /** cause */
   cause = '';
@@ -539,8 +548,8 @@ export class report_Report {
   /** post_id */
   post_id = undefined;
 
-  /** post_title */
-  post_title = '';
+  /** target_id */
+  target_id = undefined;
 
   /** type_name */
   type_name = '';

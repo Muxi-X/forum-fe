@@ -4129,6 +4129,19 @@
               "enum": [],
               "typeProperties": []
             },
+            "name": "category",
+            "required": true
+          },
+          {
+            "dataType": {
+              "typeArgs": [],
+              "typeName": "string",
+              "isDefsType": false,
+              "templateIndex": -1,
+              "compileTemplateKeyword": "#/definitions/",
+              "enum": [],
+              "typeProperties": []
+            },
             "name": "cause",
             "required": true
           },
@@ -4142,7 +4155,7 @@
               "enum": [],
               "typeProperties": []
             },
-            "name": "post_id",
+            "name": "id",
             "required": true
           },
           {
@@ -4156,6 +4169,7 @@
               "typeProperties": []
             },
             "name": "type_name",
+            "description": "post or comment",
             "required": true
           }
         ]
@@ -4229,6 +4243,19 @@
           {
             "dataType": {
               "typeArgs": [],
+              "typeName": "string",
+              "isDefsType": false,
+              "templateIndex": -1,
+              "compileTemplateKeyword": "#/definitions/",
+              "enum": [],
+              "typeProperties": []
+            },
+            "name": "be_reported_content",
+            "required": false
+          },
+          {
+            "dataType": {
+              "typeArgs": [],
               "typeName": "number",
               "isDefsType": false,
               "templateIndex": -1,
@@ -4250,6 +4277,19 @@
               "typeProperties": []
             },
             "name": "be_reported_user_name",
+            "required": false
+          },
+          {
+            "dataType": {
+              "typeArgs": [],
+              "typeName": "string",
+              "isDefsType": false,
+              "templateIndex": -1,
+              "compileTemplateKeyword": "#/definitions/",
+              "enum": [],
+              "typeProperties": []
+            },
+            "name": "category",
             "required": false
           },
           {
@@ -4307,14 +4347,14 @@
           {
             "dataType": {
               "typeArgs": [],
-              "typeName": "string",
+              "typeName": "number",
               "isDefsType": false,
               "templateIndex": -1,
               "compileTemplateKeyword": "#/definitions/",
               "enum": [],
               "typeProperties": []
             },
-            "name": "post_title",
+            "name": "target_id",
             "required": false
           },
           {
