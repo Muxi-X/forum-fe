@@ -7,7 +7,7 @@ import { useDebounceFn } from 'ahooks';
 import ArticleList from 'components/List';
 import BackToTop from 'components/BackTop';
 import Tag from 'components/Tag/tag';
-import { CATEGORY, CATEGORY_EN } from 'config';
+import { CATEGORY, CATEGORY_EN, CATEGORY_TEAM, CATEGORY_TEAM_EN } from 'config';
 import useRequest from 'hooks/useRequest';
 import useList from 'store/useList';
 import useProfile from 'store/useProfile';
@@ -85,6 +85,42 @@ const Square: React.FC = () => {
       wait: 1000,
     },
   );
+  const getCategoryInTeam = () => {
+    return CATEGORY_TEAM.map((category, i) => {
+      return (
+        <Tooltip title="仅看团队内文章" placement="bottom" color="gold" key={category}>
+          <span
+            onClick={() => {
+              setList([]);
+              setHasMore(true);
+              setGetParams({
+                ...getParams,
+                domain: 'muxi',
+                category: '',
+                filter: '',
+                tag: '',
+                page: 0,
+              });
+              setTags([]);
+              history.pushState(
+                { domain: CATEGORY_TEAM_EN[i] },
+                CATEGORY_TEAM_EN[i],
+                `${CATEGORY_TEAM_EN[i]}`,
+              );
+              useDocTitle('都是自己人啦~');
+            }}
+            className="wrapper"
+            aria-hidden="true"
+            key={category}
+          >
+            <Category trigger={pathname === `/${CATEGORY_TEAM_EN[i]}`}>
+              {category}
+            </Category>
+          </span>
+        </Tooltip>
+      );
+    });
+  };
 
   const { loading, run } = useRequest(API.post.getPostListByDomain.request, {
     onSuccess: (res) => {
@@ -240,31 +276,7 @@ const Square: React.FC = () => {
           <Category trigger={pathname === `/${CATEGORY_EN[i]}`}>{category}</Category>
         </span>
       ))}
-      {role?.includes('Muxi') ? (
-        <Tooltip title="仅看团队内文章" placement="bottom" color="gold">
-          <span
-            onClick={() => {
-              setList([]);
-              setHasMore(true);
-              setGetParams({
-                ...getParams,
-                domain: 'muxi',
-                category: '',
-                filter: '',
-                tag: '',
-                page: 0,
-              });
-              setTags([]);
-              history.pushState({ domain: 'muxi' }, 'muxi', `muxi`);
-              useDocTitle('都是自己人啦~');
-            }}
-            className="wrapper"
-            aria-hidden="true"
-          >
-            <Category trigger={pathname === '/muxi'}>木犀</Category>
-          </span>
-        </Tooltip>
-      ) : null}
+      {role?.includes('Muxi') ? getCategoryInTeam() : null}
     </Categories>
   );
   return (

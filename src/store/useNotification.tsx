@@ -12,7 +12,6 @@ export interface Notification {
 interface NotificationStore {
   notifications: Notification[];
   unreadCount: number;
-
   addNotifications: (notifications: Notification[]) => void;
   markAsRead: (id: string) => void;
   markAllAsRead: () => void;

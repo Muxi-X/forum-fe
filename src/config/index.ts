@@ -7,7 +7,6 @@ export const CATEGORY: Array<string> = [
   '游戏',
   '艺术',
   '闲聊',
-  '面评',
 ];
 
 export const CATEGORY_EN: Array<string> = [
@@ -19,8 +18,11 @@ export const CATEGORY_EN: Array<string> = [
   'game',
   'art',
   'chat',
-  'interview',
 ];
+
+export const CATEGORY_TEAM: Array<string> = ['木犀', '面评'];
+
+export const CATEGORY_TEAM_EN: Array<string> = ['muxi', 'interview'];
 
 export const Emoji = [
   '😀',
