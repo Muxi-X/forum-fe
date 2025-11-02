@@ -63,6 +63,7 @@ const Square: React.FC = () => {
   const [hasMore, setHasMore] = useState(true); // 判断是否有更多文章
   const [tags, setTags] = useState<string[]>([]); // Tags表
   const [searchParams] = useSearchParams(); // query参数获取
+  const [docTitle, setDocTitle] = useState('木犀茶馆');
   const nav = useNavigate();
   const params = useParams();
   const sort = searchParams.get('sort');
@@ -87,6 +88,8 @@ const Square: React.FC = () => {
   );
   const getCategoryInTeam = () => {
     return CATEGORY_TEAM.map((category, i) => {
+      const isMuxiTag = i === 0;
+
       return (
         <Tooltip title="仅看团队内文章" placement="bottom" color="gold" key={category}>
           <span
@@ -96,7 +99,7 @@ const Square: React.FC = () => {
               setGetParams({
                 ...getParams,
                 domain: 'muxi',
-                category: '',
+                category: isMuxiTag ? '' : CATEGORY_TEAM[i],
                 filter: '',
                 tag: '',
                 page: 0,
@@ -107,7 +110,7 @@ const Square: React.FC = () => {
                 CATEGORY_TEAM_EN[i],
                 `${CATEGORY_TEAM_EN[i]}`,
               );
-              useDocTitle('都是自己人啦~');
+              setDocTitle('都是自己人啦~');
             }}
             className="wrapper"
             aria-hidden="true"
@@ -125,7 +128,7 @@ const Square: React.FC = () => {
   const { loading, run } = useRequest(API.post.getPostListByDomain.request, {
     onSuccess: (res) => {
       if (searchQuery) {
-        useDocTitle(`${searchQuery} - 搜索 - 茶馆`);
+        setDocTitle(`${searchQuery} - 搜索 - 茶馆`);
         if (res.data.posts?.length === 0) {
           tipNoMore();
           setHasMore(false);
@@ -195,7 +198,7 @@ const Square: React.FC = () => {
       tag: '',
       domain: 'normal',
     });
-    useDocTitle(CATEGORY[index] + ' - 茶馆');
+    setDocTitle(CATEGORY[index] + ' - 茶馆');
     const category = CATEGORY_EN[index];
     history.pushState({ category }, category, `${category}`);
     getTag({ category: CATEGORY[index] });
@@ -212,7 +215,7 @@ const Square: React.FC = () => {
       tag: '',
       page: 0,
     });
-    useDocTitle('木犀茶馆');
+    setDocTitle('木犀茶馆');
     history.pushState({ category: 'all' }, 'all', '/');
   };
 
@@ -239,14 +242,20 @@ const Square: React.FC = () => {
       const i = CATEGORY_EN.indexOf(params.category as string);
       getTag({ category: CN });
       setGetParams({ ...getParams, category: CATEGORY[i] });
-      useDocTitle(`${CN} - 茶馆`);
+      setDocTitle(`${CN} - 茶馆`);
     } else {
       run(getParams);
       setTags([]);
-      useDocTitle('木犀茶馆');
+      if (!(getParams.domain === 'muxi' && getParams.category === '')) {
+        setDocTitle('木犀茶馆');
+      }
     }
     setIsFirst(false);
   }, [filter, category, tag, searchQuery, pathname, domain]);
+
+  useEffect(() => {
+    useDocTitle(docTitle);
+  }, [docTitle]);
 
   const ListHeader = (
     <>

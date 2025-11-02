@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Card, List, Badge, Button, Empty, Typography } from 'antd';
+import { Card, List, Badge, Button, Empty, Typography, Modal, message } from 'antd';
 import {
   LikeOutlined,
   CommentOutlined,
@@ -61,8 +61,22 @@ const Notice: React.FC = () => {
   });
 
   const handleMarkAllRead = () => {
-    markAllAsRead();
-    deleteMessages({}, {});
+    Modal.confirm({
+      title: '确认要全部标记为已读吗？',
+      okText: '确认',
+      cancelText: '取消',
+      okType: 'primary',
+      onOk: async () => {
+        try {
+          markAllAsRead();
+          await deleteMessages({}, {});
+          message.success('已全部标记为已读');
+        } catch (error) {
+          console.error('清除通知失败:', error);
+          message.error('操作失败，请稍后重试');
+        }
+      },
+    });
   };
 
   useDocTitle('长目飞耳 - 茶馆');

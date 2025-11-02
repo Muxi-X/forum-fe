@@ -6,7 +6,10 @@
 import * as defs from '../../baseClass';
 import { PontCore } from '../../pontCore';
 
-export class Params {}
+export class Params {
+  /** post_id */
+  id
+}
 
 export const method = 'DELETE';
 

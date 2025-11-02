@@ -612,8 +612,8 @@ declare namespace defs {
     /** post_id */
     post_id?: number;
 
-    /** receive_userid */
-    receive_userid?: number;
+    /** receive_user_id */
+    receive_user_id?: number;
 
     /** type */
     type?: string;
@@ -1322,10 +1322,10 @@ login the team-forum
     }
 
     /**
-     * 删除private message api
-     * 删除所有的非管理员信息
-     * /user/private_message
-     */
+     * 删除指定的 private message
+     * 可通过 /user/private_message/{id} 删除单条信息
+     * 如果不传 id，则默认删除所有非管理员信息
+    */
     export namespace deleteUserPrivateMessage {
       export class Params {}
 

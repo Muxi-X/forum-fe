@@ -11,19 +11,34 @@ const GlobalNotificationListener: React.FC = () => {
     {
       onSuccess: (res) => {
         if (res.data.messages) {
-          const newNotifications: Notification[] = res.data.messages.map(
-            (message: string, index: number) => {
-              const msgData = JSON.parse(message);
-              return {
-                id: `${msgData.post_id}_${msgData.type}_${index}`,
-                postId: msgData.post_id,
-                type: msgData.type,
-                content: msgData.content,
-                read: false,
-                timestamp: Date.now(),
-              };
-            },
-          );
+          const newNotifications: Notification[] = res.data.messages
+            .map((message: string, index: number) => {
+              try {
+                const notification = JSON.parse(message);
+
+                if (
+                  !notification.post_id ||
+                  !notification.type ||
+                  !notification.content
+                ) {
+                  console.error('通知解析错误:', notification);
+                }
+
+                return {
+                  id: `${notification.post_id}_${notification.type}_${index}`,
+                  postId: notification.post_id,
+                  type: notification.type,
+                  content: notification.content,
+                  read: false,
+                  timestamp: Date.now(),
+                };
+              } catch (error) {
+                console.error('通知解析失败:', message, error);
+                return null;
+              }
+            })
+            .filter((n) => n !== null);
+
           // 每次轮询重置未读数据并添加新数据
           resetNotifications();
           addNotifications(newNotifications);
@@ -50,7 +65,7 @@ const GlobalNotificationListener: React.FC = () => {
         pollingRef.current = null;
       }
     };
-  }, []);
+  }, [getNotifications]);
 
   return null;
 };

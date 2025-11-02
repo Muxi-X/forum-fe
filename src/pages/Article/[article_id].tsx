@@ -21,6 +21,7 @@ import Comment from './components/comment';
 import media from 'styles/media';
 import 'markdown-navbar/dist/navbar.css';
 import * as style from './style';
+import useProfile from 'store/useProfile';
 import useDocTitle from 'hooks/useDocTitle';
 import { CATEGORY, CATEGORY_EN } from 'config';
 import moment from 'utils/moment';
@@ -120,6 +121,7 @@ const Article: React.FC = () => {
   const [previewImg, setPreviewImg] = useState('');
   const commentRef = useRef<HTMLDivElement>();
   const { article_id } = useParams();
+  const { userProfile } = useProfile();
   const nav = useNavigate();
 
   // 之前对于md语法没有解析，新增一个函数来处理
@@ -250,6 +252,9 @@ const Article: React.FC = () => {
     content?: string,
     comment_id?: number,
   ) => {
+    // 确保不会自己给自己发送通知
+    if (userProfile.id === creator_id) return;
+
     const params = {
       post_id: +(article_id as string),
       receive_userid: creator_id,

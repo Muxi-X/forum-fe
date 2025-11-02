@@ -12,6 +12,7 @@ import {
   Input,
   Modal,
   Checkbox,
+  Tooltip,
 } from 'antd';
 import { IDomEditor } from '@wangeditor/editor';
 import Drafts, { Draft, EditorType } from 'utils/db_drafts';
@@ -21,7 +22,7 @@ import useProfile from 'store/useProfile';
 import Avatar from 'components/Avatar/avatar';
 import MdEditor from 'components/Editor/MdEditor';
 import RtfEditor from 'components/Editor/RtfEditor';
-import { CATEGORY } from 'config';
+import { CATEGORY, CATEGORY_TEAM } from 'config';
 import * as style from './style';
 import useDocTitle from 'hooks/useDocTitle';
 
@@ -143,6 +144,39 @@ const Post: React.FC<
               {val}
             </Radio.Button>
           ))}
+
+          {!role?.includes('Normal') &&
+            CATEGORY_TEAM.slice(1).map((val, index) => {
+              const disabled = !isOnlyTeam;
+              return (
+                <Tooltip
+                  key={`tooltip-${val}-${index + 1}`}
+                  title={disabled ? '当前标签仅在团队内可见时可用' : ''}
+                  placement="top"
+                  overlayInnerStyle={{
+                    backgroundColor: 'rgba(124, 124, 124, 0.65)',
+                    color: '#ffffffff',
+                    fontSize: '12px',
+                    padding: '6px 8px',
+                    borderRadius: '4px',
+                    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
+                  }}
+                >
+                  <Radio.Button
+                    key={`${val}-${index + 1}`}
+                    value={val}
+                    disabled={disabled}
+                    style={{
+                      margin: 3,
+                      opacity: disabled ? 0.5 : 1,
+                      cursor: disabled ? 'not-allowed' : 'pointer',
+                    }}
+                  >
+                    {val}
+                  </Radio.Button>
+                </Tooltip>
+              );
+            })}
         </Radio.Group>
       </Form.Item>
       <style.ItemWrapper>
