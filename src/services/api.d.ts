@@ -612,8 +612,8 @@ declare namespace defs {
     /** post_id */
     post_id?: number;
 
-    /** receive_user_id */
-    receive_user_id?: number;
+    /** receive_userid */
+    receive_userid?: number;
 
     /** type */
     type?: string;
@@ -1327,7 +1327,10 @@ login the team-forum
      * 如果不传 id，则默认删除所有非管理员信息
     */
     export namespace deleteUserPrivateMessage {
-      export class Params {}
+      export class Params {
+        /** message_id */
+        id?: number;
+      }
 
       export type HooksParams = (() => Params) | Params;
 

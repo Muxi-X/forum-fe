@@ -7,7 +7,7 @@ import * as defs from '../../baseClass';
 import { PontCore } from '../../pontCore';
 
 export class Params {
-  /** post_id */
+  /** message_id */
   id
 }
 
