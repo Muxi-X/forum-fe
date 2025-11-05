@@ -164,7 +164,7 @@ const Header: React.FC = () => {
                   title={tip ? '有人给你发消息还没回哦  ❤️' : '去找人唠唠嗑吧 ~'}
                 >
                   <Link to="/user/chat">
-                    <Badge count={tip ? 1 : 0} dot>
+                    <Badge count={tip ? 1 : 0}>
                       <img
                         aria-hidden
                         onClick={() => {
@@ -178,7 +178,7 @@ const Header: React.FC = () => {
                 </Tooltip>
                 <Tooltip color="gold" title={'查看通知'}>
                   <Link to="/notice">
-                    <Badge count={unreadCount} dot>
+                    <Badge count={unreadCount}>
                       <img src="https://ossforum.muxixyz.com/default/tip.png" alt="tip" />
                     </Badge>
                   </Link>

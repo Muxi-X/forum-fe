@@ -22,7 +22,7 @@ type commentType = 'comment' | 'subComment' | 'reply';
 interface IProps {
   commentList: defs.post_SubPost[];
   post_id: number;
-  handleAddComment: (num: number) => void;
+  handleAddComment: (num: number, content?: string, comment_id?: number) => void;
   commentNum: number;
 }
 
@@ -45,7 +45,7 @@ interface CommentItemProps extends defs.post_Comment, defs.post_SubPost {
   commentType?: commentType;
   post_id: number;
   addReply?: (reply: defs.post_Comment) => void;
-  handleAddComment: (num: number) => void;
+  handleAddComment: (num: number, content?: string, comment_id?: number) => void;
   commentNum: number;
 }
 
@@ -57,7 +57,7 @@ const SubList: React.FC<{
   subComments: defs.post_Comment[];
   post_id: number;
   syncSubComments: (subs: defs.post_Comment[]) => void;
-  handleAddComment: (num: number) => void;
+  handleAddComment: (num: number, content?: string, comment_id?: number) => void;
   commentNum: number;
 }> = ({ subComments, post_id, syncSubComments, commentNum, handleAddComment }) => {
   if (subComments.length === 0) return <></>;
@@ -122,29 +122,30 @@ const CommentItem: React.FC<CommentItemProps> = ({
   const [submitting, setSubmitting] = useState(false);
   const [isLiked, setIsLiked] = useState(is_liked);
   const [subComments, setSubComments] = useState(comments ? comments : []);
-  const [value, setValue] = useState('');
+  const [replyContent, setReplyContent] = useState('');
   const [reply, setReply] = useState(false);
   const [img, setImg] = useState('');
   const [replyInfo, setReplyInfo] = useState({
     content: be_replied_content,
     name: be_replied_user_name,
   });
+  // 这里的run处理子评论，根评论的发送逻辑在下面
   const { run } = useRequest(API.comment.postComment.request, {
     manual: true,
     onSuccess: (res) => {
       setTimeout(() => {
         if (commentType === 'comment') {
           setSubComments([...subComments, res.data]);
-          setValue('');
+          setReplyContent('');
           setSubmitting(false);
           setReply(false);
         } else {
-          setValue('');
+          setReplyContent('');
           setSubmitting(false);
           setReply(false);
           addReply && addReply(res.data);
         }
-        handleAddComment(commentNum + 1);
+        handleAddComment(commentNum + 1, replyContent, id);
         setImg('');
       }, 500);
     },
@@ -167,7 +168,7 @@ const CommentItem: React.FC<CommentItemProps> = ({
 
   const handleReply = () => {
     setReply(!reply);
-    setValue('');
+    setReplyContent('');
   };
 
   const handleSubmit = () => {
@@ -178,7 +179,7 @@ const CommentItem: React.FC<CommentItemProps> = ({
     run(
       {},
       {
-        content: value,
+        content: replyContent,
         post_id,
         father_id: id,
         type_name: type,
@@ -276,8 +277,8 @@ const CommentItem: React.FC<CommentItemProps> = ({
       {reply ? (
         <div style={{ height: 'fit-content', marginBottom: '20px' }}>
           <Editor
-            content={value}
-            setContent={setValue}
+            content={replyContent}
+            setContent={setReplyContent}
             submitting={submitting}
             setSubmitting={setSubmitting}
             onSubmit={handleSubmit}
@@ -307,7 +308,7 @@ const CommentItem: React.FC<CommentItemProps> = ({
 const CommentList: React.FC<{
   comments: defs.post_SubPost[];
   post_id: number;
-  handleAddComment: (num: number) => void;
+  handleAddComment: (num: number, content?: string, comment_id?: number) => void;
   commentNum: number;
 }> = ({ comments, post_id, commentNum, handleAddComment }) => {
   return (
@@ -490,7 +491,7 @@ const CommentCp = (props: IProps, ref: any) => {
         setComments(updatedComments);
         setContent('');
         setSubmitting(false);
-        handleAddComment(commentNum + 1);
+        handleAddComment(commentNum + 1, content);
         setImg('');
       }, 500);
     },

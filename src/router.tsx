@@ -8,6 +8,7 @@ import useShowHeader from 'store/useShowHeader';
 import useWS from 'store/useWS';
 import Layout, { Content, ContentWrapper } from 'pages/_layout';
 import Loading from 'components/Loading';
+import GlobalNotificationListener from 'components/Notice';
 
 const Routes = () => {
   return (
@@ -33,7 +34,7 @@ const SetRoutes = () => {
   return (
     <Router>
       {showHeader ? <Header /> : null}
-      {/* <NotifListener /> */}
+      <GlobalNotificationListener />
       <Routes />
     </Router>
   );

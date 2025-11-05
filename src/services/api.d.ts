@@ -601,6 +601,28 @@ declare namespace defs {
     /** messages */
     messages?: Array<string>;
   }
+
+  export class user_CreatePrivateMessageRequest {
+    /** comment_id */
+    comment_id?: number;
+
+    /** content */
+    content?: string;
+
+    /** post_id */
+    post_id?: number;
+
+    /** receive_userid */
+    receive_userid?: number;
+
+    /** type */
+    type?: string;
+  }
+
+  export class user_PrivateMessageListResponse {
+    /** messages */
+    messages?: Array<any>;
+  }
 }
 
 declare namespace API {
@@ -1255,6 +1277,64 @@ login the team-forum
       export type HooksParams = (() => Params) | Params;
 
       export type Response = ResponseTypeWarpper<defs.UserProfile>;
+
+      export const method: string;
+
+      export function request(params: Params, options?: any): Promise<Response>;
+    }
+
+    /**
+     * 创建private message api
+     * 非管理员消息api
+     * /user/private_message
+     */
+    export namespace postUserPrivateMessage {
+      export class Params {}
+
+      export type HooksParams = (() => Params) | Params;
+
+      export type Response = ResponseTypeWarpper<defs.Response>;
+
+      export const method: string;
+
+      export function request(
+        params: Params,
+        body: defs.user_CreatePrivateMessageRequest,
+        options?: any,
+      ): Promise<Response>;
+    }
+
+    /**
+     * 获取private message列表 api
+     * 获取用户非管理员信息列表
+     * /user/private_message/list
+     */
+    export namespace getUserPrivateMessageList {
+      export class Params {}
+
+      export type HooksParams = (() => Params) | Params;
+
+      export type Response = ResponseTypeWarpper<defs.user_PrivateMessageListResponse>;
+
+      export const method: string;
+
+      export function request(params: Params, options?: any): Promise<Response>;
+    }
+
+    /**
+     * 删除指定的 private message
+     * 可通过 /user/private_message/{id} 删除单条信息
+     * 如果不传 id，则默认删除所有非管理员信息
+    */
+    export namespace deleteUserPrivateMessage {
+      export class Params {
+        /** message_id */
+        id?: number;
+      }
+
+      export type HooksParams = (() => Params) | Params;
+
+      export type Response = ResponseTypeWarpper<defs.Response>;
 
       export const method: string;
 
