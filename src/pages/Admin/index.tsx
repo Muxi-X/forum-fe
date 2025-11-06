@@ -33,7 +33,6 @@ const ReportItem: React.FC<{ report: defs.report_Report }> = ({ report }) => {
     user_avatar,
     user_name,
     user_id,
-    post_title,
     post_id,
     be_reported_user_id,
     be_reported_user_name,
@@ -59,7 +58,8 @@ const ReportItem: React.FC<{ report: defs.report_Report }> = ({ report }) => {
             举报人: <Link to={`/user/${user_id}`}>{user_name}</Link>
           </style.Filed>
           <style.Filed>
-            举报帖子: <Link to={`/article/${post_id}`}>{`《${post_title}》`}</Link>
+            举报帖子:
+            <Link to={`/article/${post_id}`}>{` (ID: ${post_id})`}</Link>
           </style.Filed>
           <style.Filed>
             被举报人:
