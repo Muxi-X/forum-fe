@@ -8,7 +8,7 @@ import * as post from './post';
 import * as report from './report';
 import * as user from './user';
 
-const API = {
+window.API = {
   auth,
   chat,
   collection,
@@ -19,6 +19,3 @@ const API = {
   report,
   user,
 };
-
-window.API = API;
-export default API;
