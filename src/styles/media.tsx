@@ -1,9 +1,5 @@
 import { css } from 'styled-components';
 
-type Media = {
-  [k in keyof typeof sizes]?: any;
-};
-
 const sizes = {
   bigDesktop: 1440,
   desktop: 992,
@@ -11,14 +7,19 @@ const sizes = {
   phone: 576,
 };
 
-const media: Media = Object.keys(sizes).reduce((acc, label) => {
-  acc[label] = (args: any) => css`
-    @media (max-width: ${sizes[label] / 16}em) {
+type Sizes = typeof sizes;
+type Media = {
+  [K in keyof Sizes]: (args: Parameters<typeof css>[0]) => ReturnType<typeof css>;
+};
+
+const media = Object.keys(sizes).reduce<Partial<Media>>((acc, label) => {
+  acc[label as keyof Sizes] = (args: Parameters<typeof css>[0]) => css`
+    @media (max-width: ${sizes[label as keyof Sizes] / 16}em) {
       ${css(args)}
     }
   `;
 
   return acc;
-}, {});
+}, {}) as Media;
 
 export default media;
