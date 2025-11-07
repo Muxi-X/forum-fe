@@ -25,7 +25,7 @@ const GlobalNotificationListener: React.FC = () => {
                 }
 
                 return {
-                  id: `${notification.post_id}_${notification.type}_${index}`,
+                  id: `${notification.post_id}_${notification.type}_${Date.now()}`,
                   postId: notification.post_id,
                   type: notification.type,
                   content: notification.content,
@@ -37,7 +37,7 @@ const GlobalNotificationListener: React.FC = () => {
                 return null;
               }
             })
-            .filter((n) => n !== null);
+            .filter((n): n is Notification => n !== null);
 
           // 每次轮询重置未读数据并添加新数据
           resetNotifications();
