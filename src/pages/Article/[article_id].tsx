@@ -65,6 +65,24 @@ const Action = styled.div<ActionProps>`
   }`}
 `;
 
+const MobileActionBar = styled.div`
+  display: none;
+
+  ${media.tablet`
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    margin-top: 1.5em;
+  `}
+
+  ${media.phone`
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    margin-top: 1.2em;
+  `}
+`;
+
 const IconFont = createFromIconfontCN({
   scriptUrl: '//at.alicdn.com/t/c/font_3699573_vczcgw5jf6p.js',
 });
@@ -327,7 +345,7 @@ const Article: React.FC = () => {
     };
   });
 
-  const Actions = (
+  const DesktopActions = (
     <>
       <ActionWrapper offsetTop={200}>
         <Badge
@@ -392,6 +410,37 @@ const Article: React.FC = () => {
     </>
   );
 
+  const MobileActions = (
+    <MobileActionBar>
+      <Action
+        onClick={() => {
+          postLike({}, { target_id: +(article_id as string), type_name: 'post' });
+        }}
+        done={like.is_liked}
+      >
+        <LikeFilled />
+      </Action>
+      <Action
+        onClick={() => {
+          postCollect({ post_id: +(article_id as string) }, {});
+        }}
+        done={collect.is_collection}
+      >
+        <StarFilled />
+      </Action>
+      <Action onClick={handleToComment}>
+        <MessageFilled />
+      </Action>
+      <Icon type="icon-share" />
+      <Icon
+        onClick={() => {
+          setShowReport(true);
+        }}
+        type="icon-report"
+      />
+    </MobileActionBar>
+  );
+
   return (
     <>
       {/**以后还可以做沉浸阅读等功能 */}
@@ -400,7 +449,7 @@ const Article: React.FC = () => {
       ) : (
         <>
           <style.Wrapper>
-            {Actions}
+            {DesktopActions}
             <style.ArticleCard>
               <Image src={previewImg} />
               <style.ArticleBody>
@@ -440,6 +489,7 @@ const Article: React.FC = () => {
                   标签:
                   <Tag onClick={() => {}} inArticle tags={tags as string[]}></Tag>
                 </style.ArticleInfo>
+                {MobileActions}
               </style.ArticleBody>
             </style.ArticleCard>
             <Card>

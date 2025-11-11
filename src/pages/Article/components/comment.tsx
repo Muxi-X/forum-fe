@@ -13,6 +13,7 @@ import {
 import moment from 'utils/moment';
 import useProfile from 'store/useProfile';
 import useRequest from 'hooks/useRequest';
+import { sizes } from 'styles/media';
 import * as style from './style';
 
 const { TextArea } = Input;
@@ -411,7 +412,10 @@ const Editor = ({
           autoFocus={autoFocus}
           style={{ ...textareaStyle }}
           placeholder={
-            /windows|win32/i.test(navigator.userAgent)
+            window.matchMedia &&
+            window.matchMedia(`(max-width: ${size.desktop}px)`).matches
+              ? '发表你的评论...'
+              : /windows|win32/i.test(navigator.userAgent)
               ? '按 CTRL+ENTER 发送'
               : '按 CMD+ENTER 发送'
           }

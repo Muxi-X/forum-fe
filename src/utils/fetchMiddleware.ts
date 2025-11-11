@@ -16,7 +16,6 @@ const Request = (url: string, options: any = {}) => {
     .then((response) => {
       if (response.ok) {
         return response.json().then((res) => {
-          console.log(res);
           return res;
         });
       } else {
@@ -32,9 +31,5 @@ const Request = (url: string, options: any = {}) => {
       throw e;
     });
 };
-
-Request(
-  '/ClientWeb/pro/ajax/reserve.aspx?dialogid=&dev_id=101700102&lab_id=&kind_id=&room_id=&type=dev&prop=&test_id=&term=&Vnumber=&classkind=&test_name=&start=2022-11-27+17%3A00&end=2022-11-27+19%3A00&start_time=1700&end_time=1900&up_file=&memo=&act=set_resv&_=1669537164526',
-);
 
 export default Request;

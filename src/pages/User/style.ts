@@ -8,6 +8,12 @@ export const Info = styled.div`
   width: 1;
   align-items: center;
   flex: 2;
+
+  ${media.phone`
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 12px;
+  `}
 `;
 
 export const NameAndSign = styled.div`
@@ -18,6 +24,7 @@ export const NameAndSign = styled.div`
 
   ${media.phone`
       margin-left: 0em;
+      margin-top: 0.25em;
   `}
 
   .user-signature {
@@ -37,8 +44,19 @@ export const Tools = styled.div`
   flex: 2;
   display: flex;
   justify-content: space-around;
+
   ${media.phone`
       flex-direction: column;
-      height: 70%
+      height: auto;
+      justify-content: flex-start;
+      align-items: flex-start;
+      margin-left: 8px;
+
+      & > button {
+        margin-top: 8px;
+        width: 100%;
+      }
+
+      max-width: 36%;
   `}
 `;

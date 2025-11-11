@@ -6,6 +6,14 @@ export const EditorPageWrapper = styled.div`
   display: flex;
   flex-direction: column;
   height: 100vh;
+
+  ${media.tablet`
+    padding: 0 12px;
+  `}
+
+  ${media.phone`
+    padding: 0 8px;
+  `}
 `;
 
 export const EditorWrapper = styled.section`
@@ -14,7 +22,20 @@ export const EditorWrapper = styled.section`
   align-self: center;
   max-width: 960px;
   min-width: 375px;
-  ${media.phone`width: 100vw`}
+
+  ${media.desktop`
+    width: 70%;
+  `}
+
+  ${media.tablet`
+    width: 90%;
+  `}
+
+  ${media.phone`
+    width: 100vw;
+    padding: 0 8px;
+    min-width: auto;
+  `}
 `;
 
 export const Header = styled.header`
@@ -25,6 +46,20 @@ export const Header = styled.header`
   .ant-btn-loading-icon {
     display: none;
   }
+
+  ${media.tablet`
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 24px;
+    width: 100%;
+  `}
+
+  ${media.phone`
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 20px;
+    width: 100%;
+  `}
 `;
 
 export const TitleInput = styled.input`
@@ -40,6 +75,18 @@ export const TitleInput = styled.input`
   &::placeholder {
     color: #b0aaaa;
   }
+
+  ${media.tablet`
+    font-size: 22px;
+    padding: 0.2em 1.2em;
+    width: 100%;
+  `}
+
+  ${media.phone`
+    font-size: 18px;
+    padding: 0.2em 1em;
+    width: 100%;
+  `}
 `;
 
 export const RightBox = styled.section`
@@ -59,6 +106,33 @@ export const RightBox = styled.section`
     font-size: 1em;
     width: fit-content;
   }
+
+  ${media.tablet`
+    width: 100%;
+    justify-content: flex-end;
+    gap: 8px;
+    background-color: transparent;
+    padding-right: 12px;
+    &::before {
+      position: static;
+      left: auto;
+      display: block;
+      margin-bottom: 4px;
+    }
+  `}
+
+  ${media.phone`
+    width: 100%;
+    justify-content: flex-start;
+    gap: 8px;
+    background-color: transparent;
+    &::before {
+      position: static;
+      left: auto;
+      display: block;
+      margin-bottom: 4px;
+    }
+  `}
 `;
 
 export const ToggleEditor = styled.div`
@@ -70,6 +144,11 @@ export const ToggleEditor = styled.div`
   }
   ${Tips}
   cursor: pointer;
+
+  ${media.phone`
+    padding: 0.3em; 
+    height: 1.8em;
+  `}
 `;
 
 export const ItemWrapper = styled.div`
@@ -87,4 +166,36 @@ export const ItemWrapper = styled.div`
   #tool.generate-summary {
     top: 68px;
   }
+
+  ${media.tablet`
+    #tool {
+      position: static;
+      left: auto;
+      margin-left: 8px;
+      margin-top: 8px;
+      display: inline-block;
+    }
+    #tool.reset-tags { 
+      top: auto; 
+    }
+    #tool.generate-summary { 
+      top: auto; 
+    }
+  `}
+
+  ${media.phone`
+    #tool {
+      position: static;
+      left: auto;
+      margin-left: 6px;
+      margin-top: 6px;
+      display: inline-block;
+    }
+    #tool.reset-tags { 
+      top: auto; 
+    }
+    #tool.generate-summary { 
+      top: auto; 
+    }
+  `}
 `;
