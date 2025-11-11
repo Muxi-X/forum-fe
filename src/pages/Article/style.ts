@@ -120,20 +120,3 @@ export const ArticleCard = styled(Card)`
     padding-right: 1em;
   `}
 `;
-
-export const MobileActionBar = styled.div`
-  display: none;
-
-  ${media.tablet`
-    display: flex;
-    justify-content: space-around;
-    align-items: center;
-    margin-top: 1.5em;
-  `}
-  ${media.phone`
-    display: flex;
-    justify-content: space-around;
-    align-items: center;
-    margin-top: 1.2em;
-  `}
-`;

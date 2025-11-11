@@ -413,7 +413,7 @@ const Editor = ({
           style={{ ...textareaStyle }}
           placeholder={
             window.matchMedia &&
-            window.matchMedia(`(max-width: ${size.desktop}px)`).matches
+            window.matchMedia(`(max-width: ${sizes.desktop}px)`).matches
               ? '发表你的评论...'
               : /windows|win32/i.test(navigator.userAgent)
               ? '按 CTRL+ENTER 发送'
