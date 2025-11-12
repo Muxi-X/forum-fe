@@ -59,7 +59,20 @@ export const LogoDiv = styled.div`
 
   .anticon {
     display: none;
-    ${media.desktop`display: inline-block`};
+
+    ${media.desktop`
+      display: inline-block;
+      font-size: 1.2rem;
+      padding: 8px;
+      border-radius: 50%;
+      background-color: rgb(248, 237, 205);
+      color: rgba(255, 171, 0, 1);
+      margin-left: 10px;
+      transition: all 0.3s ease;
+      &:hover {
+        background-color: rgba(254, 169, 0, 0.3);
+      }
+    `};
   }
 `;
 
@@ -136,5 +149,21 @@ export const PostButton = styled.button`
 
   :hover {
     background-color: rgb(39, 51, 56, 0.8);
+  }
+`;
+
+export const MenuAction = styled.div`
+  font-size: 1rem;
+  color: rgb(255 208 4);
+  cursor: pointer;
+  user-select: none;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  border-radius: 8px;
+  margin-bottom: 4px;
+  transition: all 0.2s ease;
+  &:last-child {
+    margin-bottom: 0;
   }
 `;

@@ -97,6 +97,7 @@ const Header: React.FC = () => {
               <span className="logo">MUXI</span>
               <Popover
                 trigger="click"
+                placement="bottomRight"
                 content={
                   <>
                     <MenuAction
@@ -116,7 +117,17 @@ const Header: React.FC = () => {
                     >
                       查看私信
                     </MenuAction>
-                    <MenuAction>查看通知</MenuAction>
+                    <MenuAction
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        nav('/notice');
+                      }}
+                    >
+                      查看通知
+                      {unreadCount > 0 && (
+                        <Badge count={unreadCount} style={{ marginLeft: 8 }} />
+                      )}
+                    </MenuAction>
                   </>
                 }
               >

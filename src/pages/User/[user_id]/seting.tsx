@@ -1,32 +1,61 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { Button, message, Form, Input, Card, Switch } from 'antd';
 import { useNavigate } from 'react-router';
 import useRequest from 'hooks/useRequest';
+import { useDeviceType } from 'hooks/useDeviceType';
 import useProfile from 'store/useProfile';
 import Avatar from 'components/Avatar/avatar';
 import { QiniuServer } from 'config';
 import qiniupload, { CompleteRes, observer } from 'utils/qiniup';
+import media from 'styles/media';
 
 const SetCard = styled(Card)`
   position: relative;
   min-height: 300px;
+
   .ant-card-body {
     display: flex;
+    align-items: flex-start;
+
+    ${media.phone`
+      flex-direction: column;
+      align-items: flex-start;
+      padding: 16px !important;
+    `}
   }
+
   .ant-btn {
     margin-left: 6rem;
+
+    ${media.phone`
+      margin-left: 0;
+      width: 100%;
+    `}
   }
 `;
 
 const FormWrapper = styled.div`
   display: inline-block;
   width: 70%;
+
+  ${media.phone`
+    width: 100%;
+    margin-top: 1em;
+  `}
 `;
 
 const AvatarWrapper = styled.div`
   display: inline-block;
   width: 30%;
+  text-align: center;
+
+  ${media.phone`
+    width: auto;
+    margin-bottom: 1em;
+    margin-left: 0;
+    align-self: flex-start;
+  `}
 `;
 
 const StyleInput = styled(Input)`
@@ -48,6 +77,7 @@ const Seting: React.FC = () => {
   const [avatarUrl, setAvatarUrl] = useState(avatar);
   const formValues = form.getFieldsValue();
   const nav = useNavigate();
+  const isMobile = useDeviceType() === 'phone';
   const { run } = useRequest(API.user.putUser.request, {
     manual: true,
     onSuccess: () => {
@@ -71,52 +101,65 @@ const Seting: React.FC = () => {
   };
 
   return (
-    <>
-      <SetCard>
-        <FormWrapper>
-          <Form
-            layout="horizontal"
-            colon={false}
-            wrapperCol={{ span: 12 }}
-            labelAlign="left"
-            onFinish={onFinish}
-            form={form}
-            initialValues={{
-              name,
-              signature,
-              is_public_collection_and_like,
-              is_public_feed,
-            }}
+    <SetCard>
+      <FormWrapper>
+        {isMobile && (
+          <AvatarWrapper>
+            <Avatar
+              onChange={(file) => {
+                setTempFile(file);
+              }}
+              size={'large'}
+              fix
+              src={avatar as string}
+            />
+          </AvatarWrapper>
+        )}
+        <Form
+          layout="horizontal"
+          colon={false}
+          wrapperCol={{ span: 12 }}
+          labelAlign="left"
+          onFinish={onFinish}
+          form={form}
+          initialValues={{
+            name,
+            signature,
+            is_public_collection_and_like,
+            is_public_feed,
+          }}
+        >
+          <Form.Item name="name" label="用户名" labelCol={{ span: 3 }}>
+            <StyleInput maxLength={10} showCount />
+          </Form.Item>
+          <Form.Item name="signature" label="个人介绍" labelCol={{ span: 3 }}>
+            <StyleInput maxLength={20} showCount />
+          </Form.Item>
+          <Form.Item
+            valuePropName="checked"
+            label="动态隐私"
+            name="is_public_feed"
+            labelCol={{ span: 3 }}
           >
-            <Form.Item name="name" label="用户名" labelCol={{ span: 3 }}>
-              <StyleInput maxLength={10} showCount />
-            </Form.Item>
-            <Form.Item name="signature" label="个人介绍" labelCol={{ span: 3 }}>
-              <StyleInput maxLength={20} showCount />
-            </Form.Item>
-            <Form.Item
-              valuePropName="checked"
-              label="动态隐私"
-              name="is_public_feed"
-              labelCol={{ span: 3 }}
-            >
-              <Switch checkedChildren="开启" unCheckedChildren="关闭" />
-            </Form.Item>
-            <Form.Item
-              valuePropName="checked"
-              label="喜好隐私"
-              name="is_public_collection_and_like"
-              labelCol={{ span: 3 }}
-            >
-              <Switch checkedChildren="开启" unCheckedChildren="关闭" />
-            </Form.Item>
-            <Form.Item>
-              <Button htmlType="submit" type="primary">
-                保存修改
-              </Button>
-            </Form.Item>
-          </Form>
-        </FormWrapper>
+            <Switch checkedChildren="开启" unCheckedChildren="关闭" />
+          </Form.Item>
+          <Form.Item
+            valuePropName="checked"
+            label="喜好隐私"
+            name="is_public_collection_and_like"
+            labelCol={{ span: 3 }}
+          >
+            <Switch checkedChildren="开启" unCheckedChildren="关闭" />
+          </Form.Item>
+          <Form.Item>
+            <Button htmlType="submit" type="primary">
+              保存修改
+            </Button>
+          </Form.Item>
+        </Form>
+      </FormWrapper>
+
+      {!isMobile && (
         <AvatarWrapper>
           <Avatar
             onChange={(file) => {
@@ -127,8 +170,8 @@ const Seting: React.FC = () => {
             src={avatar as string}
           />
         </AvatarWrapper>
-      </SetCard>
-    </>
+      )}
+    </SetCard>
   );
 };
 

@@ -14,6 +14,7 @@ import Back from './component/back';
 import * as style from './style';
 import useDocTitle from 'hooks/useDocTitle';
 import BackToTop from 'components/BackTop';
+import media from 'styles/media';
 
 const UserInfoCard = styled(Card)`
   .ant-card-body {
@@ -21,6 +22,14 @@ const UserInfoCard = styled(Card)`
     display: flex;
     align-items: center;
     height: 30vh;
+
+    ${media.phone`
+      flex-direction: row;
+      height: auto;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 12px !important;
+    `}
   }
 `;
 
@@ -33,6 +42,12 @@ const ToolsTabs = styled(Tabs)`
   .ant-tabs-nav {
     margin-bottom: 0 !important;
   }
+
+  ${media.phone`
+    .ant-tabs-nav-wrap {
+      padding-left: 12px;
+    }
+  `}
 `;
 
 const User: React.FC = () => {

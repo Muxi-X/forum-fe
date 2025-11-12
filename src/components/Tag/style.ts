@@ -1,5 +1,6 @@
 import styled, { css } from 'styled-components';
 import { color } from 'styles/global';
+import media from 'styles/media';
 
 interface isTrigger {
   trigger?: boolean;
@@ -39,6 +40,20 @@ export const TagWarpper = styled.div<TagType>`
     props.type === 'tag' ? `1px solid rgba(255, 171, 0, 1)` : 'none'};
   color: ${(props) => (props.type === 'tag' ? 'rgba(255, 171, 0, 1)' : '#8a919f')};
   background-color: ${(props) => (props.type === 'tag' ? '' : 'white')};
+
+  ${media.tablet`
+    font-size: 0.9em;
+    padding: 4px 0.7em;
+    margin: 4px;
+    min-width: 2.8em;
+  `}
+
+  ${media.phone`
+    font-size: 0.85em;
+    padding: 3px 0.6em;
+    margin: 3px;
+    min-width: 2.5em;
+  `}
   &:hover {
     ${(props) => {
       if (props.trigger) return;
@@ -67,6 +82,22 @@ export const TriggerTag = styled.div`
   line-height: 21px;
   background-color: ${color};
   font-size: 14px;
+
+  ${media.tablet`
+    padding: 0 0.4em;
+    margin: 4px;
+    height: 20px;
+    line-height: 20px;
+    font-size: 13px;
+  `}
+
+  ${media.phone`
+    padding: 0 0.3em;
+    margin: 3px;
+    height: 18px;
+    line-height: 18px;
+    font-size: 12px;
+  `}
 `;
 
 export const CategoryDiv = styled.div<isTrigger>`
@@ -78,6 +109,18 @@ export const CategoryDiv = styled.div<isTrigger>`
   border-radius: 4px;
   transition: background-color 0.15s linear;
   cursor: pointer;
+
+  ${media.tablet`
+    padding: 0.4em 0.8em;
+    font-size: 0.9em;
+    margin: 0.25em 0.25em 0.25em 0;
+  `}
+
+  ${media.phone`
+    padding: 0.3em 0.6em;
+    font-size: 0.85em;
+    margin: 0.2em 0.2em 0.2em 0;
+  `}
 
   :hover {
     background-color: #e4e6eb;

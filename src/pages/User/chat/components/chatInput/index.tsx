@@ -7,6 +7,7 @@ import { Message } from 'utils/WS';
 import Contacts from 'utils/db_chat';
 import ChatToolbar from '../chatToolbar';
 import * as style from './style';
+import { sizes } from 'styles/media';
 import useProfile from 'store/useProfile';
 
 const cloneMap = (map: Map<number, string>) => {
@@ -89,7 +90,10 @@ const ChatInput: React.FC = () => {
       />
       <style.ButtonArea>
         <style.Tips>
-          {/windows|win32/i.test(navigator.userAgent)
+          {window.matchMedia &&
+          window.matchMedia(`(max-width: ${sizes.desktop}px)`).matches
+            ? ''
+            : /windows|win32/i.test(navigator.userAgent)
             ? '按 CTRL+ENTER 发送'
             : '按 CMD+ENTER 发送'}
         </style.Tips>
