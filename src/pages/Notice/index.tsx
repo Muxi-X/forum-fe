@@ -50,6 +50,7 @@ const Notice: React.FC = () => {
     if (!notification.read) {
       markAsRead(notification.id);
     }
+    deleteMessages({ id: notification.postId }, {});
     nav(`/article/${notification.postId}`);
   };
 
