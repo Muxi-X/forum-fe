@@ -148,8 +148,8 @@ declare namespace defs {
     /** content */
     content?: string;
 
-    /** sender_id */
-    sender_id?: number;
+    /** sender */
+    sender?: number;
 
     /** receiver_id */
     receiver_id?: number;

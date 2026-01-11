@@ -34,7 +34,7 @@ const MessageItem: React.FC<IProps> = ({ msg, contact }) => {
     userProfile: { avatar, id },
   } = profileStore;
 
-  const isMy = isMessage(msg) ? true : msg.sender_id === id;
+  const isMy = isMessage(msg) ? true : msg.sender === id;
 
   return (
     <style.MessageWrapper myMessage={isMy}>

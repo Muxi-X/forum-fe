@@ -14,7 +14,7 @@ export class Params {
 export const method = 'DELETE';
 
 export function request(params, options = {}) {
-  return PontCore.fetch(PontCore.getUrl('/user/private_message/{id}', params, 'DELETE'), {
+  return PontCore.fetch(PontCore.getUrl('/user/private_message?id={id}', params, 'DELETE'), {
     method: 'DELETE',
 
     ...options,
