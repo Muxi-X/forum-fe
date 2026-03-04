@@ -44,5 +44,5 @@ jobs:
             cd ~/forum
             docker rm -f forum_fe
             docker rmi -f ${{ secrets.IMAGE_REPO }}/forum_fe:latest
-            docker-compose up -d forum_fe
+            docker compose up -d forum_fe
           EOF
