@@ -105,7 +105,7 @@ const Login: React.FC = () => {
 
   const handleMuxierLogin = () => {
     const landing = `${window.location.host}/login`;
-    window.location.href = `http://pass.muxi-tech.xyz/#/login_auth?landing=${landing}&client_id=51f03389-2a18-4941-ba73-c85d08201d42`;
+    window.location.href = `https://pass.muxixyz.com/#/login_auth?landing=${landing}&client_id=51f03389-2a18-4941-ba73-c85d08201d42`;
   };
 
   const handleUserLogin = (val: string, type: loginInfo) => {
