@@ -4,9 +4,11 @@ dist
 dist-ssr
 *.local
 node_modules/*
-pnpm-lock.yaml
 .yarn/
 .yarnrc.yml
 .mocks/
 tsconfig.tsbuildinfo
 .idea
+
+.pnp.cjs
+.pnp.loader.mjs
