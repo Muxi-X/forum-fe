@@ -65,14 +65,47 @@ declare namespace defs {
   }
 
   export class StudentLoginRequest {
+    /** action */
+    action?: string;
+
+    /** captcha */
+    captcha?: string;
+
     /** password */
     password?: string;
+
+    /** second_auth_code */
+    second_auth_code?: string;
+
+    /** second_auth_method */
+    second_auth_method?: string;
+
+    /** session_id */
+    session_id?: string;
 
     /** student_id */
     student_id?: string;
   }
 
   export class StudentLoginResponse {
+    /** available_second_auth_methods */
+    available_second_auth_methods?: Array<string>;
+
+    /** captcha_image_base64 */
+    captcha_image_base64?: string;
+
+    /** current_second_auth_method */
+    current_second_auth_method?: string;
+
+    /** message */
+    message?: string;
+
+    /** session_id */
+    session_id?: string;
+
+    /** status */
+    status?: string;
+
     /** token */
     token?: string;
   }

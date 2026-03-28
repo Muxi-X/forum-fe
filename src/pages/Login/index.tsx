@@ -16,7 +16,21 @@ interface LoginState {
   password: string;
 }
 
-type loginInfo = 'id' | 'pwd';
+interface StudentLoginFlowState {
+  token?: string;
+  session_id?: string;
+  status?: string;
+  message?: string;
+  captcha_image_base64?: string;
+  available_second_auth_methods?: string[];
+  current_second_auth_method?: string;
+}
+
+type LoginInfo = 'id' | 'pwd';
+type SecondAuthMethod = 'sms' | 'email';
+
+const isSecondAuthMethod = (value?: string): value is SecondAuthMethod =>
+  value === 'sms' || value === 'email';
 
 const Login: React.FC = () => {
   const initId = localStorage.getItem('id');
@@ -25,6 +39,10 @@ const Login: React.FC = () => {
     student_id: initId ? initId : '',
     password: initPwd ? initPwd : '',
   });
+  const [captcha, setCaptcha] = useState('');
+  const [secondAuthCode, setSecondAuthCode] = useState('');
+  const [secondAuthMethod, setSecondAuthMethod] = useState<SecondAuthMethod>('sms');
+  const [loginFlow, setLoginFlow] = useState<StudentLoginFlowState | null>(null);
   const [isMuxi, setIsMuxi] = useState(false);
   const [searchParams] = useSearchParams();
   const { setUser, setToken } = useProfile();
@@ -33,6 +51,18 @@ const Login: React.FC = () => {
   useDocTitle(`惠然之顾 - 茶馆`);
 
   const { student_id, password } = form;
+  const loginStatus = loginFlow?.status || '';
+  const currentSessionId = loginFlow?.session_id || '';
+  const availableMethods = (loginFlow?.available_second_auth_methods || []).filter(
+    isSecondAuthMethod,
+  );
+  const showCaptchaFlow = loginStatus === 'need_captcha';
+  const showSecondAuthFlow =
+    loginStatus === 'need_second_auth_method' || loginStatus === 'need_second_auth_code';
+  const showSecondAuthCodeInput = loginStatus === 'need_second_auth_code';
+  const captchaImageSrc = loginFlow?.captcha_image_base64
+    ? `data:image/jpeg;base64,${loginFlow.captcha_image_base64}`
+    : '';
 
   const nav = useNavigate();
 
@@ -58,21 +88,61 @@ const Login: React.FC = () => {
     }
   };
 
-  const successLogin = async (res: API.auth.postStudent.Response) => {
-    if (res.code === 0) {
-      message.success('登录成功');
-      localStorage.setItem('token', res.data.token as string);
-      localStorage.setItem('id', student_id);
-      localStorage.setItem('pwd', password);
-      const user = await getUser({});
-      setUser(user.data);
-      if (user.data.id !== undefined) {
-        localStorage.setItem('userId', user.data.id.toString());
+  const finishLogin = async (token: string) => {
+    message.success('登录成功');
+    localStorage.setItem('token', token);
+    localStorage.setItem('id', student_id);
+    localStorage.setItem('pwd', password);
+    const user = await getUser({});
+    setUser(user.data);
+    if (user.data.id !== undefined) {
+      localStorage.setItem('userId', user.data.id.toString());
+    }
+    const qiniu = await getQiniuToken({});
+    setToken(qiniu.data.token as string);
+    webSocketInit();
+    nav('/');
+  };
+
+  const handleStudentLoginResponse = async (res: API.auth.postStudent.Response) => {
+    if (res.code !== 0) return;
+
+    const data = res.data as StudentLoginFlowState;
+    if (data.status && data.status !== 'logged_in') {
+      setLoginFlow(data);
+      if (isSecondAuthMethod(data.current_second_auth_method)) {
+        setSecondAuthMethod(data.current_second_auth_method);
+      } else if (data.available_second_auth_methods?.some(isSecondAuthMethod)) {
+        setSecondAuthMethod(
+          data.available_second_auth_methods.find(isSecondAuthMethod) as SecondAuthMethod,
+        );
       }
-      const qiniu = await getQiniuToken({});
-      setToken(qiniu.data.token as string);
-      webSocketInit();
-      nav('/');
+      if (data.status !== 'need_captcha') {
+        setCaptcha('');
+      }
+      if (data.status !== 'need_second_auth_code') {
+        setSecondAuthCode('');
+      }
+      if (data.message) {
+        message.info(data.message);
+      }
+      return;
+    }
+
+    if (data.token) {
+      setLoginFlow(null);
+      setCaptcha('');
+      setSecondAuthCode('');
+      await finishLogin(data.token);
+      return;
+    }
+
+    message.error('登录流程异常，请稍后重试');
+  };
+
+  const handleTeamLoginResponse = async (res: API.auth.postTeam.Response) => {
+    if (res.code === 0 && res.data.token) {
+      await finishLogin(res.data.token);
     }
   };
 
@@ -82,40 +152,91 @@ const Login: React.FC = () => {
     } else if (res.code === 20102) {
       message.error('密码错误');
     } else {
-      message.error('网络错误');
+      message.error(res.message || '网络错误');
     }
   };
 
-  const options = {
-    onSuccess: successLogin,
+  const { run: runStudent } = useRequest(API.auth.postStudent.request, {
+    onSuccess: handleStudentLoginResponse,
     onError: failLogin,
     manual: true,
-  };
+  });
 
-  const { run } = useRequest(API.auth.postStudent.request, options);
-
-  const { run: runTeam } = useRequest(API.auth.postTeam.request, options);
+  const { run: runTeam } = useRequest(API.auth.postTeam.request, {
+    onSuccess: handleTeamLoginResponse,
+    onError: failLogin,
+    manual: true,
+  });
 
   const oauth_code = searchParams.get('accessCode');
   useEffect(() => {
     if (oauth_code) {
       runTeam({}, { oauth_code });
     }
-  }, []);
+  }, [oauth_code]);
 
   const handleMuxierLogin = () => {
     const landing = `${window.location.host}/login`;
     window.location.href = `https://pass.muxixyz.com/#/login_auth?landing=${landing}&client_id=51f03389-2a18-4941-ba73-c85d08201d42`;
   };
 
-  const handleUserLogin = (val: string, type: loginInfo) => {
+  const handleUserLogin = (val: string, type: LoginInfo) => {
     if (type === 'id') setForm({ student_id: val });
     else setForm({ password: val });
   };
 
+  const submitStudentAction = (
+    action: string,
+    extra: Partial<defs.StudentLoginRequest> = {},
+  ) => {
+    runStudent(
+      {},
+      {
+        student_id,
+        password,
+        action,
+        session_id: currentSessionId,
+        ...extra,
+      },
+    );
+  };
+
   const handleLogin = () => {
-    const { student_id, password } = form;
-    run({}, { student_id, password });
+    if (!student_id || !password) {
+      message.warning('请先输入学号和密码');
+      return;
+    }
+    setLoginFlow(null);
+    setCaptcha('');
+    setSecondAuthCode('');
+    setSecondAuthMethod('sms');
+    submitStudentAction('start');
+  };
+
+  const handleSubmitCaptcha = () => {
+    if (!captcha.trim()) {
+      message.warning('请输入验证码');
+      return;
+    }
+    submitStudentAction('captcha', { captcha: captcha.trim() });
+  };
+
+  const handleSendSecondAuthCode = () => {
+    if (!secondAuthMethod) {
+      message.warning('请选择二次认证方式');
+      return;
+    }
+    submitStudentAction('second_auth_send', { second_auth_method: secondAuthMethod });
+  };
+
+  const handleVerifySecondAuthCode = () => {
+    if (!secondAuthCode.trim()) {
+      message.warning(`请输入${secondAuthMethod === 'email' ? '邮箱' : '短信'}验证码`);
+      return;
+    }
+    submitStudentAction('second_auth_verify', {
+      second_auth_code: secondAuthCode.trim(),
+    });
   };
 
   const handleLoginRole = () => {
@@ -129,6 +250,14 @@ const Login: React.FC = () => {
           aria-hidden
           onKeyDown={(e) => {
             if (e.key === 'Enter') {
+              if (showCaptchaFlow) {
+                handleSubmitCaptcha();
+                return;
+              }
+              if (showSecondAuthCodeInput) {
+                handleVerifySecondAuthCode();
+                return;
+              }
               handleLogin();
             }
           }}
@@ -166,6 +295,90 @@ const Login: React.FC = () => {
                   value="立即登录"
                   className="btn solid"
                 />
+
+                {loginFlow?.message && (
+                  <p className="login-flow-message">{loginFlow.message}</p>
+                )}
+
+                {showCaptchaFlow && (
+                  <div className="login-flow-panel">
+                    <div className="captcha-row">
+                      <div className="input-field flow-input captcha-input">
+                        <i className="fa fa-shield"></i>
+                        <input
+                          value={captcha}
+                          onChange={(e) => setCaptcha(e.target.value)}
+                          type="text"
+                          placeholder="请输入验证码"
+                        />
+                      </div>
+                      {captchaImageSrc && (
+                        <img
+                          className="captcha-image"
+                          src={captchaImageSrc}
+                          alt="验证码"
+                        />
+                      )}
+                    </div>
+                    <button
+                      onClick={handleSubmitCaptcha}
+                      type="button"
+                      className="btn flow-btn"
+                    >
+                      提交验证码
+                    </button>
+                  </div>
+                )}
+
+                {showSecondAuthFlow && (
+                  <div className="login-flow-panel">
+                    {availableMethods.length > 0 && (
+                      <div className="second-auth-methods">
+                        {availableMethods.map((method) => (
+                          <button
+                            key={method}
+                            type="button"
+                            className={`btn flow-btn method-btn ${
+                              secondAuthMethod === method ? 'active' : ''
+                            }`}
+                            onClick={() => setSecondAuthMethod(method)}
+                          >
+                            {method === 'email' ? '邮箱认证' : '短信认证'}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                    <button
+                      onClick={handleSendSecondAuthCode}
+                      type="button"
+                      className="btn flow-btn"
+                    >
+                      发送{secondAuthMethod === 'email' ? '邮箱' : '短信'}验证码
+                    </button>
+                    {showSecondAuthCodeInput && (
+                      <>
+                        <div className="input-field flow-input">
+                          <i className="fa fa-key"></i>
+                          <input
+                            value={secondAuthCode}
+                            onChange={(e) => setSecondAuthCode(e.target.value)}
+                            type="text"
+                            placeholder={`请输入${
+                              secondAuthMethod === 'email' ? '邮箱' : '短信'
+                            }验证码`}
+                          />
+                        </div>
+                        <button
+                          onClick={handleVerifySecondAuthCode}
+                          type="button"
+                          className="btn flow-btn"
+                        >
+                          提交二次认证验证码
+                        </button>
+                      </>
+                    )}
+                  </div>
+                )}
               </section>
               <section className="sign-up-form">
                 <button onClick={handleMuxierLogin} type="submit" className="btn">
