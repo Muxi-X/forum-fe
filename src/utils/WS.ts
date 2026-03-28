@@ -17,14 +17,24 @@ export interface MsgResponse {
 
 const { parse, stringify } = JSON;
 
+const resolveWSURL = () => {
+  const envURL = import.meta.env.VITE_WS_URL?.trim();
+  if (envURL) {
+    return envURL;
+  }
+  if (import.meta.env.DEV) {
+    return 'ws://localhost:8080/api/v1/chat/ws';
+  }
+  return 'wss://forum.muxistudio.xyz/api/v1/chat/ws';
+};
+
 class WS {
   ws: WebSocket | null = null;
-  url = `wss://forum.muxistudio.xyz/api/v1/chat/ws`;
+  url = resolveWSURL();
   token: string;
   reconnectAttempts = 0; //当前ws重连次数
   maxReconnectAttempts = 3; //最大ws重连次数
   reconnectTimeout: any = null; //重连延时器
-  // url = `ws://localhost:8080/api/v1/chat/ws`;
   constructor(token: string) {
     this.token = token;
     this.connect();

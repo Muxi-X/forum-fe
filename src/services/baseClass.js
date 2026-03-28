@@ -54,14 +54,53 @@ export class Source {
 }
 
 export class StudentLoginRequest {
+  /** action */
+  action = '';
+
+  /** captcha */
+  captcha = '';
+
   /** password */
   password = '';
+
+  /** second_auth_code */
+  second_auth_code = '';
+
+  /** second_auth_method */
+  second_auth_method = '';
+
+  /** session_id */
+  session_id = '';
 
   /** student_id */
   student_id = '';
 }
 
 export class StudentLoginResponse {
+  /** available_second_auth_methods */
+  available_second_auth_methods = [];
+
+  /** captcha_image_base64 */
+  captcha_image_base64 = '';
+
+  /** current_second_auth_method */
+  current_second_auth_method = '';
+
+  /** second_auth_email_target */
+  second_auth_email_target = '';
+
+  /** second_auth_sms_target */
+  second_auth_sms_target = '';
+
+  /** message */
+  message = '';
+
+  /** session_id */
+  session_id = '';
+
+  /** status */
+  status = '';
+
   /** token */
   token = '';
 }
