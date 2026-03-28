@@ -24,13 +24,69 @@ interface StudentLoginFlowState {
   captcha_image_base64?: string;
   available_second_auth_methods?: string[];
   current_second_auth_method?: string;
+  second_auth_sms_target?: string;
+  second_auth_email_target?: string;
 }
 
 type LoginInfo = 'id' | 'pwd';
 type SecondAuthMethod = 'sms' | 'email';
+type StudentLoginAction = 'start' | 'captcha' | 'second_auth_send' | 'second_auth_verify' | '';
+
+const secondAuthCopy: Record<
+  SecondAuthMethod,
+  { label: string; sendLabel: string; resendLabel: string }
+> = {
+  sms: {
+    label: '短信',
+    sendLabel: '发送短信码',
+    resendLabel: '重发短信码',
+  },
+  email: {
+    label: '邮箱',
+    sendLabel: '发送邮箱码',
+    resendLabel: '重发邮箱码',
+  },
+};
 
 const isSecondAuthMethod = (value?: string): value is SecondAuthMethod =>
   value === 'sms' || value === 'email';
+
+const getSecondAuthTarget = (
+  loginFlow: StudentLoginFlowState | null,
+  method: SecondAuthMethod,
+) => {
+  if (method === 'sms') {
+    return loginFlow?.second_auth_sms_target || '';
+  }
+  return loginFlow?.second_auth_email_target || '';
+};
+
+const getSecondAuthOptionTarget = (
+  loginFlow: StudentLoginFlowState | null,
+  method: SecondAuthMethod,
+) => {
+  return getSecondAuthTarget(loginFlow, method);
+};
+
+const simplifyFlowMessage = (status: string, rawMessage?: string) => {
+  const messageText = rawMessage?.trim() || '';
+  if (!messageText) return '';
+
+  if (status === 'need_captcha') {
+    if (messageText.includes('OCR')) return '识别失败，改为手动输入';
+    if (messageText === '请输入验证码后继续登录。') return '';
+  }
+
+  if (status === 'need_second_auth_method') {
+    if (messageText === '已进入二次认证，请选择认证方式。') return '';
+  }
+
+  if (status === 'need_second_auth_code' && messageText.includes('已发送')) {
+    return '';
+  }
+
+  return messageText;
+};
 
 const Login: React.FC = () => {
   const initId = localStorage.getItem('id');
@@ -43,6 +99,7 @@ const Login: React.FC = () => {
   const [secondAuthCode, setSecondAuthCode] = useState('');
   const [secondAuthMethod, setSecondAuthMethod] = useState<SecondAuthMethod>('sms');
   const [loginFlow, setLoginFlow] = useState<StudentLoginFlowState | null>(null);
+  const [pendingAction, setPendingAction] = useState<StudentLoginAction>('');
   const [isMuxi, setIsMuxi] = useState(false);
   const [searchParams] = useSearchParams();
   const { setUser, setToken } = useProfile();
@@ -60,9 +117,30 @@ const Login: React.FC = () => {
   const showSecondAuthFlow =
     loginStatus === 'need_second_auth_method' || loginStatus === 'need_second_auth_code';
   const showSecondAuthCodeInput = loginStatus === 'need_second_auth_code';
+  const currentSecondAuthMethod = loginFlow?.current_second_auth_method;
+  const serverSecondAuthMethod = isSecondAuthMethod(currentSecondAuthMethod)
+    ? currentSecondAuthMethod
+    : undefined;
+  const currentMethodMeta = secondAuthCopy[secondAuthMethod];
+  const currentSecondAuthTarget = getSecondAuthTarget(loginFlow, secondAuthMethod);
+  const selectedMethodNeedsSend =
+    showSecondAuthFlow &&
+    (!showSecondAuthCodeInput || !serverSecondAuthMethod || secondAuthMethod !== serverSecondAuthMethod);
+  const secondAuthStepLabel = 'STEP 2';
+  const canVerifySecondAuth =
+    showSecondAuthCodeInput &&
+    !!serverSecondAuthMethod &&
+    secondAuthMethod === serverSecondAuthMethod &&
+    !!secondAuthCode.trim();
+  const flowStatusText = simplifyFlowMessage(loginStatus, loginFlow?.message);
   const captchaImageSrc = loginFlow?.captcha_image_base64
     ? `data:image/jpeg;base64,${loginFlow.captcha_image_base64}`
     : '';
+  const isSendingSecondAuthCode = pendingAction === 'second_auth_send';
+  const isVerifyingSecondAuthCode = pendingAction === 'second_auth_verify';
+  const isSubmittingCaptcha = pendingAction === 'captcha';
+  const isRefreshingCaptcha = pendingAction === 'start' && showCaptchaFlow;
+  const isSecondAuthBusy = isSendingSecondAuthCode || isVerifyingSecondAuthCode;
 
   const nav = useNavigate();
 
@@ -105,6 +183,7 @@ const Login: React.FC = () => {
   };
 
   const handleStudentLoginResponse = async (res: API.auth.postStudent.Response) => {
+    setPendingAction('');
     if (res.code !== 0) return;
 
     const data = res.data as StudentLoginFlowState;
@@ -122,9 +201,6 @@ const Login: React.FC = () => {
       }
       if (data.status !== 'need_second_auth_code') {
         setSecondAuthCode('');
-      }
-      if (data.message) {
-        message.info(data.message);
       }
       return;
     }
@@ -147,6 +223,7 @@ const Login: React.FC = () => {
   };
 
   const failLogin = (res: ErrorRes) => {
+    setPendingAction('');
     if (res.code === 10101) {
       message.error('用户不存在');
     } else if (res.code === 20102) {
@@ -156,7 +233,7 @@ const Login: React.FC = () => {
     }
   };
 
-  const { run: runStudent } = useRequest(API.auth.postStudent.request, {
+  const { run: runStudent, loading: studentActionLoading } = useRequest(API.auth.postStudent.request, {
     onSuccess: handleStudentLoginResponse,
     onError: failLogin,
     manual: true,
@@ -186,9 +263,10 @@ const Login: React.FC = () => {
   };
 
   const submitStudentAction = (
-    action: string,
+    action: StudentLoginAction,
     extra: Partial<defs.StudentLoginRequest> = {},
   ) => {
+    setPendingAction(action);
     runStudent(
       {},
       {
@@ -202,6 +280,7 @@ const Login: React.FC = () => {
   };
 
   const handleLogin = () => {
+    if (studentActionLoading) return;
     if (!student_id || !password) {
       message.warning('请先输入学号和密码');
       return;
@@ -213,7 +292,16 @@ const Login: React.FC = () => {
     submitStudentAction('start');
   };
 
+  const handleResetFlow = () => {
+    if (studentActionLoading) return;
+    setLoginFlow(null);
+    setCaptcha('');
+    setSecondAuthCode('');
+    setSecondAuthMethod('sms');
+  };
+
   const handleSubmitCaptcha = () => {
+    if (studentActionLoading) return;
     if (!captcha.trim()) {
       message.warning('请输入验证码');
       return;
@@ -221,7 +309,18 @@ const Login: React.FC = () => {
     submitStudentAction('captcha', { captcha: captcha.trim() });
   };
 
+  const handleRefreshCaptcha = () => {
+    if (studentActionLoading) return;
+    if (!student_id || !password) {
+      message.warning('请先输入学号和密码');
+      return;
+    }
+    setCaptcha('');
+    submitStudentAction('start');
+  };
+
   const handleSendSecondAuthCode = () => {
+    if (studentActionLoading) return;
     if (!secondAuthMethod) {
       message.warning('请选择二次认证方式');
       return;
@@ -230,6 +329,7 @@ const Login: React.FC = () => {
   };
 
   const handleVerifySecondAuthCode = () => {
+    if (studentActionLoading) return;
     if (!secondAuthCode.trim()) {
       message.warning(`请输入${secondAuthMethod === 'email' ? '邮箱' : '短信'}验证码`);
       return;
@@ -240,7 +340,192 @@ const Login: React.FC = () => {
   };
 
   const handleLoginRole = () => {
+    if (studentActionLoading) return;
     setIsMuxi(!isMuxi);
+  };
+
+  const renderFlowButtonLabel = (
+    idleLabel: string,
+    loadingLabel: string,
+    loading: boolean,
+  ) => (
+    <span className="flow-btn-content">
+      {loading ? <span className="flow-btn-spinner" aria-hidden /> : null}
+      <span>{loading ? loadingLabel : idleLabel}</span>
+    </span>
+  );
+
+  const renderAuthStage = () => {
+    if (!showCaptchaFlow && !showSecondAuthFlow) {
+      return (
+        <div key="credentials" className="auth-stage">
+          <h2 className="title">登录</h2>
+          <div className="input-field">
+            <i className="fa fa-user"></i>
+            <input
+              value={student_id}
+              onChange={(e) => {
+                handleUserLogin(e.target.value, 'id');
+              }}
+              type="text"
+              placeholder="学号"
+            />
+          </div>
+          <div className="input-field">
+            <i className="fa fa-lock"></i>
+            <input
+              value={password}
+              onChange={(e) => {
+                handleUserLogin(e.target.value, 'pwd');
+              }}
+              type="password"
+              placeholder="密码"
+            />
+          </div>
+          <button onClick={handleLogin} type="button" className="btn solid stage-submit">
+            立即登录
+          </button>
+        </div>
+      );
+    }
+
+    if (showCaptchaFlow) {
+      return (
+        <div key="captcha" className="auth-stage flow-stage">
+          <div className="flow-head flow-head-plain">
+            <button
+              onClick={handleResetFlow}
+              type="button"
+              className="flow-link"
+              disabled={studentActionLoading}
+            >
+              返回登录
+            </button>
+          </div>
+          <h2 className="title flow-title">输入验证码</h2>
+          {flowStatusText ? <p className="flow-status">{flowStatusText}</p> : null}
+          <div className="flow-card captcha-stage">
+            {captchaImageSrc && (
+              <div className={`captcha-visual ${isRefreshingCaptcha ? 'refreshing' : ''}`}>
+                <div className="captcha-image-shell">
+                  <img className="captcha-image" src={captchaImageSrc} alt="验证码" />
+                  {isRefreshingCaptcha ? (
+                    <span className="captcha-image-loading" aria-hidden>
+                      <span className="flow-btn-spinner captcha-spinner" />
+                    </span>
+                  ) : null}
+                </div>
+                <button
+                  onClick={handleRefreshCaptcha}
+                  type="button"
+                  className="captcha-refresh"
+                  disabled={isRefreshingCaptcha || isSubmittingCaptcha}
+                >
+                  换一张
+                </button>
+              </div>
+            )}
+            <div className="input-field flow-input">
+              <i className="fa fa-shield"></i>
+              <input
+                value={captcha}
+                onChange={(e) => setCaptcha(e.target.value)}
+                type="text"
+                placeholder="验证码"
+              />
+            </div>
+            <div className="flow-actions-row">
+              <button
+                onClick={handleSubmitCaptcha}
+                type="button"
+                className={`btn flow-btn primary-action ${isSubmittingCaptcha ? 'loading' : ''}`}
+                disabled={isSubmittingCaptcha || isRefreshingCaptcha}
+              >
+                {renderFlowButtonLabel('继续', '提交中', isSubmittingCaptcha)}
+              </button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div className="auth-stage flow-stage">
+        <div className="flow-head">
+          <span className="flow-marker">{secondAuthStepLabel}</span>
+          <button
+            onClick={handleResetFlow}
+            type="button"
+            className="flow-link"
+            disabled={studentActionLoading}
+          >
+            返回登录
+          </button>
+        </div>
+        <h2 className="title flow-title">二次验证</h2>
+        {flowStatusText ? <p className="flow-status">{flowStatusText}</p> : null}
+        <div className="flow-card">
+          <div className="method-switcher">
+            {(availableMethods.length > 0 ? availableMethods : [secondAuthMethod]).map((method) => (
+              <button
+                key={method}
+                type="button"
+                className={`method-tab ${secondAuthMethod === method ? 'active' : ''}`}
+                disabled={isSecondAuthBusy}
+                onClick={() => {
+                  setSecondAuthMethod(method);
+                  setSecondAuthCode('');
+                }}
+              >
+                <span className="method-tab-label">{secondAuthCopy[method].label}</span>
+                {getSecondAuthOptionTarget(loginFlow, method) ? (
+                  <span className="method-tab-target">
+                    {getSecondAuthOptionTarget(loginFlow, method)}
+                  </span>
+                ) : null}
+              </button>
+            ))}
+          </div>
+
+          <div className="input-field flow-input">
+            <i className="fa fa-key"></i>
+            <input
+              value={secondAuthCode}
+              onChange={(e) => setSecondAuthCode(e.target.value)}
+              type="text"
+              disabled={isSendingSecondAuthCode}
+              placeholder={
+                selectedMethodNeedsSend
+                  ? `先发送${currentMethodMeta.label}验证码`
+                  : `输入${currentMethodMeta.label}验证码`
+              }
+            />
+          </div>
+          <div className="flow-actions-row split">
+            <button
+              onClick={handleSendSecondAuthCode}
+              type="button"
+              className={`btn flow-btn light-btn ${isSendingSecondAuthCode ? 'loading' : ''}`}
+              disabled={isSecondAuthBusy}
+            >
+              {renderFlowButtonLabel(
+                selectedMethodNeedsSend ? currentMethodMeta.sendLabel : currentMethodMeta.resendLabel,
+                '发送中',
+                isSendingSecondAuthCode,
+              )}
+            </button>
+            <button
+              onClick={handleVerifySecondAuthCode}
+              type="button"
+              className={`btn flow-btn primary-action ${isVerifyingSecondAuthCode ? 'loading' : ''}`}
+              disabled={!canVerifySecondAuth || isSecondAuthBusy}
+            >
+              {renderFlowButtonLabel('验证并登录', '验证中', isVerifyingSecondAuthCode)}
+            </button>
+          </div>
+        </div>
+      </div>
+    );
   };
 
   return (
@@ -250,135 +535,32 @@ const Login: React.FC = () => {
           aria-hidden
           onKeyDown={(e) => {
             if (e.key === 'Enter') {
+              if (studentActionLoading) {
+                return;
+              }
               if (showCaptchaFlow) {
                 handleSubmitCaptcha();
                 return;
               }
-              if (showSecondAuthCodeInput) {
-                handleVerifySecondAuthCode();
+              if (showSecondAuthFlow) {
+                if (showSecondAuthCodeInput) {
+                  handleVerifySecondAuthCode();
+                } else {
+                  handleSendSecondAuthCode();
+                }
                 return;
               }
               handleLogin();
             }
           }}
-          className={`container ${isMuxi ? 'sign-up-mode' : ''} `}
+          className={`container ${isMuxi ? 'sign-up-mode' : ''} ${
+            showCaptchaFlow || showSecondAuthFlow ? 'flow-mode' : ''
+          }`}
         >
           <div className="forms-container">
             <div className="signin-signup">
               <section className="sign-in-form">
-                <h2 className="title">登录</h2>
-                <div className="input-field">
-                  <i className="fa fa-user"></i>
-                  <input
-                    value={student_id}
-                    onChange={(e) => {
-                      handleUserLogin(e.target.value, 'id');
-                    }}
-                    type="text"
-                    placeholder="学号"
-                  />
-                </div>
-                <div className="input-field">
-                  <i className="fa fa-lock"></i>
-                  <input
-                    value={password}
-                    onChange={(e) => {
-                      handleUserLogin(e.target.value, 'pwd');
-                    }}
-                    type="password"
-                    placeholder="密码"
-                  />
-                </div>
-                <input
-                  onClick={handleLogin}
-                  type="submit"
-                  value="立即登录"
-                  className="btn solid"
-                />
-
-                {loginFlow?.message && (
-                  <p className="login-flow-message">{loginFlow.message}</p>
-                )}
-
-                {showCaptchaFlow && (
-                  <div className="login-flow-panel">
-                    <div className="captcha-row">
-                      <div className="input-field flow-input captcha-input">
-                        <i className="fa fa-shield"></i>
-                        <input
-                          value={captcha}
-                          onChange={(e) => setCaptcha(e.target.value)}
-                          type="text"
-                          placeholder="请输入验证码"
-                        />
-                      </div>
-                      {captchaImageSrc && (
-                        <img
-                          className="captcha-image"
-                          src={captchaImageSrc}
-                          alt="验证码"
-                        />
-                      )}
-                    </div>
-                    <button
-                      onClick={handleSubmitCaptcha}
-                      type="button"
-                      className="btn flow-btn"
-                    >
-                      提交验证码
-                    </button>
-                  </div>
-                )}
-
-                {showSecondAuthFlow && (
-                  <div className="login-flow-panel">
-                    {availableMethods.length > 0 && (
-                      <div className="second-auth-methods">
-                        {availableMethods.map((method) => (
-                          <button
-                            key={method}
-                            type="button"
-                            className={`btn flow-btn method-btn ${
-                              secondAuthMethod === method ? 'active' : ''
-                            }`}
-                            onClick={() => setSecondAuthMethod(method)}
-                          >
-                            {method === 'email' ? '邮箱认证' : '短信认证'}
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                    <button
-                      onClick={handleSendSecondAuthCode}
-                      type="button"
-                      className="btn flow-btn"
-                    >
-                      发送{secondAuthMethod === 'email' ? '邮箱' : '短信'}验证码
-                    </button>
-                    {showSecondAuthCodeInput && (
-                      <>
-                        <div className="input-field flow-input">
-                          <i className="fa fa-key"></i>
-                          <input
-                            value={secondAuthCode}
-                            onChange={(e) => setSecondAuthCode(e.target.value)}
-                            type="text"
-                            placeholder={`请输入${
-                              secondAuthMethod === 'email' ? '邮箱' : '短信'
-                            }验证码`}
-                          />
-                        </div>
-                        <button
-                          onClick={handleVerifySecondAuthCode}
-                          type="button"
-                          className="btn flow-btn"
-                        >
-                          提交二次认证验证码
-                        </button>
-                      </>
-                    )}
-                  </div>
-                )}
+                {renderAuthStage()}
               </section>
               <section className="sign-up-form">
                 <button onClick={handleMuxierLogin} type="submit" className="btn">

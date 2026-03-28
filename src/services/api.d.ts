@@ -97,6 +97,12 @@ declare namespace defs {
     /** current_second_auth_method */
     current_second_auth_method?: string;
 
+    /** second_auth_email_target */
+    second_auth_email_target?: string;
+
+    /** second_auth_sms_target */
+    second_auth_sms_target?: string;
+
     /** message */
     message?: string;
 

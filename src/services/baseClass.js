@@ -86,6 +86,12 @@ export class StudentLoginResponse {
   /** current_second_auth_method */
   current_second_auth_method = '';
 
+  /** second_auth_email_target */
+  second_auth_email_target = '';
+
+  /** second_auth_sms_target */
+  second_auth_sms_target = '';
+
   /** message */
   message = '';
 
