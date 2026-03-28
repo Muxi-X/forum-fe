@@ -30,7 +30,12 @@ interface StudentLoginFlowState {
 
 type LoginInfo = 'id' | 'pwd';
 type SecondAuthMethod = 'sms' | 'email';
-type StudentLoginAction = 'start' | 'captcha' | 'second_auth_send' | 'second_auth_verify' | '';
+type StudentLoginAction =
+  | 'start'
+  | 'captcha'
+  | 'second_auth_send'
+  | 'second_auth_verify'
+  | '';
 
 const secondAuthCopy: Record<
   SecondAuthMethod,
@@ -125,7 +130,9 @@ const Login: React.FC = () => {
   const currentSecondAuthTarget = getSecondAuthTarget(loginFlow, secondAuthMethod);
   const selectedMethodNeedsSend =
     showSecondAuthFlow &&
-    (!showSecondAuthCodeInput || !serverSecondAuthMethod || secondAuthMethod !== serverSecondAuthMethod);
+    (!showSecondAuthCodeInput ||
+      !serverSecondAuthMethod ||
+      secondAuthMethod !== serverSecondAuthMethod);
   const secondAuthStepLabel = 'STEP 2';
   const canVerifySecondAuth =
     showSecondAuthCodeInput &&
@@ -233,11 +240,14 @@ const Login: React.FC = () => {
     }
   };
 
-  const { run: runStudent, loading: studentActionLoading } = useRequest(API.auth.postStudent.request, {
-    onSuccess: handleStudentLoginResponse,
-    onError: failLogin,
-    manual: true,
-  });
+  const { run: runStudent, loading: studentActionLoading } = useRequest(
+    API.auth.postStudent.request,
+    {
+      onSuccess: handleStudentLoginResponse,
+      onError: failLogin,
+      manual: true,
+    },
+  );
 
   const { run: runTeam } = useRequest(API.auth.postTeam.request, {
     onSuccess: handleTeamLoginResponse,
@@ -406,7 +416,9 @@ const Login: React.FC = () => {
           {flowStatusText ? <p className="flow-status">{flowStatusText}</p> : null}
           <div className="flow-card captcha-stage">
             {captchaImageSrc && (
-              <div className={`captcha-visual ${isRefreshingCaptcha ? 'refreshing' : ''}`}>
+              <div
+                className={`captcha-visual ${isRefreshingCaptcha ? 'refreshing' : ''}`}
+              >
                 <div className="captcha-image-shell">
                   <img className="captcha-image" src={captchaImageSrc} alt="验证码" />
                   {isRefreshingCaptcha ? (
@@ -438,7 +450,9 @@ const Login: React.FC = () => {
               <button
                 onClick={handleSubmitCaptcha}
                 type="button"
-                className={`btn flow-btn primary-action ${isSubmittingCaptcha ? 'loading' : ''}`}
+                className={`btn flow-btn primary-action ${
+                  isSubmittingCaptcha ? 'loading' : ''
+                }`}
                 disabled={isSubmittingCaptcha || isRefreshingCaptcha}
               >
                 {renderFlowButtonLabel('继续', '提交中', isSubmittingCaptcha)}
@@ -466,25 +480,27 @@ const Login: React.FC = () => {
         {flowStatusText ? <p className="flow-status">{flowStatusText}</p> : null}
         <div className="flow-card">
           <div className="method-switcher">
-            {(availableMethods.length > 0 ? availableMethods : [secondAuthMethod]).map((method) => (
-              <button
-                key={method}
-                type="button"
-                className={`method-tab ${secondAuthMethod === method ? 'active' : ''}`}
-                disabled={isSecondAuthBusy}
-                onClick={() => {
-                  setSecondAuthMethod(method);
-                  setSecondAuthCode('');
-                }}
-              >
-                <span className="method-tab-label">{secondAuthCopy[method].label}</span>
-                {getSecondAuthOptionTarget(loginFlow, method) ? (
-                  <span className="method-tab-target">
-                    {getSecondAuthOptionTarget(loginFlow, method)}
-                  </span>
-                ) : null}
-              </button>
-            ))}
+            {(availableMethods.length > 0 ? availableMethods : [secondAuthMethod]).map(
+              (method) => (
+                <button
+                  key={method}
+                  type="button"
+                  className={`method-tab ${secondAuthMethod === method ? 'active' : ''}`}
+                  disabled={isSecondAuthBusy}
+                  onClick={() => {
+                    setSecondAuthMethod(method);
+                    setSecondAuthCode('');
+                  }}
+                >
+                  <span className="method-tab-label">{secondAuthCopy[method].label}</span>
+                  {getSecondAuthOptionTarget(loginFlow, method) ? (
+                    <span className="method-tab-target">
+                      {getSecondAuthOptionTarget(loginFlow, method)}
+                    </span>
+                  ) : null}
+                </button>
+              ),
+            )}
           </div>
 
           <div className="input-field flow-input">
@@ -505,11 +521,15 @@ const Login: React.FC = () => {
             <button
               onClick={handleSendSecondAuthCode}
               type="button"
-              className={`btn flow-btn light-btn ${isSendingSecondAuthCode ? 'loading' : ''}`}
+              className={`btn flow-btn light-btn ${
+                isSendingSecondAuthCode ? 'loading' : ''
+              }`}
               disabled={isSecondAuthBusy}
             >
               {renderFlowButtonLabel(
-                selectedMethodNeedsSend ? currentMethodMeta.sendLabel : currentMethodMeta.resendLabel,
+                selectedMethodNeedsSend
+                  ? currentMethodMeta.sendLabel
+                  : currentMethodMeta.resendLabel,
                 '发送中',
                 isSendingSecondAuthCode,
               )}
@@ -517,7 +537,9 @@ const Login: React.FC = () => {
             <button
               onClick={handleVerifySecondAuthCode}
               type="button"
-              className={`btn flow-btn primary-action ${isVerifyingSecondAuthCode ? 'loading' : ''}`}
+              className={`btn flow-btn primary-action ${
+                isVerifyingSecondAuthCode ? 'loading' : ''
+              }`}
               disabled={!canVerifySecondAuth || isSecondAuthBusy}
             >
               {renderFlowButtonLabel('验证并登录', '验证中', isVerifyingSecondAuthCode)}
@@ -559,9 +581,7 @@ const Login: React.FC = () => {
         >
           <div className="forms-container">
             <div className="signin-signup">
-              <section className="sign-in-form">
-                {renderAuthStage()}
-              </section>
+              <section className="sign-in-form">{renderAuthStage()}</section>
               <section className="sign-up-form">
                 <button onClick={handleMuxierLogin} type="submit" className="btn">
                   木犀通行证
