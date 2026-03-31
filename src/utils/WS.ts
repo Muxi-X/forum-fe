@@ -9,7 +9,7 @@ export interface Message {
 
 export interface MsgResponse {
   content: string;
-  sender_id: number;
+  sender: number;
   receiver_id: number;
   time: string;
   type_name: 'str' | 'file';

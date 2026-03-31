@@ -65,8 +65,8 @@ const Chat: React.FC = () => {
       WebSocket.ws.onmessage = (e) => {
         const res = JSON.parse(e.data) as MsgResponse;
         const newTime = formatYear(res.time, 'YYYY-MM-DD HH:MM:SS');
-        const records = [...getRecords(res.sender_id, myId), { ...res, time: newTime }];
-        setRecords(records, res.sender_id, myId);
+        const records = [...getRecords(res.sender, myId), { ...res, time: newTime }];
+        setRecords(records, res.sender, myId);
       };
     }
     setWS(WebSocket);
@@ -241,8 +241,8 @@ const Chat: React.FC = () => {
       (ws as WS).ws!.onmessage = (e) => {
         const res = JSON.parse(e.data) as MsgResponse;
         const newTime = formatYear(res.time, 'YYYY-MM-DD HH:MM:SS');
-        const records = [...getRecords(res.sender_id, myId), { ...res, time: newTime }];
-        setRecords(records, res.sender_id, myId);
+        const records = [...getRecords(res.sender, myId), { ...res, time: newTime }];
+        setRecords(records, res.sender, myId);
       };
     } else {
       webSocketInit();
@@ -254,9 +254,9 @@ const Chat: React.FC = () => {
       if (ws)
         (ws as WS).ws!.onmessage = (res) => {
           const data: MsgResponse = JSON.parse(res.data);
-          if (typeof data?.sender_id === 'number') {
+          if (typeof data?.sender === 'number') {
             setTip(true);
-            setSelectedId(data.sender_id);
+            setSelectedId(data.sender);
           }
         };
     };

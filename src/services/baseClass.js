@@ -176,8 +176,8 @@ export class chat_Message {
   /** content */
   content = '';
 
-  /** sender_id */
-  sender_id = undefined;
+  /** sender */
+  sender = undefined;
 
   /** receiver_id */
   receiver_id = undefined;
