@@ -57,7 +57,7 @@ const secondAuthCopy: Record<
 const isSecondAuthMethod = (value?: string): value is SecondAuthMethod =>
   value === 'sms' || value === 'email';
 
-const studentLoginProvider = import.meta.env.VITE_STUDENT_LOGIN_PROVIDER || 'legacy';
+const studentLoginProvider = import.meta.env.VITE_STUDENT_LOGIN_PROVIDER || 'oauth';
 const isStudentOAuthLogin = studentLoginProvider === 'oauth';
 
 const getStudentOAuthCallbackURL = () => {
