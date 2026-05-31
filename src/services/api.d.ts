@@ -68,11 +68,20 @@ declare namespace defs {
     /** action */
     action?: string;
 
+    /** callback_url */
+    callback_url?: string;
+
     /** captcha */
     captcha?: string;
 
+    /** oauth_code */
+    oauth_code?: string;
+
     /** password */
     password?: string;
+
+    /** provider */
+    provider?: string;
 
     /** second_auth_code */
     second_auth_code?: string;
@@ -105,6 +114,9 @@ declare namespace defs {
 
     /** message */
     message?: string;
+
+    /** redirect_url */
+    redirect_url?: string;
 
     /** session_id */
     session_id?: string;

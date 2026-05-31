@@ -18,6 +18,7 @@ interface LoginState {
 
 interface StudentLoginFlowState {
   token?: string;
+  redirect_url?: string;
   session_id?: string;
   status?: string;
   message?: string;
@@ -55,6 +56,15 @@ const secondAuthCopy: Record<
 
 const isSecondAuthMethod = (value?: string): value is SecondAuthMethod =>
   value === 'sms' || value === 'email';
+
+const studentLoginProvider = import.meta.env.VITE_STUDENT_LOGIN_PROVIDER || 'legacy';
+const isStudentOAuthLogin = studentLoginProvider === 'oauth';
+
+const getStudentOAuthCallbackURL = () => {
+  const configured = import.meta.env.VITE_STUDENT_OAUTH_CALLBACK_URL?.trim();
+  if (configured) return configured;
+  return `${window.location.origin}/login?student_oauth=1`;
+};
 
 const getSecondAuthTarget = (
   loginFlow: StudentLoginFlowState | null,
@@ -139,6 +149,12 @@ const Login: React.FC = () => {
     !!serverSecondAuthMethod &&
     secondAuthMethod === serverSecondAuthMethod &&
     !!secondAuthCode.trim();
+  const isStudentOAuthCallback = searchParams.get('student_oauth') === '1';
+  const studentOAuthCode =
+    isStudentOAuthCallback &&
+    (searchParams.get('code') || searchParams.get('accessCode') || '');
+  const teamOAuthCode = !isStudentOAuthCallback ? searchParams.get('accessCode') : '';
+  const isHandlingOAuthCallback = !!studentOAuthCode || !!teamOAuthCode;
   const flowStatusText = simplifyFlowMessage(loginStatus, loginFlow?.message);
   const captchaImageSrc = loginFlow?.captcha_image_base64
     ? `data:image/jpeg;base64,${loginFlow.captcha_image_base64}`
@@ -194,6 +210,11 @@ const Login: React.FC = () => {
     if (res.code !== 0) return;
 
     const data = res.data as StudentLoginFlowState;
+    if (data.redirect_url) {
+      window.location.href = data.redirect_url;
+      return;
+    }
+
     if (data.status && data.status !== 'logged_in') {
       setLoginFlow(data);
       if (isSecondAuthMethod(data.current_second_auth_method)) {
@@ -255,12 +276,22 @@ const Login: React.FC = () => {
     manual: true,
   });
 
-  const oauth_code = searchParams.get('accessCode');
   useEffect(() => {
-    if (oauth_code) {
-      runTeam({}, { oauth_code });
+    if (studentOAuthCode) {
+      runStudent(
+        {},
+        {
+          provider: 'oauth',
+          oauth_code: studentOAuthCode,
+        },
+      );
+      return;
     }
-  }, [oauth_code]);
+
+    if (teamOAuthCode) {
+      runTeam({}, { oauth_code: teamOAuthCode });
+    }
+  }, [studentOAuthCode, teamOAuthCode]);
 
   const handleMuxierLogin = () => {
     const landing = `${window.location.host}/login`;
@@ -291,6 +322,18 @@ const Login: React.FC = () => {
 
   const handleLogin = () => {
     if (studentActionLoading) return;
+    if (isStudentOAuthLogin) {
+      setPendingAction('start');
+      runStudent(
+        {},
+        {
+          provider: 'oauth',
+          callback_url: getStudentOAuthCallbackURL(),
+        },
+      );
+      return;
+    }
+
     if (!student_id || !password) {
       message.warning('请先输入学号和密码');
       return;
@@ -370,30 +413,47 @@ const Login: React.FC = () => {
       return (
         <div key="credentials" className="auth-stage">
           <h2 className="title">登录</h2>
-          <div className="input-field">
-            <i className="fa fa-user"></i>
-            <input
-              value={student_id}
-              onChange={(e) => {
-                handleUserLogin(e.target.value, 'id');
-              }}
-              type="text"
-              placeholder="学号"
-            />
-          </div>
-          <div className="input-field">
-            <i className="fa fa-lock"></i>
-            <input
-              value={password}
-              onChange={(e) => {
-                handleUserLogin(e.target.value, 'pwd');
-              }}
-              type="password"
-              placeholder="密码"
-            />
-          </div>
-          <button onClick={handleLogin} type="button" className="btn solid stage-submit">
-            立即登录
+          {!isStudentOAuthLogin ? (
+            <>
+              <div className="input-field">
+                <i className="fa fa-user"></i>
+                <input
+                  value={student_id}
+                  onChange={(e) => {
+                    handleUserLogin(e.target.value, 'id');
+                  }}
+                  type="text"
+                  placeholder="学号"
+                />
+              </div>
+              <div className="input-field">
+                <i className="fa fa-lock"></i>
+                <input
+                  value={password}
+                  onChange={(e) => {
+                    handleUserLogin(e.target.value, 'pwd');
+                  }}
+                  type="password"
+                  placeholder="密码"
+                />
+              </div>
+            </>
+          ) : null}
+          <button
+            onClick={handleLogin}
+            type="button"
+            className={`btn solid stage-submit ${
+              pendingAction === 'start' ? 'loading' : ''
+            }`}
+            disabled={pendingAction === 'start'}
+          >
+            {isStudentOAuthLogin
+              ? renderFlowButtonLabel(
+                  '学校统一认证登录',
+                  '正在跳转',
+                  pendingAction === 'start',
+                )
+              : '立即登录'}
           </button>
         </div>
       );
@@ -552,7 +612,7 @@ const Login: React.FC = () => {
 
   return (
     <div className="login-page">
-      {!oauth_code ? (
+      {!isHandlingOAuthCallback ? (
         <div
           aria-hidden
           onKeyDown={(e) => {

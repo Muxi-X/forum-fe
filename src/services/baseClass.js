@@ -57,11 +57,20 @@ export class StudentLoginRequest {
   /** action */
   action = '';
 
+  /** callback_url */
+  callback_url = '';
+
   /** captcha */
   captcha = '';
 
+  /** oauth_code */
+  oauth_code = '';
+
   /** password */
   password = '';
+
+  /** provider */
+  provider = '';
 
   /** second_auth_code */
   second_auth_code = '';
@@ -94,6 +103,9 @@ export class StudentLoginResponse {
 
   /** message */
   message = '';
+
+  /** redirect_url */
+  redirect_url = '';
 
   /** session_id */
   session_id = '';
