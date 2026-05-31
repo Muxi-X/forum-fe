@@ -63,7 +63,7 @@ const isStudentOAuthLogin = studentLoginProvider === 'oauth';
 const getStudentOAuthCallbackURL = () => {
   const configured = import.meta.env.VITE_STUDENT_OAUTH_CALLBACK_URL?.trim();
   if (configured) return configured;
-  return `${window.location.origin}/login?student_oauth=1`;
+  return `${window.location.origin}/login/student-oauth`;
 };
 
 const getSecondAuthTarget = (
@@ -149,7 +149,7 @@ const Login: React.FC = () => {
     !!serverSecondAuthMethod &&
     secondAuthMethod === serverSecondAuthMethod &&
     !!secondAuthCode.trim();
-  const isStudentOAuthCallback = searchParams.get('student_oauth') === '1';
+  const isStudentOAuthCallback = window.location.pathname === '/login/student-oauth';
   const studentOAuthCode =
     isStudentOAuthCallback &&
     (searchParams.get('code') || searchParams.get('accessCode') || '');
