@@ -36,7 +36,7 @@ const Meta = styled.div`
   column-gap: 10px;
   color: #7f838a;
   font-size: 12px;
-  .name {
+  .author {
     display: block;
     max-width: 100%;
     overflow: hidden;
@@ -51,16 +51,6 @@ const Meta = styled.div`
     display: inline-block;
     margin-top: 2px;
     color: #bfbfc0;
-  }
-  .creator {
-    display: inline-block;
-    max-width: 128px;
-    margin-left: 10px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    vertical-align: bottom;
-    white-space: nowrap;
-    color: #fe9800;
   }
 `;
 
@@ -129,6 +119,11 @@ const Tags = styled.div`
     text-overflow: ellipsis;
     white-space: nowrap;
   }
+  .table {
+    max-width: 96px;
+    background: rgba(254, 152, 0, 0.12);
+    color: #c46c00;
+  }
 `;
 
 const getSummary = (post: MobilePost) =>
@@ -145,15 +140,15 @@ const PostCard: React.FC<{ post: MobilePost }> = ({ post }) => {
       <Meta>
         <MobileAvatar url={post.creator_avatar} size={36} />
         <span>
-          <span className="name">{table.name}</span>
+          <span className="author">{post.creator_name || '茶友'}</span>
           <span className="time">{post.time ? moment(post.time).fromNow() : ''}</span>
-          <span className="creator">{post.creator_name || '茶友'}</span>
         </span>
       </Meta>
       <Title>{post.title || '未命名帖子'}</Title>
       <Summary>{getSummary(post)}</Summary>
       <Footer>
         <Tags>
+          <span className="table">{table.name}</span>
           {(post.tags || []).slice(0, 2).map((tag) => (
             <span key={tag}>#{tag}</span>
           ))}

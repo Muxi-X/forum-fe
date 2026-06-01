@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import styled from 'styled-components';
 import { useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { message } from 'antd';
@@ -50,18 +50,13 @@ const SearchWrap = styled.div`
 const HomeTitle = styled.div`
   position: relative;
   z-index: 2;
-  margin: 0 0 18px;
+  margin: 0 0 20px;
   h1 {
-    margin: 0 0 6px;
+    margin: 0;
     color: ${mobilePalette.ink};
     font-size: 28px;
     font-weight: 900;
     line-height: 1.12;
-  }
-  p {
-    margin: 0;
-    color: ${mobilePalette.muted};
-    font-size: 13px;
   }
 `;
 
@@ -74,7 +69,7 @@ const SearchPageHeader = styled.section`
 const TableGrid = styled.section`
   position: relative;
   z-index: 2;
-  padding: 20px 0 16px;
+  padding: 20px 0 18px;
   h3 {
     margin: 0 0 13px;
     font-size: 20px;
@@ -84,15 +79,15 @@ const TableGrid = styled.section`
   .grid {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 12px;
+    gap: 10px;
     padding-bottom: 4px;
   }
 `;
 
 const TableButton = styled.button`
   min-width: 0;
-  min-height: 104px;
-  padding: 10px 6px 8px;
+  min-height: 94px;
+  padding: 10px 4px 8px;
   text-align: center;
   background: rgba(255, 255, 255, 0.76);
   border: 0;
@@ -105,14 +100,14 @@ const TableButton = styled.button`
   }
   .table-avatar {
     position: relative;
-    width: 50px;
-    height: 50px;
+    width: 46px;
+    height: 46px;
     display: grid;
     place-items: center;
     margin: 0 auto;
     border-radius: 18px;
     color: #fff;
-    font-size: 20px;
+    font-size: 19px;
     font-weight: 700;
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45),
       0 8px 18px rgba(254, 152, 0, 0.16);
@@ -129,10 +124,10 @@ const TableButton = styled.button`
     transform: rotate(-22deg);
   }
   h4 {
-    margin: 9px 0 0;
+    margin: 8px 0 0;
     font-size: 12px;
     line-height: 1.35;
-    font-weight: 500;
+    font-weight: 800;
     color: #1a202c;
     word-break: keep-all;
     .anticon {
@@ -148,7 +143,7 @@ const TableButton = styled.button`
 
 const PostList = styled.div`
   display: block;
-  padding: 14px 0 20px;
+  padding: 14px 0 10px;
   background: ${mobilePalette.bg};
 `;
 
@@ -295,21 +290,13 @@ const DetailTopControls = styled.div`
   }
 `;
 
-const MoreButton = styled.button`
-  width: calc(100% - 40px);
-  height: 44px;
-  margin: 4px 20px 28px;
-  border-radius: ${mobileRadius.pill};
-  background: #fff;
-  border: 1px solid ${mobilePalette.lineSoft};
-  color: #3d3d3d;
-`;
-
-const FeedIntro = styled.div`
-  padding: 16px 20px 2px;
-  color: ${mobilePalette.ink};
-  font-size: 18px;
-  font-weight: 900;
+const LoadMoreStatus = styled.div`
+  min-height: 42px;
+  padding: 6px 20px 26px;
+  display: grid;
+  place-items: center;
+  color: ${mobilePalette.muted};
+  font-size: 12px;
   background: ${mobilePalette.bg};
 `;
 
@@ -321,6 +308,8 @@ const tableVisuals: Record<string, { glyph: string; gradient: string }> = {
   campus: { glyph: '校', gradient: 'linear-gradient(135deg, #8ddfd5, #43b7a9)' },
   trade: { glyph: '闲', gradient: 'linear-gradient(135deg, #b7a4ff, #7867d8)' },
 };
+
+const PAGE_SIZE = 20;
 
 const Home: React.FC = () => {
   const nav = useNavigate();
@@ -335,17 +324,20 @@ const Home: React.FC = () => {
   const [page, setPage] = useState(0);
   const [loading, setLoading] = useState(true);
   const [loaded, setLoaded] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
   const [error, setError] = useState('');
   const [activeTag, setActiveTag] = useState('全部');
   const [sort, setSort] = useState<'newest' | 'hottest'>('newest');
+  const loadMoreRef = useRef<HTMLDivElement | null>(null);
 
   const fetchPosts = async (nextPage = 0, append = false) => {
+    if (append && (loading || !hasMore)) return;
     setLoading(true);
     setError('');
     try {
       const res = await mobileApi.posts.list({
         domain: 'normal',
-        limit: 20,
+        limit: PAGE_SIZE,
         page: nextPage,
         category: table ? activeTable.apiCategory : undefined,
         search_content: query || undefined,
@@ -360,6 +352,7 @@ const Home: React.FC = () => {
       const next = res.data.posts || [];
       setPosts((current) => (append ? [...current, ...next] : next));
       setPage(nextPage);
+      setHasMore(next.length >= PAGE_SIZE);
     } catch (err) {
       setError(err instanceof Error ? err.message : '加载失败');
     } finally {
@@ -372,8 +365,24 @@ const Home: React.FC = () => {
     setPosts([]);
     setPage(0);
     setLoaded(false);
+    setHasMore(true);
     fetchPosts(0, false);
   }, [query, params.category, activeTag, sort]);
+
+  useEffect(() => {
+    const node = loadMoreRef.current;
+    if (!node || !posts.length || !hasMore || loading) return undefined;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) {
+          fetchPosts(page + 1, true);
+        }
+      },
+      { rootMargin: '220px 0px 220px 0px', threshold: 0.01 },
+    );
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [posts.length, hasMore, loading, page]);
 
   return (
     <MobileShell
@@ -389,7 +398,6 @@ const Home: React.FC = () => {
             <Hero>
               <HomeTitle>
                 <h1>木犀茶馆</h1>
-                <p>校园里的新鲜事，慢慢喝一口再说。</p>
               </HomeTitle>
               <SearchWrap>
                 <SearchBar
@@ -399,9 +407,9 @@ const Home: React.FC = () => {
                 />
               </SearchWrap>
               <TableGrid>
-                <h3>茶桌分类</h3>
+                <h3>茶桌</h3>
                 <div className="grid">
-                  {MOBILE_TABLES.slice(0, 3).map((item) => (
+                  {MOBILE_TABLES.map((item) => (
                     <TableButton key={item.key} onClick={() => nav(`/${item.route}`)}>
                       <span
                         className="table-avatar"
@@ -409,7 +417,7 @@ const Home: React.FC = () => {
                       >
                         {tableVisuals[item.key].glyph}
                       </span>
-                      <h4>{item.name.replace(/\s+/g, ' ')}</h4>
+                      <h4>{item.name}</h4>
                       <p>{item.intro}</p>
                     </TableButton>
                   ))}
@@ -494,15 +502,14 @@ const Home: React.FC = () => {
       ) : null}
       {posts.length ? (
         <>
-          {!table && !isSearch ? <FeedIntro>正在聊</FeedIntro> : null}
           <PostList>
             {posts.map((post) => (
               <PostCard key={post.id} post={post} />
             ))}
           </PostList>
-          <MoreButton disabled={loading} onClick={() => fetchPosts(page + 1, true)}>
-            {loading ? '加载中...' : '加载更多'}
-          </MoreButton>
+          <LoadMoreStatus ref={loadMoreRef}>
+            {loading ? '正在加载...' : hasMore ? '' : '已经到底了'}
+          </LoadMoreStatus>
         </>
       ) : error ? (
         <ErrorState text={error} onRetry={() => fetchPosts(0, false)} />
