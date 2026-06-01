@@ -1,161 +1,407 @@
 import React, { useEffect, useState } from 'react';
 import styled from 'styled-components';
-import {
-  EditOutlined,
-  LogoutOutlined,
-  MessageOutlined,
-  StarOutlined,
-  FileTextOutlined,
-  FormOutlined,
-  RightOutlined,
-} from '@ant-design/icons';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { message } from 'antd';
 import MobileShell from '../components/MobileShell';
 import PostCard from '../components/PostCard';
 import EmptyState from '../components/EmptyState';
-import { mobilePalette, Section, PrimaryButton, GhostButton } from '../styles';
+import MobileAvatar from '../components/MobileAvatar';
+import DesignIcon from '../components/DesignIcon';
+import { mobilePalette, Section } from '../styles';
 import { mobileApi, MobilePost, MobileUser, SipScoreWithEntries } from '../api';
+import { mastergoAssets } from '../assets/mastergo';
 
 const Hero = styled.section`
   position: relative;
-  padding: 94px 16px 16px;
-  background: radial-gradient(
-      circle at 18px 28px,
-      rgba(255, 255, 255, 0.55) 0 9px,
-      transparent 10px
-    ),
-    radial-gradient(circle at 66px 48px, rgba(255, 255, 255, 0.36) 0 8px, transparent 9px),
-    linear-gradient(180deg, #ffd57b 0%, #fff1bd 62%, #fffefa 63%);
+  min-height: 348px;
+  overflow: hidden;
+  background: #fff;
+  &::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: -40px;
+    height: 336px;
+    background: url(${mastergoAssets.decorations.profileHeroCupBg}) center top /
+      calc(100% + 69px) auto no-repeat;
+  }
 `;
 
 const NoticeIcon = styled.button`
   position: absolute;
-  right: 16px;
-  top: 16px;
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.64);
+  right: 14px;
+  top: 18px;
+  z-index: 4;
+  width: 26px;
+  height: 26px;
+  display: grid;
+  place-items: center;
+  background: transparent;
+  img {
+    width: 26px;
+    height: 26px;
+  }
 `;
 
-const Avatar = styled.img`
-  width: 94px;
-  height: 94px;
-  border-radius: 50%;
-  object-fit: cover;
-  border: 2px solid #fff;
-  box-shadow: 0 8px 20px rgba(39, 45, 55, 0.12);
+const HeroActionIcon = styled(NoticeIcon)`
+  img {
+    width: auto;
+    height: auto;
+  }
+`;
+
+const ProfilePanel = styled.div`
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 2;
+  min-height: 208px;
+  padding: 78px 26px 18px;
+  isolation: isolate;
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: rgba(255, 255, 255, 0.94);
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+    clip-path: polygon(0 13%, 100% 0, 100% 100%, 0 100%);
+  }
+`;
+
+const Avatar = styled(MobileAvatar)`
+  position: absolute;
+  left: 28px;
+  top: -28px;
 `;
 
 const NameRow = styled.div`
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-top: 12px;
+  margin-top: 0;
   h1 {
     margin: 0;
-    font-size: 23px;
-    font-weight: 900;
+    max-width: 250px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 24px;
+    line-height: 1.1;
+    font-weight: 500;
+    color: #1a202c;
+  }
+  .anticon {
+    color: #7f838a;
+    font-size: 16px;
+  }
+  button {
+    width: 22px;
+    height: 22px;
+    background: transparent;
+    img {
+      width: 15px;
+      height: 15px;
+    }
   }
 `;
 
 const Signature = styled.p`
-  margin: 8px 0 12px;
-  color: ${mobilePalette.muted};
+  margin: 12px 0 14px;
+  max-width: 286px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #7f838a;
+  font-size: 14px;
 `;
 
 const Counts = styled.div`
   display: flex;
-  gap: 28px;
-  color: ${mobilePalette.muted};
+  gap: 48px;
+  color: #7f838a;
+  font-size: 14px;
   strong {
     display: block;
-    color: ${mobilePalette.ink};
-    font-size: 17px;
+    margin-bottom: 4px;
+    color: #3d3d3d;
+    font-size: 16px;
+    font-weight: 400;
   }
 `;
 
 const ActionBar = styled.div`
+  position: absolute;
+  right: 24px;
+  top: 58px;
   display: flex;
-  gap: 10px;
-  margin-top: 14px;
+  gap: 8px;
+`;
+
+const VisitorButton = styled.button<{ primary?: boolean }>`
+  height: 25px;
+  min-width: 53px;
+  padding: 0 10px;
+  border-radius: 999px;
+  border: 1px solid ${(props) => (props.primary ? '#fe9800' : '#ffc641')};
+  background: ${(props) => (props.primary ? '#fe9800' : '#fff')};
+  color: ${(props) => (props.primary ? '#fff' : '#fe9800')};
+  font-size: 12px;
 `;
 
 const Menu = styled(Section)`
-  margin-top: 10px;
+  margin-top: 0;
+  background: #fff;
+  border-top: 1px solid rgba(60, 60, 67, 0.12);
+  border-bottom: 0;
 `;
 
 const MenuItem = styled.button`
   width: 100%;
-  height: 58px;
+  height: 70px;
   display: grid;
-  grid-template-columns: 38px 1fr 24px;
+  grid-template-columns: 50px 1fr 32px;
   align-items: center;
-  padding: 0 16px;
+  padding: 0 22px;
   background: transparent;
-  border-bottom: 1px solid ${mobilePalette.line};
+  border-bottom: 0;
   text-align: left;
-  color: ${mobilePalette.ink};
-  .anticon:first-child {
-    color: ${mobilePalette.orange};
-    font-size: 19px;
+  color: #3d3d3d;
+  font-size: 16px;
+  .chevron {
+    justify-self: end;
+  }
+  transition: background 0.18s ease;
+  &:active {
+    background: rgba(0, 0, 0, 0.035);
   }
   &:last-child {
     border-bottom: 0;
   }
 `;
 
-const List = styled.div`
+const ExpandedPanel = styled.div`
+  background: #fff;
+  border-bottom: 0;
+`;
+
+const ExpandedPosts = styled.div`
+  min-height: 118px;
+  padding: 0 0 8px;
+`;
+
+const ViewAll = styled.button`
+  display: block;
+  margin: 14px auto 18px;
+  background: transparent;
+  color: #ffc641;
+  font-size: 13px;
+  font-weight: 500;
+`;
+
+const MiniEmpty = styled.div`
+  min-height: 112px;
   display: grid;
-  gap: 10px;
-  padding: 12px;
+  place-items: center;
+  color: #a0a5ad;
+  font-size: 13px;
+`;
+
+const CollectionGroupButton = styled.button`
+  width: calc(100% - 36px);
+  min-height: 48px;
+  display: grid;
+  grid-template-columns: 1fr 22px;
+  align-items: center;
+  margin: 8px 18px;
+  padding: 0 14px;
+  text-align: left;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.96);
+  color: #7f838a;
+  box-shadow: 0 8px 22px rgba(16, 24, 40, 0.06);
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease;
+  &:active {
+    transform: scale(0.99);
+    box-shadow: 0 5px 14px rgba(16, 24, 40, 0.05);
+  }
+  & + & {
+    margin-top: 12px;
+  }
 `;
 
 const RankingCard = styled.button`
-  width: 100%;
-  display: block;
-  padding: 14px;
+  width: calc(100% - 40px);
+  display: grid;
+  grid-template-columns: 52px 1fr;
+  gap: 10px;
+  align-items: center;
+  margin: 8px 20px 0;
+  padding: 10px;
   background: ${mobilePalette.paper};
-  border: 1px solid ${mobilePalette.line};
+  border: 1px solid rgba(60, 60, 67, 0.1);
   border-radius: 8px;
+  box-shadow: 0 8px 22px rgba(16, 24, 40, 0.05);
   text-align: left;
+  .cover {
+    width: 52px;
+    height: 52px;
+    border-radius: 8px;
+    background: linear-gradient(135deg, #ffe8a8, #8bc6a4);
+    background-size: cover;
+    background-position: center;
+  }
   h3 {
-    margin: 0 0 6px;
-    font-size: 16px;
+    margin: 0 0 4px;
+    color: ${mobilePalette.ink};
+    font-size: 14px;
+    line-height: 1.35;
   }
   p {
     margin: 0;
     color: ${mobilePalette.muted};
+    font-size: 12px;
+    line-height: 1.45;
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
   }
+`;
+
+const ActionGroup = styled.div`
+  border-top: 1px solid rgba(60, 60, 67, 0.1);
+`;
+
+const CenterToast = styled.div`
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  z-index: 80;
+  transform: translate(-50%, -50%);
+  width: 154px;
+  height: 70px;
+  display: grid;
+  place-items: center;
+  border-radius: 8px;
+  background: rgba(98, 103, 111, 0.76);
+  color: #fff;
+  font-size: 18px;
 `;
 
 const Profile: React.FC = () => {
   const { user_id } = useParams();
+  const { state } = useLocation();
   const userId = Number(user_id);
   const nav = useNavigate();
   const myId = Number(localStorage.getItem('userId')) || 0;
-  const isMine = userId === myId || !userId;
+  const [currentUserId, setCurrentUserId] = useState(myId);
   const [profile, setProfile] = useState<MobileUser | null>(null);
   const [posts, setPosts] = useState<MobilePost[]>([]);
-  const [rankings, setRankings] = useState<SipScoreWithEntries[]>([]);
+  const [collectedPosts, setCollectedPosts] = useState<MobilePost[]>([]);
+  const [collectedRankings, setCollectedRankings] = useState<SipScoreWithEntries[]>([]);
+  const [expanded, setExpanded] = useState<Record<'posts' | 'collections', boolean>>({
+    posts: false,
+    collections: false,
+  });
+  const [collectionExpanded, setCollectionExpanded] = useState({
+    posts: false,
+    rankings: false,
+  });
+  const [toast, setToast] = useState<string>((state as any)?.profileToast || '');
+  const isMine = Boolean(
+    !userId ||
+      (currentUserId && userId === currentUserId) ||
+      (profile?.id && currentUserId && profile.id === currentUserId),
+  );
 
   const load = async () => {
-    const target = userId || myId;
-    if (!target) return;
-    const [profileRes, postsRes, rankingsRes] = await Promise.all([
-      mobileApi.user.profile(target),
-      mobileApi.posts.published(target, { limit: 10 }),
-      mobileApi.sipScore.created(target, { limit: 10 }),
-    ]);
-    if (profileRes.code === 0) setProfile(profileRes.data);
-    if (postsRes.code === 0) setPosts(postsRes.data.posts || []);
-    if (rankingsRes.code === 0) setRankings(rankingsRes.data.sip_scores || []);
+    let resolvedCurrentUserId = currentUserId;
+    if (!resolvedCurrentUserId) {
+      try {
+        const myProfileRes = await mobileApi.user.myProfile();
+        if (myProfileRes.code === 0 && myProfileRes.data.id) {
+          resolvedCurrentUserId = myProfileRes.data.id;
+          setCurrentUserId(resolvedCurrentUserId);
+          localStorage.setItem('userId', String(resolvedCurrentUserId));
+        }
+      } catch {
+        // keep anonymous fallback in local development
+      }
+    }
+    const target = userId || resolvedCurrentUserId;
+    const fallbackProfile = (id?: number): MobileUser => ({
+      id: id || 0,
+      name: '茶友',
+      avatar: '',
+      signature: '热爱生活，喜欢分享校园趣事',
+      following_count: 0,
+      follower_count: 0,
+      is_following: false,
+    });
+
+    let nextProfile: MobileUser | null = null;
+    try {
+      const profileRes = target
+        ? await mobileApi.user.profile(target)
+        : await mobileApi.user.myProfile();
+      if (profileRes.code === 0) nextProfile = profileRes.data;
+    } catch (error) {
+      if (import.meta.env.DEV) {
+        try {
+          const myProfileRes = await mobileApi.user.myProfile();
+          if (myProfileRes.code === 0) nextProfile = myProfileRes.data;
+        } catch {
+          nextProfile = fallbackProfile(target);
+        }
+      }
+    }
+
+    const effectiveProfile = nextProfile || fallbackProfile(target);
+    const effectiveId = effectiveProfile.id || target;
+    setProfile(effectiveProfile);
+
+    if (!effectiveId) return;
+    const [postsRes, collectedPostsRes, collectedRankingsRes] =
+      await Promise.allSettled([
+        mobileApi.posts.published(effectiveId, { limit: 10 }),
+        mobileApi.collection.list(effectiveId, { limit: 3, page: 0 }),
+        mobileApi.sipScore.collected(effectiveId, { limit: 3, page: 0 }),
+      ]);
+    if (postsRes.status === 'fulfilled' && postsRes.value.code === 0) {
+      setPosts(postsRes.value.data.posts || []);
+    } else {
+      setPosts([]);
+    }
+    if (collectedPostsRes.status === 'fulfilled' && collectedPostsRes.value.code === 0) {
+      setCollectedPosts(collectedPostsRes.value.data.posts || []);
+    } else {
+      setCollectedPosts([]);
+    }
+    if (
+      collectedRankingsRes.status === 'fulfilled' &&
+      collectedRankingsRes.value.code === 0
+    ) {
+      setCollectedRankings(collectedRankingsRes.value.data.sip_scores || []);
+    } else {
+      setCollectedRankings([]);
+    }
   };
 
   useEffect(() => {
     load();
-  }, [userId, myId]);
+  }, [userId, currentUserId]);
+
+  useEffect(() => {
+    if (!toast) return;
+    const timer = window.setTimeout(() => setToast(''), 1800);
+    return () => window.clearTimeout(timer);
+  }, [toast]);
 
   const follow = async () => {
     if (!profile?.id) return;
@@ -187,86 +433,209 @@ const Profile: React.FC = () => {
   return (
     <MobileShell
       title={isMine ? '我的主页' : '他的主页'}
-      right="notice"
-      onRight={() => nav('/notice')}
+      tabs
+      borderlessTopBar
     >
       <Hero>
-        <NoticeIcon onClick={() => nav('/notice')}>
-          <MessageOutlined />
-        </NoticeIcon>
-        <Avatar
-          src={profile.avatar || 'https://ossforum.muxixyz.com/default/avatar.png'}
-        />
-        <NameRow>
-          <h1>{profile.name || '茶友'}</h1>
-          {isMine ? (
-            <EditOutlined onClick={() => nav(`/user/${profile.id}/seting`)} />
+        {isMine ? (
+          <NoticeIcon onClick={() => nav('/notice')}>
+            <img src={mastergoAssets.icons.notificationBellUnread} alt="" />
+          </NoticeIcon>
+        ) : (
+          <HeroActionIcon type="button">
+            <DesignIcon name="more" size={24} />
+          </HeroActionIcon>
+        )}
+        <ProfilePanel>
+          <Avatar url={profile.avatar || profile.avatar_url} size={100} bordered />
+          <NameRow>
+            <h1>{profile.name || '茶友'}</h1>
+            {isMine ? (
+              <button type="button" onClick={() => nav(`/user/${profile.id}/seting`)}>
+                <img src={mastergoAssets.icons.editPencilGray} alt="编辑" />
+              </button>
+            ) : null}
+          </NameRow>
+          <Signature>{profile.signature || '热爱生活，喜欢分享校园趣事'}</Signature>
+          <Counts>
+            <span>
+              <strong>{profile.following_count || 0}</strong>关注
+            </span>
+            <span>
+              <strong>{profile.follower_count || 0}</strong>粉丝
+            </span>
+          </Counts>
+          {!isMine ? (
+            <ActionBar>
+              <VisitorButton onClick={() => nav(`/user/chat?target_id=${profile.id}`)}>
+                私信
+              </VisitorButton>
+              <VisitorButton primary onClick={follow}>
+                {profile.is_following ? '已关注' : '+ 关注'}
+              </VisitorButton>
+            </ActionBar>
           ) : null}
-        </NameRow>
-        <Signature>{profile.signature || '热爱生活，喜欢分享校园趣事'}</Signature>
-        <Counts>
-          <span>
-            <strong>{profile.following_count || 0}</strong>关注
-          </span>
-          <span>
-            <strong>{profile.follower_count || 0}</strong>粉丝
-          </span>
-        </Counts>
-        {!isMine ? (
-          <ActionBar>
-            <PrimaryButton onClick={follow}>
-              {profile.is_following ? '已关注' : '关注'}
-            </PrimaryButton>
-            <GhostButton onClick={() => nav(`/user/chat?target_id=${profile.id}`)}>
-              私信
-            </GhostButton>
-          </ActionBar>
-        ) : null}
+        </ProfilePanel>
       </Hero>
       <Menu>
         <MenuItem
-          onClick={() => document.getElementById('profile-posts')?.scrollIntoView()}
+          onClick={() =>
+            setExpanded((current) => ({
+              posts: !current.posts,
+              collections: false,
+            }))
+          }
         >
-          <FileTextOutlined />
-          <span>我发过的帖子</span>
-          <RightOutlined />
+          <DesignIcon name="post" size={23} />
+          <span>{isMine ? '我发过的帖子' : 'Ta发过的帖子'}</span>
+          <span className="chevron">
+            <DesignIcon name={expanded.posts ? 'chevronUp' : 'chevronDown'} size={22} />
+          </span>
         </MenuItem>
-        <MenuItem onClick={() => nav(`/user/${profile.id}/collect`)}>
-          <StarOutlined />
-          <span>我的收藏</span>
-          <RightOutlined />
+        {expanded.posts ? (
+          <ExpandedPanel>
+            <ExpandedPosts id="profile-posts">
+              {posts.length ? (
+                posts.slice(0, 1).map((post) => <PostCard key={post.id} post={post} />)
+              ) : (
+                <MiniEmpty>{isMine ? '还没有发过帖子' : 'Ta还没有发过帖子'}</MiniEmpty>
+              )}
+              {posts.length ? (
+                <ViewAll type="button" onClick={() => nav(`/user/${profile.id}`)}>
+                  查看全部 &gt;
+                </ViewAll>
+              ) : null}
+            </ExpandedPosts>
+          </ExpandedPanel>
+        ) : null}
+        <MenuItem
+          onClick={() =>
+            setExpanded((current) => {
+              const nextCollections = !current.collections;
+              if (!nextCollections) {
+                setCollectionExpanded({ posts: false, rankings: false });
+              }
+              return {
+                posts: false,
+                collections: nextCollections,
+              };
+            })
+          }
+        >
+          <DesignIcon name="star" size={24} />
+          <span>{isMine ? '我的收藏' : 'Ta的收藏'}</span>
+          <span className="chevron">
+            <DesignIcon
+              name={expanded.collections ? 'chevronUp' : 'chevronDown'}
+              size={22}
+            />
+          </span>
         </MenuItem>
+        {expanded.collections ? (
+          <ExpandedPanel>
+            <CollectionGroupButton
+              type="button"
+              onClick={() =>
+                setCollectionExpanded((current) => ({
+                  ...current,
+                  posts: !current.posts,
+                }))
+              }
+            >
+              <span>帖子收藏</span>
+              <DesignIcon
+                name={collectionExpanded.posts ? 'chevronUp' : 'chevronDown'}
+                size={18}
+              />
+            </CollectionGroupButton>
+            {collectionExpanded.posts ? (
+              <ExpandedPosts>
+                {collectedPosts.length ? (
+                  collectedPosts
+                    .slice(0, 1)
+                    .map((post) => <PostCard key={post.id} post={post} />)
+                ) : (
+                  <MiniEmpty>{isMine ? '还没有收藏帖子' : 'Ta还没有收藏帖子'}</MiniEmpty>
+                )}
+                {collectedPosts.length ? (
+                  <ViewAll type="button" onClick={() => nav(`/user/${profile.id}/collect`)}>
+                    查看全部 &gt;
+                  </ViewAll>
+                ) : null}
+              </ExpandedPosts>
+            ) : null}
+            <CollectionGroupButton
+              type="button"
+              onClick={() =>
+                setCollectionExpanded((current) => ({
+                  ...current,
+                  rankings: !current.rankings,
+                }))
+              }
+            >
+              <span>榜单收藏</span>
+              <DesignIcon
+                name={collectionExpanded.rankings ? 'chevronUp' : 'chevronDown'}
+                size={18}
+              />
+            </CollectionGroupButton>
+            {collectionExpanded.rankings ? (
+              <ExpandedPosts>
+                {collectedRankings.length ? (
+                  collectedRankings.slice(0, 1).map((item) => {
+                    const ranking = item.sip_score || {};
+                    return (
+                      <RankingCard
+                        key={ranking.id || ranking.name}
+                        type="button"
+                        onClick={() => ranking.id && nav(`/sip-score/${ranking.id}`)}
+                      >
+                        <span
+                          className="cover"
+                          style={
+                            ranking.cover_img
+                              ? { backgroundImage: `url(${ranking.cover_img})` }
+                              : undefined
+                          }
+                        />
+                        <span>
+                          <h3>{ranking.name || '未命名榜单'}</h3>
+                          <p>{ranking.description || '暂无简介'}</p>
+                        </span>
+                      </RankingCard>
+                    );
+                  })
+                ) : (
+                  <MiniEmpty>{isMine ? '还没有收藏榜单' : 'Ta还没有收藏榜单'}</MiniEmpty>
+                )}
+                {collectedRankings.length ? (
+                  <ViewAll
+                    type="button"
+                    onClick={() => nav(`/user/${profile.id}/collect?tab=sipScore`)}
+                  >
+                    查看全部 &gt;
+                  </ViewAll>
+                ) : null}
+              </ExpandedPosts>
+            ) : null}
+          </ExpandedPanel>
+        ) : null}
         {isMine ? (
-          <>
+          <ActionGroup>
             <MenuItem onClick={() => nav('/feedback')}>
-              <FormOutlined />
+              <DesignIcon name="feedback" size={24} />
               <span>反馈与建议</span>
-              <RightOutlined />
+              <span />
             </MenuItem>
             <MenuItem onClick={logout}>
-              <LogoutOutlined />
+              <DesignIcon name="power" size={24} />
               <span>退出与登录</span>
-              <RightOutlined />
+              <span />
             </MenuItem>
-          </>
+          </ActionGroup>
         ) : null}
       </Menu>
-      <List id="profile-posts">
-        {posts.map((post) => (
-          <PostCard key={post.id} post={post} />
-        ))}
-      </List>
-      <List>
-        {rankings.map((ranking) => (
-          <RankingCard
-            key={ranking.sip_score?.id}
-            onClick={() => nav(`/sip-score/${ranking.sip_score?.id}`)}
-          >
-            <h3>{ranking.sip_score?.name}</h3>
-            <p>{ranking.sip_score?.description}</p>
-          </RankingCard>
-        ))}
-      </List>
+      {toast ? <CenterToast>{toast}</CenterToast> : null}
     </MobileShell>
   );
 };

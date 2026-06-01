@@ -6,6 +6,7 @@ import MobileShell from '../components/MobileShell';
 import StarRating from '../components/StarRating';
 import UploadField from '../components/UploadField';
 import EmptyState from '../components/EmptyState';
+import MobileAvatar from '../components/MobileAvatar';
 import { mobilePalette, PrimaryButton, CardSurface } from '../styles';
 import { SORT_TYPE } from '../constants';
 import { mobileApi, SipScoreEntry, SipScoreRating } from '../api';
@@ -13,12 +14,15 @@ import moment from 'utils/moment';
 
 const Hero = styled.section`
   background: ${mobilePalette.paper};
-  padding: 16px;
+  padding: 16px 20px;
+  overflow: hidden;
 `;
 
 const Cover = styled.div<{ src?: string }>`
-  width: 100%;
-  aspect-ratio: 16 / 9;
+  width: 86px;
+  height: 86px;
+  float: left;
+  margin: 0 14px 12px 0;
   border-radius: 8px;
   background: ${(props) =>
     props.src
@@ -27,9 +31,9 @@ const Cover = styled.div<{ src?: string }>`
 `;
 
 const Title = styled.h1`
-  margin: 14px 0 6px;
-  font-size: 22px;
-  font-weight: 900;
+  margin: 0 0 8px;
+  font-size: 18px;
+  font-weight: 700;
 `;
 
 const Muted = styled.p`
@@ -40,9 +44,11 @@ const Muted = styled.p`
 
 const RateBox = styled(CardSurface)`
   margin: 12px;
-  padding: 14px;
+  padding: 14px 20px;
   display: grid;
   gap: 10px;
+  border: 0;
+  border-radius: 8px;
 `;
 
 const RatingList = styled.div`
@@ -53,6 +59,8 @@ const RatingList = styled.div`
 
 const RatingCard = styled(CardSurface)`
   padding: 12px;
+  border: 0;
+  border-radius: 8px;
 `;
 
 const RatingHead = styled.div`
@@ -61,12 +69,6 @@ const RatingHead = styled.div`
   gap: 8px;
   color: ${mobilePalette.muted};
   font-size: 12px;
-  img {
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
-    object-fit: cover;
-  }
 `;
 
 const EntryDetail: React.FC = () => {
@@ -170,13 +172,7 @@ const EntryDetail: React.FC = () => {
           {ratings.map((rating) => (
             <RatingCard key={rating.id}>
               <RatingHead>
-                <img
-                  src={
-                    rating.creator?.avatar ||
-                    'https://ossforum.muxixyz.com/default/avatar.png'
-                  }
-                  alt=""
-                />
+                <MobileAvatar url={rating.creator?.avatar} size={28} />
                 <strong>{rating.creator?.name || '茶友'}</strong>
                 <span>
                   {rating.created_at ? moment(rating.created_at).fromNow() : ''}

@@ -12,3 +12,7 @@ tsconfig.tsbuildinfo
 
 .pnp.cjs
 .pnp.loader.mjs
+
+# Local verification artifacts
+output/
+.playwright-cli/

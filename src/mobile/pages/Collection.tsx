@@ -1,19 +1,20 @@
 import React, { useEffect, useState } from 'react';
 import styled from 'styled-components';
-import { StarOutlined } from '@ant-design/icons';
 import { message } from 'antd';
 import { useNavigate, useParams } from 'react-router-dom';
 import MobileShell from '../components/MobileShell';
 import SegmentTabs from '../components/SegmentTabs';
 import PostCard from '../components/PostCard';
 import EmptyState from '../components/EmptyState';
+import DesignIcon from '../components/DesignIcon';
 import { CardSurface, mobilePalette } from '../styles';
 import { mobileApi, MobilePost, SipScoreWithEntries } from '../api';
 
 const List = styled.div`
   display: grid;
   gap: 10px;
-  padding: 12px;
+  padding: 0 0 20px;
+  background: #fff;
 `;
 
 const RankingCard = styled(CardSurface)`
@@ -21,6 +22,9 @@ const RankingCard = styled(CardSurface)`
   grid-template-columns: 72px 1fr;
   gap: 12px;
   padding: 12px;
+  border: 0;
+  border-bottom: 1px solid #efefef;
+  border-radius: 0;
 `;
 
 const Cover = styled.div<{ src?: string }>`
@@ -128,7 +132,8 @@ const Collection: React.FC = () => {
                   <h3>{ranking?.name || '未命名榜单'}</h3>
                   <p>{ranking?.description || '暂无简介'}</p>
                   <div className="meta">
-                    <StarOutlined /> {ranking?.collect_count || 0} 收藏 ·{' '}
+                    <DesignIcon name="bookmark" size={13} color={mobilePalette.orange} />{' '}
+                    {ranking?.collect_count || 0} 收藏 ·{' '}
                     {ranking?.entry_count || item.entries?.length || 0} 个对象
                   </div>
                 </RankingInfo>

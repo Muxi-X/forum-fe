@@ -3,18 +3,12 @@ import styled from 'styled-components';
 import DOMPurify from 'dompurify';
 import MarkdownIt from 'markdown-it';
 import { Input, message, Modal } from 'antd';
-import {
-  LikeFilled,
-  LikeOutlined,
-  StarFilled,
-  StarOutlined,
-  MessageOutlined,
-  WarningOutlined,
-} from '@ant-design/icons';
 import { useNavigate, useParams } from 'react-router-dom';
 import MobileShell from '../components/MobileShell';
 import EmptyState from '../components/EmptyState';
 import UploadField from '../components/UploadField';
+import MobileAvatar from '../components/MobileAvatar';
+import DesignIcon from '../components/DesignIcon';
 import { mobilePalette, PrimaryButton, GhostButton } from '../styles';
 import { mobileApi, MobileComment, MobilePost } from '../api';
 import { TARGET_TYPE, TYPE_NAME, SORT_TYPE, mobileTableByCategory } from '../constants';
@@ -22,21 +16,21 @@ import moment from 'utils/moment';
 
 const ArticleWrap = styled.article`
   background: ${mobilePalette.paper};
-  padding: 18px 16px 8px;
+  padding: 14px 20px 8px;
 `;
 
 const TableLabel = styled.button`
   height: 28px;
   padding: 0 10px;
   border-radius: 999px;
-  background: #fff5d7;
-  color: #765600;
+  background: transparent;
+  color: #fe9800;
   font-size: 12px;
 `;
 
 const Title = styled.h1`
   margin: 14px 0 10px;
-  font-size: 23px;
+  font-size: 18px;
   line-height: 1.35;
   font-weight: 900;
   color: ${mobilePalette.ink};
@@ -48,12 +42,6 @@ const Author = styled.div`
   gap: 9px;
   color: ${mobilePalette.muted};
   font-size: 12px;
-  img {
-    width: 30px;
-    height: 30px;
-    border-radius: 50%;
-    object-fit: cover;
-  }
 `;
 
 const Content = styled.div`
@@ -64,29 +52,31 @@ const Content = styled.div`
   word-break: break-word;
   img {
     max-width: 100%;
-    border-radius: 8px;
+    border-radius: 0;
   }
 `;
 
 const ActionRow = styled.div`
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 8px;
-  padding: 14px 16px;
+  grid-template-columns: repeat(4, auto);
+  justify-content: start;
+  gap: 14px;
+  padding: 12px 20px;
   background: ${mobilePalette.paper};
   border-top: 1px solid ${mobilePalette.line};
   border-bottom: 1px solid ${mobilePalette.line};
 `;
 
 const ActionButton = styled.button<{ active?: boolean }>`
-  height: 40px;
-  border-radius: 8px;
-  background: ${(props) => (props.active ? '#fff5d7' : '#fff')};
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 28px;
+  padding: 0 2px;
+  border-radius: 999px;
+  background: transparent;
   color: ${(props) => (props.active ? mobilePalette.orange : mobilePalette.ink)};
-  border: 1px solid ${(props) => (props.active ? '#ffd66e' : mobilePalette.line)};
-  .anticon {
-    margin-right: 5px;
-  }
+  border: 0;
 `;
 
 const CommentSection = styled.section`
@@ -95,7 +85,7 @@ const CommentSection = styled.section`
   border-top: 1px solid ${mobilePalette.line};
   h2 {
     margin: 0;
-    padding: 16px;
+    padding: 16px 20px;
     font-size: 16px;
   }
 `;
@@ -111,12 +101,6 @@ const CommentHead = styled.div`
   gap: 8px;
   color: ${mobilePalette.muted};
   font-size: 12px;
-  img {
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
-    object-fit: cover;
-  }
 `;
 
 const CommentText = styled.p`
@@ -144,14 +128,14 @@ const Composer = styled.div`
   bottom: 0;
   z-index: 40;
   display: grid;
-  grid-template-columns: 1fr 74px;
+  grid-template-columns: 1fr 56px;
   gap: 8px;
   padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
   background: rgba(255, 254, 250, 0.98);
   border-top: 1px solid ${mobilePalette.line};
   textarea {
     resize: none;
-    border-radius: 8px;
+    border-radius: 999px;
   }
 `;
 
@@ -172,12 +156,7 @@ const CommentList: React.FC<{
     {comments.map((comment) => (
       <CommentItem key={comment.id}>
         <CommentHead>
-          <img
-            src={
-              comment.creator_avatar || 'https://ossforum.muxixyz.com/default/avatar.png'
-            }
-            alt=""
-          />
+          <MobileAvatar url={comment.creator_avatar} size={28} />
           <strong>{comment.creator_name || '茶友'}</strong>
           <span>{getTime(comment) ? moment(getTime(comment)).fromNow() : ''}</span>
           <button
@@ -360,10 +339,7 @@ const Article: React.FC = () => {
         </TableLabel>
         <Title>{post.title}</Title>
         <Author>
-          <img
-            src={post.creator_avatar || 'https://ossforum.muxixyz.com/default/avatar.png'}
-            alt=""
-          />
+          <MobileAvatar url={post.creator_avatar} size={30} />
           <span>{post.creator_name || '茶友'}</span>
           <span>{post.time ? moment(post.time).fromNow() : ''}</span>
         </Author>
@@ -371,21 +347,29 @@ const Article: React.FC = () => {
       </ArticleWrap>
       <ActionRow>
         <ActionButton active={post.is_liked} onClick={toggleLike}>
-          {post.is_liked ? <LikeFilled /> : <LikeOutlined />}
+          <DesignIcon
+            name="like"
+            size={18}
+            color={post.is_liked ? mobilePalette.orange : mobilePalette.muted}
+          />
           {post.like_num || 0}
         </ActionButton>
         <ActionButton active={post.is_collection} onClick={toggleCollect}>
-          {post.is_collection ? <StarFilled /> : <StarOutlined />}
+          <DesignIcon
+            name="bookmark"
+            size={17}
+            color={post.is_collection ? mobilePalette.orange : mobilePalette.muted}
+          />
           {post.collection_num || 0}
         </ActionButton>
         <ActionButton
           onClick={() => document.getElementById('mobile-comments')?.scrollIntoView()}
         >
-          <MessageOutlined />
+          <DesignIcon name="comment" size={18} />
           {post.comment_num || 0}
         </ActionButton>
         <ActionButton onClick={() => setReportOpen(true)}>
-          <WarningOutlined />
+          <DesignIcon name="warning" size={18} />
           投诉
         </ActionButton>
       </ActionRow>

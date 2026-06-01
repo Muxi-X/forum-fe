@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import styled from 'styled-components';
 import { Input, Modal, message } from 'antd';
-import { StarFilled, StarOutlined, PlusOutlined } from '@ant-design/icons';
 import { useNavigate, useParams } from 'react-router-dom';
 import MobileShell from '../components/MobileShell';
 import SegmentTabs from '../components/SegmentTabs';
@@ -10,24 +9,59 @@ import EmptyState from '../components/EmptyState';
 import { mobilePalette, CardSurface, PrimaryButton, GhostButton } from '../styles';
 import { SORT_TYPE, TARGET_TYPE } from '../constants';
 import { mobileApi, SipScore, SipScoreEntry } from '../api';
+import DesignIcon from '../components/DesignIcon';
+import { mastergoAssets } from '../assets/mastergo';
 
 const Hero = styled.section`
-  display: grid;
-  grid-template-columns: 104px 1fr;
-  gap: 14px;
-  padding: 16px;
+  position: relative;
+  min-height: 358px;
+  padding: 0;
   background: ${mobilePalette.paper};
   border-bottom: 1px solid ${mobilePalette.line};
 `;
 
+const CoverWrap = styled.div`
+  position: relative;
+  width: 100%;
+  height: 210px;
+  overflow: hidden;
+  background: linear-gradient(120deg, #d4d4d4 0%, #777 100%);
+`;
+
+const CoverImg = styled.img`
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+  opacity: 0.78;
+`;
+
+const CoverTitle = styled.div`
+  position: absolute;
+  left: 20px;
+  right: 20px;
+  bottom: 24px;
+  color: #fff;
+  h1 {
+    margin: 0 0 10px;
+    font-size: 28px;
+    line-height: 1.1;
+    font-weight: 800;
+  }
+  span {
+    font-size: 13px;
+    opacity: 0.95;
+  }
+`;
+
 const Cover = styled.div<{ src?: string }>`
-  width: 104px;
-  height: 104px;
-  border-radius: 8px;
+  width: 100%;
+  height: 210px;
+  border-radius: 0;
   background: ${(props) =>
     props.src
       ? `url(${props.src}) center/cover`
-      : 'linear-gradient(135deg, #ffe8a8, #8bc6a4)'};
+      : 'linear-gradient(120deg, #d4d4d4 0%, #777 100%)'};
 `;
 
 const EntryCover = styled(Cover)`
@@ -36,10 +70,11 @@ const EntryCover = styled(Cover)`
 `;
 
 const Info = styled.div`
+  padding: 22px 20px 0;
   h1 {
     margin: 0 0 8px;
-    font-size: 20px;
-    font-weight: 900;
+    font-size: 24px;
+    font-weight: 700;
   }
   p {
     margin: 0;
@@ -49,10 +84,13 @@ const Info = styled.div`
 `;
 
 const Collect = styled.button<{ active?: boolean }>`
-  margin-top: 12px;
-  height: 34px;
-  padding: 0 12px;
-  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 14px;
+  height: 28px;
+  padding: 0 14px;
+  border-radius: 999px;
   background: ${(props) => (props.active ? '#fff5d7' : '#fff')};
   border: 1px solid ${(props) => (props.active ? '#ffd66e' : mobilePalette.line)};
   color: ${(props) => (props.active ? mobilePalette.orange : mobilePalette.ink)};
@@ -61,27 +99,47 @@ const Collect = styled.button<{ active?: boolean }>`
 const EntryList = styled.div`
   display: grid;
   gap: 10px;
-  padding: 12px;
+  padding: 18px 20px 86px;
 `;
 
 const EntryCard = styled(CardSurface)`
   display: grid;
-  grid-template-columns: 72px 1fr;
+  grid-template-columns: 36px 72px 1fr;
   gap: 12px;
-  padding: 12px;
+  align-items: center;
+  padding: 16px 14px;
+  border: 0;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+`;
+
+const RankNumber = styled.strong`
+  color: #7f838a;
+  font-size: 20px;
+  text-align: center;
 `;
 
 const AddButton = styled.button`
   position: fixed;
-  right: 18px;
-  bottom: calc(18px + env(safe-area-inset-bottom));
-  width: 52px;
-  height: 52px;
-  border-radius: 50%;
-  background: ${mobilePalette.orange};
+  left: 50%;
+  bottom: calc(28px + env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  width: 132px;
+  height: 48px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  border-radius: 999px;
+  background: #ffb300;
   color: #fff;
-  font-size: 20px;
+  font-size: 14px;
   box-shadow: 0 12px 28px rgba(255, 159, 26, 0.32);
+  img {
+    width: 14px;
+    height: 14px;
+    filter: brightness(0) invert(1);
+  }
 `;
 
 const FormGrid = styled.div`
@@ -158,12 +216,21 @@ const SipScoreDetail: React.FC = () => {
   return (
     <MobileShell title="榜单详情" back tabs={false}>
       <Hero>
-        <Cover src={sipScore.cover_img} />
+        <CoverWrap>
+          {sipScore.cover_img ? <CoverImg src={sipScore.cover_img} alt="" /> : null}
+          <CoverTitle>
+            <h1>{sipScore.name}</h1>
+            <span>由 {sipScore.creator?.name || '茶友'} 创建</span>
+          </CoverTitle>
+        </CoverWrap>
         <Info>
-          <h1>{sipScore.name}</h1>
           <p>{sipScore.description}</p>
           <Collect active={sipScore.is_collected} onClick={toggleCollect}>
-            {sipScore.is_collected ? <StarFilled /> : <StarOutlined />}{' '}
+            <DesignIcon
+              name="bookmark"
+              size={15}
+              color={sipScore.is_collected ? mobilePalette.orange : mobilePalette.muted}
+            />
             {sipScore.collect_count || 0}
           </Collect>
         </Info>
@@ -180,11 +247,12 @@ const SipScoreDetail: React.FC = () => {
       />
       {entries.length ? (
         <EntryList>
-          {entries.map((entry) => (
+          {entries.map((entry, index) => (
             <EntryCard
               key={entry.id}
               onClick={() => nav(`/sip-score/${sipScoreId}/entry/${entry.id}`)}
             >
+              <RankNumber>{index + 1}</RankNumber>
               <EntryCover src={entry.cover_img} />
               <Info>
                 <h1 style={{ fontSize: 16 }}>{entry.name}</h1>
@@ -201,7 +269,8 @@ const SipScoreDetail: React.FC = () => {
         <EmptyState text="还没有评分对象" />
       )}
       <AddButton onClick={() => setOpen(true)}>
-        <PlusOutlined />
+        <img src={mastergoAssets.icons.addSmall} alt="" />
+        添加新项目
       </AddButton>
       <Modal
         title="添加评分对象"

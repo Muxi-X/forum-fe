@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
-import { SearchOutlined } from '@ant-design/icons';
-import { mobilePalette } from '../styles';
+import DesignIcon from './DesignIcon';
 
 const Form = styled.form`
   display: flex;
@@ -9,20 +8,20 @@ const Form = styled.form`
   gap: 8px;
   height: 42px;
   background: #fff;
-  border: 1px solid ${mobilePalette.line};
-  border-radius: 8px;
-  padding: 0 12px;
-  color: ${mobilePalette.muted};
+  border: 1px solid #f0f1f4;
+  border-radius: 999px;
+  padding: 0 16px;
+  color: #fe9800;
 `;
 
 const Input = styled.input`
   flex: 1;
   min-width: 0;
   background: transparent;
-  color: ${mobilePalette.ink};
+  color: #3d3d3d;
   font-size: 14px;
   &::placeholder {
-    color: #aeb4bc;
+    color: #9ca3af;
   }
 `;
 
@@ -39,7 +38,7 @@ const SearchBar: React.FC<{
         onSearch(value.trim());
       }}
     >
-      <SearchOutlined />
+      <DesignIcon name="search" size={18} color="#fe9800" />
       <Input
         value={value}
         placeholder={placeholder}

@@ -1,13 +1,13 @@
 import styled, { css } from 'styled-components';
 
 export const mobilePalette = {
-  bg: '#f6f7f9',
-  paper: '#fffefa',
-  ink: '#252b36',
-  muted: '#858b96',
-  line: '#eceef2',
-  orange: '#ff9f1a',
-  amber: '#ffd66e',
+  bg: '#f9fafc',
+  paper: '#ffffff',
+  ink: '#1a202c',
+  muted: '#7f838a',
+  line: '#d8d8d8',
+  orange: '#fe9800',
+  amber: '#ffc641',
   green: '#70b77e',
   blue: '#4e7fff',
   danger: '#f05d5e',
@@ -18,10 +18,21 @@ export const safeBottom = css`
 `;
 
 export const MobilePage = styled.div`
-  min-height: 100vh;
+  min-height: 100dvh;
   background: ${mobilePalette.bg};
   color: ${mobilePalette.ink};
   font-size: 14px;
+  font-family:
+    'Source Han Sans', 'PingFang SC', 'Microsoft YaHei', -apple-system,
+    BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  * {
+    box-sizing: border-box;
+  }
+  button,
+  input,
+  textarea {
+    font: inherit;
+  }
 `;
 
 export const ScrollBody = styled.main<{ withTabs?: boolean }>`
@@ -42,13 +53,13 @@ export const CardSurface = styled.article`
 `;
 
 export const PrimaryButton = styled.button`
-  height: 42px;
+  height: 48px;
   border: 0;
-  border-radius: 8px;
-  padding: 0 16px;
-  background: ${mobilePalette.orange};
+  border-radius: 999px;
+  padding: 0 20px;
+  background: ${mobilePalette.amber};
   color: #fff;
-  font-weight: 700;
+  font-weight: 500;
   cursor: pointer;
   &:disabled {
     opacity: 0.55;
@@ -59,7 +70,7 @@ export const PrimaryButton = styled.button`
 export const GhostButton = styled.button`
   height: 38px;
   border: 1px solid ${mobilePalette.line};
-  border-radius: 8px;
+  border-radius: 999px;
   background: #fff;
   color: ${mobilePalette.ink};
   padding: 0 14px;

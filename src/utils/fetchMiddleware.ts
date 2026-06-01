@@ -1,13 +1,16 @@
 const Request = (url: string, options: any = {}) => {
   url = `/api/v1${url}`;
   const isFile = options.body instanceof FormData;
+  const authToken =
+    localStorage.getItem('token') ||
+    (import.meta.env.DEV ? import.meta.env.VITE_DEV_AUTH_TOKEN || '2' : '');
   options.headers = isFile
     ? {}
     : {
         Accept: 'application/json',
         'Content-Type': 'application/json',
       };
-  options.headers.Authorization = localStorage.getItem('token');
+  options.headers.Authorization = authToken;
 
   if (options.body) {
     options.body = isFile ? options.body : JSON.stringify(options.body);

@@ -1,147 +1,238 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import styled from 'styled-components';
-import { EditOutlined, RightOutlined } from '@ant-design/icons';
 import { useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { message } from 'antd';
 import MobileShell from '../components/MobileShell';
 import SearchBar from '../components/SearchBar';
 import SegmentTabs from '../components/SegmentTabs';
 import PostCard from '../components/PostCard';
-import TeaCupHeroSvg from '../components/TeaCupHeroSvg';
 import EmptyState from '../components/EmptyState';
-import { mobilePalette, PrimaryButton } from '../styles';
 import {
   DEFAULT_TABLE,
   MOBILE_TABLES,
   mobileTableByRoute,
-  SORT_TYPE,
 } from '../constants';
 import { mobileApi, MobilePost } from '../api';
+import DesignIcon from '../components/DesignIcon';
+import { mastergoAssets } from '../assets/mastergo';
+
+const HomeSurface = styled.div`
+  background: #f9fafc;
+`;
 
 const Hero = styled.section`
   position: relative;
+  min-height: 266px;
   overflow: hidden;
-  padding: 16px 16px 20px;
-  background: radial-gradient(
-      circle at 22% 28%,
-      rgba(255, 255, 255, 0.6) 0 8px,
-      transparent 9px
-    ),
-    linear-gradient(135deg, #ffe8a8 0%, #ffd271 48%, #fff9e7 100%);
-`;
-
-const HeroText = styled.div`
-  position: relative;
-  z-index: 1;
-  width: 58%;
-  h2 {
-    margin: 10px 0 8px;
-    font-size: 24px;
-    line-height: 1.2;
-    font-weight: 900;
-    color: #273042;
+  padding: 88px 16px 0;
+  background: #fff;
+  &::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    height: 60px;
+    background: #d9d9d9;
   }
-  p {
-    margin: 0;
-    color: #6d7480;
-    line-height: 1.55;
-  }
-`;
-
-const Cup = styled(TeaCupHeroSvg)`
-  position: absolute;
-  right: -2px;
-  bottom: 12px;
-  width: 44%;
-  max-width: 180px;
 `;
 
 const SearchWrap = styled.div`
-  padding: 14px 16px 0;
-  background: ${mobilePalette.paper};
+  position: relative;
+  z-index: 3;
+  margin: 0 16px;
+`;
+
+const SearchPageHeader = styled.section`
+  position: relative;
+  padding: 88px 16px 16px;
+  background: #fff;
+  &::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    height: 60px;
+    background: #d9d9d9;
+  }
 `;
 
 const TableGrid = styled.section`
-  padding: 16px;
-  background: ${mobilePalette.paper};
+  padding: 16px 0 10px;
+  background: #fff;
   h3 {
-    margin: 0 0 12px;
-    font-size: 16px;
+    margin: 0 0 13px;
+    font-size: 20px;
+    font-weight: 700;
+    color: #1a202c;
   }
   .grid {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 10px;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+    padding-bottom: 4px;
   }
 `;
 
 const TableButton = styled.button`
-  min-height: 76px;
-  border-radius: 8px;
-  padding: 12px;
-  text-align: left;
-  background: #fff;
-  border: 1px solid ${mobilePalette.line};
+  min-width: 0;
+  min-height: 92px;
+  padding: 0 2px;
+  text-align: center;
+  background: transparent;
+  border: 0;
+  .table-avatar {
+    position: relative;
+    width: 50px;
+    height: 50px;
+    display: grid;
+    place-items: center;
+    margin: 0 auto;
+    border-radius: 18px;
+    color: #fff;
+    font-size: 20px;
+    font-weight: 700;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.45),
+      0 8px 18px rgba(254, 152, 0, 0.16);
+    overflow: hidden;
+  }
+  .table-avatar::after {
+    content: '';
+    position: absolute;
+    inset: 6px auto auto 7px;
+    width: 18px;
+    height: 8px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.35);
+    transform: rotate(-22deg);
+  }
   h4 {
-    margin: 0 0 7px;
-    font-size: 15px;
-    color: ${mobilePalette.ink};
+    margin: 9px 0 0;
+    font-size: 12px;
+    line-height: 1.35;
+    font-weight: 500;
+    color: #1a202c;
+    word-break: keep-all;
+    .anticon {
+      color: #fe9800;
+      font-size: 12px;
+      margin-top: 4px;
+    }
   }
   p {
-    margin: 0;
-    color: ${mobilePalette.muted};
-    line-height: 1.45;
-    font-size: 12px;
-  }
-`;
-
-const ListHeader = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 14px 16px 8px;
-  h3 {
-    margin: 0;
-    font-size: 16px;
+    display: none;
   }
 `;
 
 const PostList = styled.div`
-  display: grid;
-  gap: 10px;
-  padding: 0 12px 20px;
+  display: block;
+  padding: 0 0 20px;
+  background: #fff;
 `;
 
 const DetailHero = styled.section`
-  padding: 18px 16px;
-  background: linear-gradient(135deg, #fff5d5, #fffefa 70%);
-  border-bottom: 1px solid ${mobilePalette.line};
+  position: relative;
+  padding: 24px 20px 20px;
+  background: #ffedc6;
+  border-bottom: 1px solid #efefef;
+`;
+
+const TableIntro = styled.div`
+  display: grid;
+  grid-template-columns: 62px 1fr;
+  gap: 16px;
+  align-items: center;
+  margin-bottom: 16px;
+  .cover {
+    width: 62px;
+    height: 62px;
+    border-radius: 6px;
+    background: #fff;
+  }
   h2 {
-    margin: 0 0 8px;
-    font-size: 22px;
-    font-weight: 900;
+    margin: 0 0 6px;
+    font-size: 20px;
+    line-height: 1.22;
+    font-weight: 700;
+    color: #1a202c;
   }
-  p {
-    margin: 0;
-    color: ${mobilePalette.muted};
-    line-height: 1.55;
+  span {
+    color: #7f838a;
+    font-size: 12px;
   }
+`;
+
+const TableDesc = styled.p`
+  margin: 0;
+  color: #7f838a;
+  font-size: 13px;
+  line-height: 1.55;
 `;
 
 const SortRow = styled.div`
   display: flex;
-  gap: 8px;
-  padding: 10px 16px;
-  background: ${mobilePalette.paper};
+  gap: 24px;
+  padding: 10px 16px 8px;
+  background: #fff;
+  border-bottom: 1px solid #efefef;
+`;
+
+const TableTabsPanel = styled.div`
+  margin: 0;
+  padding-top: 8px;
+  background: #fff;
+  border-top-left-radius: 8px;
+  border-top-right-radius: 8px;
+`;
+
+const FeaturedCard = styled.button`
+  width: calc(100% - 32px);
+  min-height: 90px;
+  margin: 10px 16px 14px;
+  padding: 12px;
+  text-align: left;
+  border-radius: 8px;
+  background: #fff8e1;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+  .tag {
+    color: #fe9800;
+    font-size: 12px;
+  }
+  h3 {
+    margin: 8px 0 6px;
+    font-size: 14px;
+    color: #1a202c;
+  }
+  p {
+    margin: 0;
+    color: #7f838a;
+    font-size: 12px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
 `;
 
 const SortButton = styled.button<{ active: boolean }>`
-  height: 30px;
-  padding: 0 12px;
-  border-radius: 999px;
-  background: ${(props) => (props.active ? '#253042' : '#fff')};
-  color: ${(props) => (props.active ? '#fff' : mobilePalette.muted)};
-  border: 1px solid ${(props) => (props.active ? '#253042' : mobilePalette.line)};
+  position: relative;
+  height: 28px;
+  padding: 0;
+  background: transparent;
+  color: ${(props) => (props.active ? '#fe9800' : '#9ca3af')};
+  border: 0;
+  font-size: 14px;
+  &::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -8px;
+    height: 2px;
+    border-radius: 999px;
+    background: ${(props) => (props.active ? '#ffc641' : 'transparent')};
+  }
 `;
 
 const FloatingEdit = styled.button`
@@ -154,20 +245,82 @@ const FloatingEdit = styled.button`
   display: grid;
   place-items: center;
   border-radius: 50%;
-  background: ${mobilePalette.orange};
-  color: #fff;
+  background: #ffc641;
+  color: #1a202c;
   font-size: 21px;
   box-shadow: 0 12px 28px rgba(255, 159, 26, 0.32);
+  img {
+    width: 14px;
+    height: 14px;
+    filter: brightness(0) invert(1);
+  }
+`;
+
+const DetailTopControls = styled.div`
+  display: grid;
+  grid-template-columns: 28px 1fr 28px;
+  gap: 10px;
+  align-items: center;
+  padding: 22px 16px 14px;
+  background: #ffedc6;
+  .ghost {
+    width: 28px;
+    height: 28px;
+    display: grid;
+    place-items: center;
+    background: transparent;
+    color: #fe9800;
+  }
 `;
 
 const MoreButton = styled.button`
   height: 42px;
-  margin: 4px 16px 24px;
+  margin: 4px 20px 24px;
   border-radius: 8px;
   background: #fff;
-  border: 1px solid ${mobilePalette.line};
-  color: ${mobilePalette.ink};
+  border: 1px solid #e6e6e6;
+  color: #3d3d3d;
 `;
+
+const LoadingPanel = styled.div`
+  min-height: 224px;
+  display: grid;
+  place-items: center;
+  background: #fff;
+  border-top: 1px solid #f0f1f4;
+  color: #8a9099;
+`;
+
+const LoadingBubble = styled.div`
+  display: grid;
+  justify-items: center;
+  gap: 12px;
+  .spinner {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    border: 3px solid rgba(254, 152, 0, 0.16);
+    border-top-color: #fe9800;
+    animation: mobile-spin 0.86s linear infinite;
+  }
+  .copy {
+    font-size: 13px;
+  }
+  @keyframes mobile-spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+`;
+
+const tableVisuals: Record<string, { glyph: string; gradient: string }> = {
+  daily: { glyph: '即', gradient: 'linear-gradient(135deg, #ffbc49, #fe9800)' },
+  study: { glyph: '学', gradient: 'linear-gradient(135deg, #72a5ff, #4e7fff)' },
+  project: { glyph: '赛', gradient: 'linear-gradient(135deg, #7bd79a, #40b978)' },
+  emotion: { glyph: '情', gradient: 'linear-gradient(135deg, #ff8f9d, #f05d5e)' },
+  campus: { glyph: '校', gradient: 'linear-gradient(135deg, #8ddfd5, #43b7a9)' },
+  trade: { glyph: '闲', gradient: 'linear-gradient(135deg, #b7a4ff, #7867d8)' },
+};
 
 const Home: React.FC = () => {
   const nav = useNavigate();
@@ -180,15 +333,10 @@ const Home: React.FC = () => {
   const isSearch = pathname === '/search';
   const [posts, setPosts] = useState<MobilePost[]>([]);
   const [page, setPage] = useState(0);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [loaded, setLoaded] = useState(false);
   const [activeTag, setActiveTag] = useState('全部');
   const [sort, setSort] = useState<'newest' | 'hottest'>('newest');
-
-  const listTitle = useMemo(() => {
-    if (isSearch) return query ? `"${query}" 的搜索结果` : '搜索茶馆';
-    if (table) return '茶桌帖子';
-    return '最新帖子';
-  }, [isSearch, query, table]);
 
   const fetchPosts = async (nextPage = 0, append = false) => {
     setLoading(true);
@@ -210,6 +358,7 @@ const Home: React.FC = () => {
       setPosts(append ? [...posts, ...next] : next);
       setPage(nextPage);
     } finally {
+      setLoaded(true);
       setLoading(false);
     }
   };
@@ -217,76 +366,123 @@ const Home: React.FC = () => {
   useEffect(() => {
     setPosts([]);
     setPage(0);
+    setLoaded(false);
     fetchPosts(0, false);
   }, [query, params.category, activeTag, sort]);
 
   return (
     <MobileShell
       title={table ? activeTable.name : '木犀茶馆'}
-      right="notice"
-      onRight={() => nav('/notice')}
+      back={!!table}
+      right={table ? undefined : 'notice'}
+      onRight={table ? undefined : () => nav('/notice')}
+      showTopBar={!!table}
     >
-      {!table ? (
-        <>
-          <Hero>
-            <HeroText>
-              <span>WELCOME</span>
-              <h2>今天也来茶馆坐坐</h2>
-              <p>看见校园里的真实经验、情绪和一点点灵光。</p>
-            </HeroText>
-            <Cup />
-          </Hero>
-          <SearchWrap>
+      <HomeSurface>
+        {!table && !isSearch ? (
+          <>
+            <Hero>
+              <SearchWrap>
+                <SearchBar
+                  defaultValue={query}
+                  placeholder="搜索茶馆"
+                  onSearch={(value) => nav(value ? `/search?query=${value}` : '/')}
+                />
+              </SearchWrap>
+              <TableGrid>
+                <h3>茶桌分类</h3>
+                <div className="grid">
+                  {MOBILE_TABLES.slice(0, 3).map((item) => (
+                    <TableButton key={item.key} onClick={() => nav(`/${item.route}`)}>
+                      <span
+                        className="table-avatar"
+                        style={{ background: tableVisuals[item.key].gradient }}
+                      >
+                        {tableVisuals[item.key].glyph}
+                      </span>
+                      <h4>{item.name.replace(/\s+/g, ' ')}</h4>
+                      <p>{item.intro}</p>
+                    </TableButton>
+                  ))}
+                </div>
+              </TableGrid>
+            </Hero>
+          </>
+        ) : isSearch ? (
+          <SearchPageHeader>
             <SearchBar
               defaultValue={query}
-              placeholder="搜索帖子、茶桌或关键词"
-              onSearch={(value) => nav(value ? `/search?query=${value}` : '/')}
+              placeholder="搜索茶馆"
+              onSearch={(value) => nav(value ? `/search?query=${value}` : '/search')}
             />
-          </SearchWrap>
-          <TableGrid>
-            <h3>茶桌分类</h3>
-            <div className="grid">
-              {MOBILE_TABLES.map((item) => (
-                <TableButton key={item.key} onClick={() => nav(`/${item.route}`)}>
-                  <h4>
-                    {item.name} <RightOutlined />
-                  </h4>
-                  <p>{item.intro}</p>
-                </TableButton>
-              ))}
-            </div>
-          </TableGrid>
-        </>
-      ) : (
-        <>
-          <DetailHero>
-            <h2>{activeTable.name}</h2>
-            <p>{activeTable.intro}</p>
-          </DetailHero>
-          <SegmentTabs
-            value={activeTag}
-            items={activeTable.tags.map((tag) => ({ label: tag, value: tag }))}
-            onChange={(value) => setActiveTag(String(value))}
-          />
-        </>
-      )}
+          </SearchPageHeader>
+        ) : (
+          <>
+            <DetailTopControls>
+              <button className="ghost" type="button" onClick={() => nav(-1)}>
+                <img
+                  src={mastergoAssets.icons.chevronLeftOrange}
+                  alt=""
+                  style={{ width: 7, height: 13 }}
+                />
+              </button>
+              <SearchBar
+                defaultValue={query}
+                placeholder="搜索茶桌"
+                onSearch={(value) => nav(value ? `/search?query=${value}` : '/')}
+              />
+              <button className="ghost" type="button">
+                <DesignIcon name="more" size={22} />
+              </button>
+            </DetailTopControls>
+            <DetailHero>
+              <TableIntro>
+                <span className="cover" />
+                <div>
+                  <h2>{activeTable.name}</h2>
+                  <span>{posts[0]?.comment_num || 0} 评论</span>
+                </div>
+              </TableIntro>
+              <TableDesc>茶桌简介：{activeTable.intro}</TableDesc>
+            </DetailHero>
+            <TableTabsPanel>
+              <SegmentTabs
+                value={activeTag}
+                items={activeTable.tags.map((tag) => ({ label: tag, value: tag }))}
+                onChange={(value) => setActiveTag(String(value))}
+              />
+              {posts[0] ? (
+                <FeaturedCard
+                  type="button"
+                  onClick={() => posts[0].id && nav(`/article/${posts[0].id}`)}
+                >
+                  <span className="tag">
+                    #{posts[0].tags?.[0] || activeTable.tags[1] || '精选'}{' '}
+                    {posts[0].comment_num || 0}讨论
+                  </span>
+                  <h3>{posts[0].title || '未命名帖子'}</h3>
+                  <p>
+                    {posts[0].summary ||
+                      posts[0].content?.replace(/<[^>]+>/g, '').slice(0, 60) ||
+                      '暂无摘要'}
+                  </p>
+                </FeaturedCard>
+              ) : null}
+            </TableTabsPanel>
+          </>
+        )}
+      </HomeSurface>
 
-      <SortRow>
-        <SortButton active={sort === 'newest'} onClick={() => setSort('newest')}>
-          最新
-        </SortButton>
-        <SortButton active={sort === 'hottest'} onClick={() => setSort('hottest')}>
-          热门
-        </SortButton>
-      </SortRow>
-      <ListHeader>
-        <h3>{listTitle}</h3>
-        {!table ? (
-          <PrimaryButton onClick={() => nav(`/${DEFAULT_TABLE.route}`)}>
-            去茶桌
-          </PrimaryButton>
-        ) : null}
-      </ListHeader>
+      {isSearch || table ? (
+        <SortRow>
+          <SortButton active={sort === 'newest'} onClick={() => setSort('newest')}>
+            最新
+          </SortButton>
+          <SortButton active={sort === 'hottest'} onClick={() => setSort('hottest')}>
+            热门
+          </SortButton>
+        </SortRow>
+      ) : null}
       {posts.length ? (
         <>
           <PostList>
@@ -298,11 +494,18 @@ const Home: React.FC = () => {
             {loading ? '加载中...' : '加载更多'}
           </MoreButton>
         </>
+      ) : loading || !loaded ? (
+        <LoadingPanel>
+          <LoadingBubble>
+            <span className="spinner" />
+            <span className="copy">正在沏茶...</span>
+          </LoadingBubble>
+        </LoadingPanel>
       ) : (
-        <EmptyState text={loading ? '加载中...' : '还没有帖子'} />
+        <EmptyState text="还没有帖子" />
       )}
       <FloatingEdit type="button" onClick={() => nav(`/editor/article${Date.now()}`)}>
-        <EditOutlined />
+        <img src={mastergoAssets.icons.addSmall} alt="" />
       </FloatingEdit>
     </MobileShell>
   );

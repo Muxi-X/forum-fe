@@ -4,9 +4,10 @@ import { mobilePalette } from '../styles';
 
 const Wrap = styled.div`
   display: flex;
-  gap: 8px;
+  gap: 22px;
   overflow-x: auto;
-  padding: 10px 16px;
+  padding: 10px 16px 12px;
+  background: #fff;
   scrollbar-width: none;
   &::-webkit-scrollbar {
     display: none;
@@ -14,15 +15,26 @@ const Wrap = styled.div`
 `;
 
 const Tab = styled.button<{ active: boolean }>`
+  position: relative;
   flex: 0 0 auto;
-  min-width: 54px;
-  height: 32px;
-  padding: 0 13px;
-  border-radius: 999px;
-  background: ${(props) => (props.active ? '#fff2cc' : '#fff')};
-  border: 1px solid ${(props) => (props.active ? '#ffd66e' : mobilePalette.line)};
-  color: ${(props) => (props.active ? '#5d4300' : mobilePalette.muted)};
+  min-width: 34px;
+  height: 30px;
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
+  border: 0;
+  color: ${(props) => (props.active ? '#fe9800' : mobilePalette.muted)};
   font-weight: ${(props) => (props.active ? 700 : 500)};
+  &::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -5px;
+    height: 3px;
+    border-radius: 999px;
+    background: ${(props) => (props.active ? '#ffc641' : 'transparent')};
+  }
 `;
 
 const SegmentTabs: React.FC<{

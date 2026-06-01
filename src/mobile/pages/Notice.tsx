@@ -5,18 +5,20 @@ import { useNavigate } from 'react-router-dom';
 import MobileShell from '../components/MobileShell';
 import SegmentTabs from '../components/SegmentTabs';
 import EmptyState from '../components/EmptyState';
+import MobileAvatar from '../components/MobileAvatar';
 import { mobilePalette, Section } from '../styles';
 import { ChatUser, mobileApi } from '../api';
 import useNotification, { Notification } from 'store/useNotification';
 import moment from 'utils/moment';
 
 const List = styled(Section)`
-  margin-top: 10px;
+  margin-top: 0;
+  border-top: 0;
 `;
 
 const Item = styled.button`
   width: 100%;
-  min-height: 68px;
+  min-height: 70px;
   display: grid;
   grid-template-columns: 42px 1fr;
   gap: 12px;
@@ -25,15 +27,10 @@ const Item = styled.button`
   background: transparent;
   border-bottom: 1px solid ${mobilePalette.line};
   text-align: left;
-  img {
-    width: 42px;
-    height: 42px;
-    border-radius: 50%;
-    object-fit: cover;
-  }
   h3 {
     margin: 0 0 5px;
-    font-size: 15px;
+    color: #1a202c;
+    font-size: 14px;
   }
   p {
     margin: 0;
@@ -78,10 +75,7 @@ const Notice: React.FC = () => {
           <List>
             {chatUsers.map((user) => (
               <Item key={user.id} onClick={() => nav(`/user/chat?target_id=${user.id}`)}>
-                <img
-                  src={user.avatar || 'https://ossforum.muxixyz.com/default/avatar.png'}
-                  alt=""
-                />
+                <MobileAvatar url={user.avatar} size={42} />
                 <div>
                   <h3>{user.name || '茶友'}</h3>
                   <p>查看私信记录</p>
@@ -103,7 +97,7 @@ const Notice: React.FC = () => {
               }}
             >
               <Badge dot={!item.read}>
-                <img src="https://ossforum.muxixyz.com/default/avatar.png" alt="" />
+                <MobileAvatar size={42} />
               </Badge>
               <div>
                 <h3>
