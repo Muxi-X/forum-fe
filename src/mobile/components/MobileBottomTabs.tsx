@@ -28,30 +28,18 @@ const Tabs = styled.nav`
 
 const Tab = styled.button<{ active: boolean }>`
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 4px;
   min-width: 0;
-  border-radius: 22px;
-  background: ${(props) =>
-    props.active
-      ? 'linear-gradient(180deg, rgba(255, 246, 220, 0.98), rgba(255, 232, 164, 0.74))'
-      : 'transparent'};
+  background: transparent;
   color: ${(props) => (props.active ? '#1a202c' : '#8a9099')};
   font-size: 12px;
   line-height: 1;
-  box-shadow: ${(props) =>
-    props.active
-      ? 'inset 0 0 0 1px rgba(255, 198, 65, 0.28), 0 8px 18px rgba(255, 198, 65, 0.18)'
-      : 'none'};
-  transition: color ${mobileMotion.fast}, background ${mobileMotion.fast},
-    box-shadow ${mobileMotion.fast}, transform ${mobileMotion.fast};
+  transition: color ${mobileMotion.fast};
   &:active {
-    transform: scale(0.96);
-  }
-  span {
-    font-weight: ${(props) => (props.active ? 600 : 400)};
+    > span {
+      transform: scale(0.96);
+    }
   }
   svg {
     transform: ${(props) => (props.active ? 'translateY(-1px)' : 'none')};
@@ -60,6 +48,31 @@ const Tab = styled.button<{ active: boolean }>`
   svg [stroke] {
     stroke: ${(props) => (props.active ? mobilePalette.ink : undefined)};
   }
+`;
+
+const TabInner = styled.span<{ active: boolean }>`
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  width: 74px;
+  height: 50px;
+  border-radius: 24px;
+  background: ${(props) =>
+    props.active
+      ? 'linear-gradient(180deg, rgba(255, 248, 224, 0.98), rgba(255, 233, 168, 0.78))'
+      : 'transparent'};
+  box-shadow: ${(props) =>
+    props.active
+      ? 'inset 0 0 0 1px rgba(255, 198, 65, 0.24), 0 8px 18px rgba(255, 198, 65, 0.14)'
+      : 'none'};
+  transition: background ${mobileMotion.fast}, box-shadow ${mobileMotion.fast},
+    transform ${mobileMotion.fast};
+`;
+
+const Label = styled.span<{ active: boolean }>`
+  font-weight: ${(props) => (props.active ? 700 : 500)};
 `;
 
 const MobileBottomTabs: React.FC = () => {
@@ -104,8 +117,10 @@ const MobileBottomTabs: React.FC = () => {
           aria-current={item.active ? 'page' : undefined}
           onClick={() => nav(item.path)}
         >
-          <DesignIcon name={item.icon} active={item.active} size={25} />
-          <span>{item.label}</span>
+          <TabInner active={item.active}>
+            <DesignIcon name={item.icon} active={item.active} size={24} />
+            <Label active={item.active}>{item.label}</Label>
+          </TabInner>
         </Tab>
       ))}
     </Tabs>

@@ -14,6 +14,8 @@ import { mobileApi, SipScoreWithEntries } from '../api';
 import DesignIcon from '../components/DesignIcon';
 import { mastergoAssets } from '../assets/mastergo';
 
+const PREVIEW_ENTRY_LIMIT = 2;
+
 const Header = styled.section`
   padding: calc(22px + env(safe-area-inset-top)) 20px 16px;
   background: linear-gradient(180deg, #fff7e8 0%, #f8f9fc 100%);
@@ -371,7 +373,7 @@ const SipScore: React.FC = () => {
         <List>
           {items.map((item) => {
             const sip = item.sip_score || {};
-            const entries = (item.entries || []).slice(0, 2);
+            const entries = (item.entries || []).slice(0, PREVIEW_ENTRY_LIMIT);
             const entryCount = getEntryCount(item);
             const collectCount = getCollectCount(item);
             return (
