@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { message } from 'antd';
 import { useNavigate } from 'react-router';
 import { useSearchParams } from 'react-router-dom';
@@ -125,6 +125,8 @@ const Login: React.FC = () => {
   const [pendingAction, setPendingAction] = useState<StudentLoginAction>('');
   const [isMuxi, setIsMuxi] = useState(false);
   const [searchParams] = useSearchParams();
+  const handledStudentOAuthCodeRef = useRef('');
+  const handledTeamOAuthCodeRef = useRef('');
   const { setUser, setToken } = useProfile();
   const { setTip, setWS } = useWS();
 
@@ -287,7 +289,9 @@ const Login: React.FC = () => {
 
   useEffect(() => {
     if (studentOAuthCode) {
-      window.history.replaceState(null, '', window.location.pathname);
+      if (handledStudentOAuthCodeRef.current === studentOAuthCode) return;
+      handledStudentOAuthCodeRef.current = studentOAuthCode;
+      nav('/login/student-oauth', { replace: true });
       runStudent(
         {},
         {
@@ -300,9 +304,11 @@ const Login: React.FC = () => {
     }
 
     if (teamOAuthCode) {
+      if (handledTeamOAuthCodeRef.current === teamOAuthCode) return;
+      handledTeamOAuthCodeRef.current = teamOAuthCode;
       runTeam({}, { oauth_code: teamOAuthCode });
     }
-  }, [studentOAuthCode, teamOAuthCode]);
+  }, [nav, runStudent, runTeam, studentOAuthCode, teamOAuthCode]);
 
   const handleMuxierLogin = () => {
     const landing = `${window.location.host}/login`;
