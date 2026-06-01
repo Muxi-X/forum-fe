@@ -13,12 +13,12 @@ export class Params {
 export const method = 'POST';
 
 export function request(params, options = {}) {
-  return PontCore.fetch(
-    PontCore.getUrl('/collection/{post_id}', params, 'POST'),
-    {
-      method: 'POST',
-
-      ...options,
+  return PontCore.fetch(PontCore.getUrl('/collection', {}, 'POST'), {
+    method: 'POST',
+    body: {
+      target_id: params.post_id,
+      target_type: 1,
     },
-  );
+    ...options,
+  });
 }

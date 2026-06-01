@@ -1,0 +1,21 @@
+import React from 'react';
+import MobileTopBar from './MobileTopBar';
+import MobileBottomTabs from './MobileBottomTabs';
+import { MobilePage, ScrollBody } from '../styles';
+
+const MobileShell: React.FC<{
+  title: string;
+  back?: boolean;
+  tabs?: boolean;
+  right?: 'notice' | 'edit' | 'add';
+  onRight?: () => void;
+  children: React.ReactNode;
+}> = ({ title, back, tabs = true, right, onRight, children }) => (
+  <MobilePage>
+    <MobileTopBar title={title} back={back} right={right} onRight={onRight} />
+    <ScrollBody withTabs={tabs}>{children}</ScrollBody>
+    {tabs ? <MobileBottomTabs /> : null}
+  </MobilePage>
+);
+
+export default MobileShell;

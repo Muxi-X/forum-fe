@@ -9,6 +9,7 @@ import useWS from 'store/useWS';
 import Layout, { Content, ContentWrapper } from 'pages/_layout';
 import Loading from 'components/Loading';
 import GlobalNotificationListener from 'components/Notice';
+import { useDeviceType } from 'hooks/useDeviceType';
 
 const Routes = () => {
   return (
@@ -30,10 +31,11 @@ const Routes = () => {
 
 const SetRoutes = () => {
   const { showHeader } = useShowHeader();
+  const isPhone = useDeviceType() === 'phone';
 
   return (
     <Router>
-      {showHeader ? <Header /> : null}
+      {showHeader && !isPhone ? <Header /> : null}
       <GlobalNotificationListener />
       <Routes />
     </Router>

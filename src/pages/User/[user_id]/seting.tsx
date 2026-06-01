@@ -9,6 +9,7 @@ import Avatar from 'components/Avatar/avatar';
 import { QiniuServer } from 'config';
 import qiniupload, { CompleteRes, observer } from 'utils/qiniup';
 import media from 'styles/media';
+import MobileProfileEdit from 'mobile/pages/ProfileEdit';
 
 const SetCard = styled(Card)`
   position: relative;
@@ -78,6 +79,7 @@ const Seting: React.FC = () => {
   const formValues = form.getFieldsValue();
   const nav = useNavigate();
   const isMobile = useDeviceType() === 'phone';
+  if (isMobile) return <MobileProfileEdit />;
   const { run } = useRequest(API.user.putUser.request, {
     manual: true,
     onSuccess: () => {

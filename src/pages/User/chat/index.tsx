@@ -17,6 +17,8 @@ import media from 'styles/media';
 import useDocTitle from 'hooks/useDocTitle';
 import EmptyCard from 'components/EmptyCard';
 import Loading from 'components/Loading';
+import { useDeviceType } from 'hooks/useDeviceType';
+import MobileChat from 'mobile/pages/Chat';
 
 interface LocationState {
   id: string;
@@ -42,7 +44,7 @@ const ChatPage = styled.section`
   ${media.desktop`width: 100vw`}
 `;
 
-const Chat: React.FC = () => {
+const DesktopChat: React.FC = () => {
   const chatStore = useChat();
   const { userProfile } = useProfile();
   const myId = userProfile.id as number;
@@ -276,6 +278,11 @@ const Chat: React.FC = () => {
       )}
     </>
   );
+};
+
+const Chat: React.FC = () => {
+  const isPhone = useDeviceType() === 'phone';
+  return isPhone ? <MobileChat /> : <DesktopChat />;
 };
 
 export default Chat;

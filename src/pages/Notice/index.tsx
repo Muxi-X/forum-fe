@@ -12,8 +12,10 @@ import useDocTitle from 'hooks/useDocTitle';
 import useRequest from 'hooks/useRequest';
 import { useNavigate } from 'react-router-dom';
 import moment from 'utils/moment';
+import { useDeviceType } from 'hooks/useDeviceType';
+import MobileNotice from 'mobile/pages/Notice';
 
-const Notice: React.FC = () => {
+const DesktopNotice: React.FC = () => {
   const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotification();
   const nav = useNavigate();
 
@@ -138,6 +140,11 @@ const Notice: React.FC = () => {
       </Card>
     </style.Wrapper>
   );
+};
+
+const Notice: React.FC = () => {
+  const isPhone = useDeviceType() === 'phone';
+  return isPhone ? <MobileNotice /> : <DesktopNotice />;
 };
 
 export default Notice;

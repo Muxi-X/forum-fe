@@ -1,0 +1,446 @@
+import React, { useEffect, useMemo, useState } from 'react';
+import styled from 'styled-components';
+import DOMPurify from 'dompurify';
+import MarkdownIt from 'markdown-it';
+import { Input, message, Modal } from 'antd';
+import {
+  LikeFilled,
+  LikeOutlined,
+  StarFilled,
+  StarOutlined,
+  MessageOutlined,
+  WarningOutlined,
+} from '@ant-design/icons';
+import { useNavigate, useParams } from 'react-router-dom';
+import MobileShell from '../components/MobileShell';
+import EmptyState from '../components/EmptyState';
+import UploadField from '../components/UploadField';
+import { mobilePalette, PrimaryButton, GhostButton } from '../styles';
+import { mobileApi, MobileComment, MobilePost } from '../api';
+import { TARGET_TYPE, TYPE_NAME, SORT_TYPE, mobileTableByCategory } from '../constants';
+import moment from 'utils/moment';
+
+const ArticleWrap = styled.article`
+  background: ${mobilePalette.paper};
+  padding: 18px 16px 8px;
+`;
+
+const TableLabel = styled.button`
+  height: 28px;
+  padding: 0 10px;
+  border-radius: 999px;
+  background: #fff5d7;
+  color: #765600;
+  font-size: 12px;
+`;
+
+const Title = styled.h1`
+  margin: 14px 0 10px;
+  font-size: 23px;
+  line-height: 1.35;
+  font-weight: 900;
+  color: ${mobilePalette.ink};
+`;
+
+const Author = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  color: ${mobilePalette.muted};
+  font-size: 12px;
+  img {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    object-fit: cover;
+  }
+`;
+
+const Content = styled.div`
+  margin-top: 18px;
+  color: #303745;
+  font-size: 15px;
+  line-height: 1.75;
+  word-break: break-word;
+  img {
+    max-width: 100%;
+    border-radius: 8px;
+  }
+`;
+
+const ActionRow = styled.div`
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  padding: 14px 16px;
+  background: ${mobilePalette.paper};
+  border-top: 1px solid ${mobilePalette.line};
+  border-bottom: 1px solid ${mobilePalette.line};
+`;
+
+const ActionButton = styled.button<{ active?: boolean }>`
+  height: 40px;
+  border-radius: 8px;
+  background: ${(props) => (props.active ? '#fff5d7' : '#fff')};
+  color: ${(props) => (props.active ? mobilePalette.orange : mobilePalette.ink)};
+  border: 1px solid ${(props) => (props.active ? '#ffd66e' : mobilePalette.line)};
+  .anticon {
+    margin-right: 5px;
+  }
+`;
+
+const CommentSection = styled.section`
+  margin-top: 10px;
+  background: ${mobilePalette.paper};
+  border-top: 1px solid ${mobilePalette.line};
+  h2 {
+    margin: 0;
+    padding: 16px;
+    font-size: 16px;
+  }
+`;
+
+const CommentItem = styled.div`
+  padding: 14px 16px;
+  border-top: 1px solid ${mobilePalette.line};
+`;
+
+const CommentHead = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: ${mobilePalette.muted};
+  font-size: 12px;
+  img {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    object-fit: cover;
+  }
+`;
+
+const CommentText = styled.p`
+  margin: 9px 0 0 36px;
+  color: ${mobilePalette.ink};
+  line-height: 1.6;
+`;
+
+const SubComments = styled.div`
+  margin: 10px 0 0 36px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: #f6f7f9;
+  color: #596170;
+  font-size: 13px;
+  p {
+    margin: 4px 0;
+  }
+`;
+
+const Composer = styled.div`
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 40;
+  display: grid;
+  grid-template-columns: 1fr 74px;
+  gap: 8px;
+  padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
+  background: rgba(255, 254, 250, 0.98);
+  border-top: 1px solid ${mobilePalette.line};
+  textarea {
+    resize: none;
+    border-radius: 8px;
+  }
+`;
+
+const ReportForm = styled.div`
+  display: grid;
+  gap: 12px;
+`;
+
+const md = new MarkdownIt({ html: true, linkify: true, typographer: true });
+
+const getTime = (comment: MobileComment) => comment.create_time || comment.time || '';
+
+const CommentList: React.FC<{
+  comments: MobileComment[];
+  onReply: (comment: MobileComment) => void;
+}> = ({ comments, onReply }) => (
+  <>
+    {comments.map((comment) => (
+      <CommentItem key={comment.id}>
+        <CommentHead>
+          <img
+            src={
+              comment.creator_avatar || 'https://ossforum.muxixyz.com/default/avatar.png'
+            }
+            alt=""
+          />
+          <strong>{comment.creator_name || '茶友'}</strong>
+          <span>{getTime(comment) ? moment(getTime(comment)).fromNow() : ''}</span>
+          <button
+            type="button"
+            onClick={() => onReply(comment)}
+            style={{
+              marginLeft: 'auto',
+              background: 'transparent',
+              color: mobilePalette.muted,
+            }}
+          >
+            回复
+          </button>
+        </CommentHead>
+        <CommentText>{comment.content}</CommentText>
+        {comment.img_url ? (
+          <img
+            src={comment.img_url}
+            alt=""
+            style={{
+              width: 88,
+              height: 88,
+              objectFit: 'cover',
+              borderRadius: 8,
+              margin: '10px 0 0 36px',
+            }}
+          />
+        ) : null}
+        {comment.sub_comments?.length ? (
+          <SubComments>
+            {comment.sub_comments.map((sub) => (
+              <p key={sub.id}>
+                <strong>{sub.creator_name}：</strong>
+                {sub.content}
+              </p>
+            ))}
+          </SubComments>
+        ) : null}
+      </CommentItem>
+    ))}
+  </>
+);
+
+const Article: React.FC = () => {
+  const { article_id } = useParams();
+  const postId = Number(article_id);
+  const nav = useNavigate();
+  const [post, setPost] = useState<MobilePost | null>(null);
+  const [comments, setComments] = useState<MobileComment[]>([]);
+  const [content, setContent] = useState('');
+  const [replyTo, setReplyTo] = useState<MobileComment | null>(null);
+  const [reportOpen, setReportOpen] = useState(false);
+  const [reportContent, setReportContent] = useState('');
+  const [reportContact, setReportContact] = useState('');
+  const [reportImg, setReportImg] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+
+  const html = useMemo(() => {
+    if (!post) return '';
+    const raw =
+      post.compiled_content ||
+      (post.content_type === 'md' ? md.render(post.content || '') : post.content || '');
+    return DOMPurify.sanitize(raw);
+  }, [post]);
+
+  const load = async () => {
+    const res = await mobileApi.posts.get(postId);
+    if (res.code !== 0) {
+      message.error(res.message);
+      return;
+    }
+    setPost(res.data);
+  };
+
+  const loadComments = async () => {
+    const res = await mobileApi.comments.list({
+      target_id: postId,
+      target_type: TYPE_NAME.post,
+      sort_type: SORT_TYPE.newest,
+      page_size: 50,
+    });
+    if (res.code === 0) setComments(res.data.comments || []);
+  };
+
+  useEffect(() => {
+    if (!postId) return;
+    load();
+    loadComments();
+  }, [postId]);
+
+  const table = mobileTableByCategory(post?.category);
+
+  const toggleLike = async () => {
+    if (!post?.id) return;
+    setPost({
+      ...post,
+      is_liked: !post.is_liked,
+      like_num: (post.like_num || 0) + (post.is_liked ? -1 : 1),
+    });
+    await mobileApi.like(post.id, TYPE_NAME.post);
+  };
+
+  const toggleCollect = async () => {
+    if (!post?.id) return;
+    setPost({
+      ...post,
+      is_collection: !post.is_collection,
+      collection_num: (post.collection_num || 0) + (post.is_collection ? -1 : 1),
+    });
+    await mobileApi.collection.toggle(post.id, TARGET_TYPE.post);
+  };
+
+  const submitComment = async () => {
+    if (!content.trim() || !post?.id) return;
+    setSubmitting(true);
+    const body = replyTo
+      ? {
+          target_id: post.id,
+          target_type: TYPE_NAME.post,
+          content,
+          father_id: replyTo.id,
+          type_name: TYPE_NAME.secondLevel,
+        }
+      : {
+          target_id: post.id,
+          target_type: TYPE_NAME.post,
+          content,
+          father_id: post.id,
+          type_name: TYPE_NAME.firstLevel,
+        };
+    try {
+      const res = await mobileApi.comments.create(body);
+      if (res.code !== 0) {
+        message.error(res.message);
+        return;
+      }
+      setContent('');
+      setReplyTo(null);
+      loadComments();
+      setPost({ ...post, comment_num: (post.comment_num || 0) + 1 });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const submitReport = async () => {
+    if (!post?.id || !reportContent.trim()) {
+      message.warning('请填写投诉内容');
+      return;
+    }
+    const res = await mobileApi.report({
+      id: post.id,
+      type_name: TYPE_NAME.post,
+      category: 'mobile',
+      cause: reportContent,
+      contact: reportContact,
+      img_url: reportImg,
+    });
+    if (res.code === 0) {
+      message.success('已提交');
+      setReportOpen(false);
+    } else {
+      message.error(res.message);
+    }
+  };
+
+  if (!post) {
+    return (
+      <MobileShell title="帖子详情" back tabs={false}>
+        <EmptyState text="加载中..." />
+      </MobileShell>
+    );
+  }
+
+  return (
+    <MobileShell title="帖子详情" back tabs={false}>
+      <ArticleWrap>
+        <TableLabel type="button" onClick={() => nav(`/${table.route}`)}>
+          {table.name}
+        </TableLabel>
+        <Title>{post.title}</Title>
+        <Author>
+          <img
+            src={post.creator_avatar || 'https://ossforum.muxixyz.com/default/avatar.png'}
+            alt=""
+          />
+          <span>{post.creator_name || '茶友'}</span>
+          <span>{post.time ? moment(post.time).fromNow() : ''}</span>
+        </Author>
+        <Content dangerouslySetInnerHTML={{ __html: html }} />
+      </ArticleWrap>
+      <ActionRow>
+        <ActionButton active={post.is_liked} onClick={toggleLike}>
+          {post.is_liked ? <LikeFilled /> : <LikeOutlined />}
+          {post.like_num || 0}
+        </ActionButton>
+        <ActionButton active={post.is_collection} onClick={toggleCollect}>
+          {post.is_collection ? <StarFilled /> : <StarOutlined />}
+          {post.collection_num || 0}
+        </ActionButton>
+        <ActionButton
+          onClick={() => document.getElementById('mobile-comments')?.scrollIntoView()}
+        >
+          <MessageOutlined />
+          {post.comment_num || 0}
+        </ActionButton>
+        <ActionButton onClick={() => setReportOpen(true)}>
+          <WarningOutlined />
+          投诉
+        </ActionButton>
+      </ActionRow>
+      <CommentSection id="mobile-comments">
+        <h2>评论</h2>
+        {comments.length ? (
+          <CommentList comments={comments} onReply={setReplyTo} />
+        ) : (
+          <EmptyState text="还没有评论" />
+        )}
+      </CommentSection>
+      <Composer>
+        <Input.TextArea
+          rows={1}
+          value={content}
+          placeholder={replyTo ? `回复 ${replyTo.creator_name || '茶友'}` : '写评论...'}
+          onChange={(event) => setContent(event.target.value)}
+          onBlur={() => {
+            if (!content) setReplyTo(null);
+          }}
+        />
+        <PrimaryButton disabled={submitting || !content.trim()} onClick={submitComment}>
+          发送
+        </PrimaryButton>
+      </Composer>
+      <Modal
+        title="投诉"
+        open={reportOpen}
+        onCancel={() => setReportOpen(false)}
+        footer={[
+          <GhostButton key="cancel" onClick={() => setReportOpen(false)}>
+            取消
+          </GhostButton>,
+          <PrimaryButton key="ok" onClick={submitReport}>
+            提交
+          </PrimaryButton>,
+        ]}
+      >
+        <ReportForm>
+          <Input.TextArea
+            rows={4}
+            value={reportContent}
+            onChange={(event) => setReportContent(event.target.value)}
+            placeholder="说明你遇到的问题"
+          />
+          <Input
+            value={reportContact}
+            onChange={(event) => setReportContact(event.target.value)}
+            placeholder="联系方式（可选）"
+          />
+          <UploadField value={reportImg} onChange={setReportImg} />
+        </ReportForm>
+      </Modal>
+    </MobileShell>
+  );
+};
+
+export default Article;

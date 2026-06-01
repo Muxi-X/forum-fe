@@ -26,6 +26,8 @@ import useDocTitle from 'hooks/useDocTitle';
 import { CATEGORY, CATEGORY_EN } from 'config';
 import moment from 'utils/moment';
 import 'assets/theme/theme.less';
+import { useDeviceType } from 'hooks/useDeviceType';
+import MobileArticle from 'mobile/pages/Article';
 
 interface ActionProps {
   done?: boolean;
@@ -131,7 +133,7 @@ const Icon: React.FC<{ onClick?: () => void; type: string }> = ({ type, onClick 
   );
 };
 
-const Article: React.FC = () => {
+const DesktopArticle: React.FC = () => {
   const [articleInfo, setArticleInfo] = useState<defs.post_GetPostResponse>({});
   const [navBar, setNavBar] = useState({ show: false, content: '' });
   const [showReport, setShowReport] = useState(false);
@@ -528,6 +530,11 @@ const Article: React.FC = () => {
       <BackToTop />
     </>
   );
+};
+
+const Article: React.FC = () => {
+  const isPhone = useDeviceType() === 'phone';
+  return isPhone ? <MobileArticle /> : <DesktopArticle />;
 };
 
 export default Article;

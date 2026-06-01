@@ -15,6 +15,9 @@ import * as style from './style';
 import useDocTitle from 'hooks/useDocTitle';
 import BackToTop from 'components/BackTop';
 import media from 'styles/media';
+import { useDeviceType } from 'hooks/useDeviceType';
+import MobileProfile from 'mobile/pages/Profile';
+import MobileProfileEdit from 'mobile/pages/ProfileEdit';
 
 const UserInfoCard = styled(Card)`
   .ant-card-body {
@@ -50,7 +53,7 @@ const ToolsTabs = styled(Tabs)`
   `}
 `;
 
-const User: React.FC = () => {
+const DesktopUser: React.FC = () => {
   const { pathname } = useLocation();
   const { user_id } = useParams();
   const {
@@ -183,6 +186,17 @@ const User: React.FC = () => {
       </style.UserWrapper>
     </>
   );
+};
+
+const User: React.FC = () => {
+  const { pathname } = useLocation();
+  const { user_id } = useParams();
+  const isPhone = useDeviceType() === 'phone';
+  if (isPhone) {
+    if (pathname === `/user/${user_id}/seting`) return <MobileProfileEdit />;
+    return <MobileProfile />;
+  }
+  return <DesktopUser />;
 };
 
 export default User;

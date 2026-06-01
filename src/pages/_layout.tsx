@@ -10,6 +10,7 @@ import Footer from 'components/Footer';
 import ResultPage from './Result';
 import media from 'styles/media';
 import useChat from 'store/useChat';
+import { useDeviceType } from 'hooks/useDeviceType';
 
 export const ContentWrapper = styled.main`
   display: flex;
@@ -47,6 +48,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { setTip, setWS, ws } = useWS();
   const { setSelectedId } = useChat();
   const { showHeader } = useShowHeader();
+  const isPhone = useDeviceType() === 'phone';
 
   const webSocketInit = () => {
     const token = localStorage.getItem('token') as string;
@@ -74,6 +76,9 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
       setShowHeader(true);
     }
   }, [pathname]);
+  if (isPhone) {
+    return <ErrorBoundary fallbackRender={ErrorInfo}>{children}</ErrorBoundary>;
+  }
   if (isSpecialPage())
     return <ErrorBoundary fallbackRender={ErrorInfo}>{children}</ErrorBoundary>;
   else {
