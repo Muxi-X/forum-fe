@@ -153,6 +153,12 @@ export type PrivateMessage = {
   sender_name?: string;
 };
 
+export type ChatUser = {
+  id?: number;
+  name?: string;
+  avatar?: string;
+};
+
 export const mobileApi = {
   posts: {
     list: (params: {
@@ -229,6 +235,8 @@ export const mobileApi = {
           time?: string;
         }>
       >(`/chat/history/${id}`, { query }),
+    users: (query?: Record<string, QueryValue>) =>
+      request<ChatUser[]>('/chat/userList', { query }),
   },
   feed: (userId: number, query?: Record<string, QueryValue>) =>
     request<{ list?: Array<Record<string, unknown>> }>(`/feed/list/${userId}`, { query }),

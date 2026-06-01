@@ -2,6 +2,48 @@ import React, { useEffect, useRef } from 'react';
 import useNotification, { Notification } from 'store/useNotification';
 import useRequest from 'hooks/useRequest';
 
+type RawNotification = {
+  id?: string;
+  post_id?: number | string;
+  comment_id?: number | string;
+  type?: Notification['type'];
+  content?: string;
+  post_title?: string;
+  comment_content?: string;
+};
+
+const parseNotification = (message: unknown, index: number): Notification | null => {
+  let notification: RawNotification;
+  if (typeof message === 'string') {
+    try {
+      notification = JSON.parse(message);
+    } catch (error) {
+      console.error('通知解析失败:', message, error);
+      return null;
+    }
+  } else if (message && typeof message === 'object') {
+    notification = message as RawNotification;
+  } else {
+    return null;
+  }
+
+  const postId = Number(notification.post_id);
+  if (!postId || !notification.type) return null;
+
+  return {
+    id: notification.id || `${postId}_${notification.type}_${index}`,
+    postId,
+    type: notification.type,
+    content:
+      notification.content ||
+      notification.comment_content ||
+      notification.post_title ||
+      '',
+    read: false,
+    timestamp: Date.now(),
+  };
+};
+
 const GlobalNotificationListener: React.FC = () => {
   const { addNotifications, resetNotifications } = useNotification();
   const pollingRef = useRef<NodeJS.Timeout | null>(null);
@@ -12,31 +54,7 @@ const GlobalNotificationListener: React.FC = () => {
       onSuccess: (res) => {
         if (res.data.messages) {
           const newNotifications: Notification[] = res.data.messages
-            .map((message: string, index: number) => {
-              try {
-                const notification = JSON.parse(message);
-
-                if (
-                  !notification.post_id ||
-                  !notification.type ||
-                  !notification.content
-                ) {
-                  console.error('通知解析错误:', notification);
-                }
-
-                return {
-                  id: `${notification.post_id}_${notification.type}_${Date.now()}`,
-                  postId: notification.post_id,
-                  type: notification.type,
-                  content: notification.content,
-                  read: false,
-                  timestamp: Date.now(),
-                };
-              } catch (error) {
-                console.error('通知解析失败:', message, error);
-                return null;
-              }
-            })
+            .map(parseNotification)
             .filter((n): n is Notification => n !== null);
 
           // 每次轮询重置未读数据并添加新数据

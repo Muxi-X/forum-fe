@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import styled from 'styled-components';
 import { Input, message } from 'antd';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useSearchParams } from 'react-router-dom';
 import MobileShell from '../components/MobileShell';
 import EmptyState from '../components/EmptyState';
 import { mobilePalette, PrimaryButton } from '../styles';
@@ -53,7 +53,8 @@ const Composer = styled.div`
 
 const Chat: React.FC = () => {
   const { state } = useLocation();
-  const targetId = Number((state as any)?.id || 0);
+  const [searchParams] = useSearchParams();
+  const targetId = Number(searchParams.get('target_id') || (state as any)?.id || 0);
   const { userProfile } = useProfile();
   const { ws, setWS } = useWS();
   const [target, setTarget] = useState<MobileUser | null>(null);

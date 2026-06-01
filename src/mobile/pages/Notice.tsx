@@ -6,7 +6,7 @@ import MobileShell from '../components/MobileShell';
 import SegmentTabs from '../components/SegmentTabs';
 import EmptyState from '../components/EmptyState';
 import { mobilePalette, Section } from '../styles';
-import { mobileApi, PrivateMessage } from '../api';
+import { ChatUser, mobileApi } from '../api';
 import useNotification, { Notification } from 'store/useNotification';
 import moment from 'utils/moment';
 
@@ -45,12 +45,12 @@ const Item = styled.button`
 const Notice: React.FC = () => {
   const nav = useNavigate();
   const [tab, setTab] = useState('all');
-  const [messages, setMessages] = useState<PrivateMessage[]>([]);
+  const [chatUsers, setChatUsers] = useState<ChatUser[]>([]);
   const { notifications, markAsRead } = useNotification();
 
   useEffect(() => {
-    mobileApi.user.privateMessages().then((res) => {
-      if (res.code === 0) setMessages(res.data.messages || []);
+    mobileApi.chat.users({ limit: 50, page: 0 }).then((res) => {
+      if (res.code === 0) setChatUsers(res.data || []);
     });
   }, []);
 
@@ -74,20 +74,17 @@ const Notice: React.FC = () => {
         onChange={(value) => setTab(String(value))}
       />
       {tab === 'chat' ? (
-        messages.length ? (
+        chatUsers.length ? (
           <List>
-            {messages.map((msg) => (
-              <Item
-                key={msg.id}
-                onClick={() => nav('/user/chat', { state: { id: msg.send_user_id } })}
-              >
+            {chatUsers.map((user) => (
+              <Item key={user.id} onClick={() => nav(`/user/chat?target_id=${user.id}`)}>
                 <img
-                  src={msg.avatar || 'https://ossforum.muxixyz.com/default/avatar.png'}
+                  src={user.avatar || 'https://ossforum.muxixyz.com/default/avatar.png'}
                   alt=""
                 />
                 <div>
-                  <h3>{msg.sender_name || '茶友'}</h3>
-                  <p>{msg.content || msg.post_title}</p>
+                  <h3>{user.name || '茶友'}</h3>
+                  <p>查看私信记录</p>
                 </div>
               </Item>
             ))}

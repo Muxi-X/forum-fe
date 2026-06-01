@@ -217,9 +217,7 @@ const Profile: React.FC = () => {
             <PrimaryButton onClick={follow}>
               {profile.is_following ? '已关注' : '关注'}
             </PrimaryButton>
-            <GhostButton
-              onClick={() => nav('/user/chat', { state: { id: String(profile.id) } })}
-            >
+            <GhostButton onClick={() => nav(`/user/chat?target_id=${profile.id}`)}>
               私信
             </GhostButton>
           </ActionBar>
