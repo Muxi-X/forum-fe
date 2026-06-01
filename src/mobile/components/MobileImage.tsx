@@ -11,6 +11,7 @@ const Img = styled.img<{ radius?: number | string }>`
   object-fit: cover;
   border-radius: ${(props) =>
     typeof props.radius === 'number' ? `${props.radius}px` : props.radius || 'inherit'};
+  background: ${DEFAULT_IMAGE};
 `;
 
 const Fallback = styled.div<{ radius?: number | string }>`
@@ -23,6 +24,7 @@ const Fallback = styled.div<{ radius?: number | string }>`
   background: ${DEFAULT_IMAGE};
   color: rgba(121, 85, 72, 0.68);
   font-size: 12px;
+  font-weight: 700;
 `;
 
 const normalizeUrl = (src?: string | null) => {
