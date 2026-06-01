@@ -15,11 +15,11 @@ const Tabs = styled.nav`
   grid-template-columns: repeat(3, 1fr);
   gap: 4px;
   width: min(492px, calc(100% - 28px));
-  height: 64px;
-  padding: 6px;
+  height: 72px;
+  padding: 8px;
   transform: translateX(-50%);
   border: 1px solid rgba(255, 255, 255, 0.76);
-  border-radius: 28px;
+  border-radius: 32px;
   background: rgba(255, 255, 255, 0.84);
   box-shadow: 0 12px 34px rgba(16, 24, 40, 0.14);
   backdrop-filter: blur(22px) saturate(180%);
@@ -42,7 +42,6 @@ const Tab = styled.button<{ active: boolean }>`
     }
   }
   svg {
-    transform: ${(props) => (props.active ? 'translateY(-1px)' : 'none')};
     transition: transform ${mobileMotion.fast};
   }
   svg [stroke] {
@@ -55,10 +54,10 @@ const TabInner = styled.span<{ active: boolean }>`
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 3px;
-  width: 68px;
-  height: 44px;
-  border-radius: 22px;
+  gap: 4px;
+  width: 76px;
+  height: 56px;
+  border-radius: 26px;
   background: ${(props) =>
     props.active
       ? 'linear-gradient(180deg, rgba(255, 248, 224, 0.98), rgba(255, 233, 168, 0.78))'
@@ -72,7 +71,10 @@ const TabInner = styled.span<{ active: boolean }>`
 `;
 
 const Label = styled.span<{ active: boolean }>`
+  display: block;
+  font-size: 12px;
   font-weight: ${(props) => (props.active ? 700 : 500)};
+  line-height: 14px;
 `;
 
 const MobileBottomTabs: React.FC = () => {
@@ -118,7 +120,7 @@ const MobileBottomTabs: React.FC = () => {
           onClick={() => nav(item.path)}
         >
           <TabInner active={item.active}>
-            <DesignIcon name={item.icon} active={item.active} size={24} />
+            <DesignIcon name={item.icon} active={item.active} size={20} />
             <Label active={item.active}>{item.label}</Label>
           </TabInner>
         </Tab>
