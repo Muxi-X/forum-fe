@@ -434,11 +434,11 @@ const Article: React.FC = () => {
         </ActionButton>
       </ActionRow>
       <CommentSection id="mobile-comments">
-        <h2>评论</h2>
+        <h2>{comments.length ? `评论 ${comments.length}` : '评论'}</h2>
         {comments.length ? (
           <CommentList comments={comments} onReply={setReplyTo} />
         ) : (
-          <EmptyState title="还没有评论" text="坐下聊两句，可能就有人接上了。" />
+          <EmptyState title="还没有评论" text="写下第一条评论。" />
         )}
       </CommentSection>
       <Composer>

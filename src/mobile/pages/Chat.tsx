@@ -147,7 +147,7 @@ const Chat: React.FC = () => {
               </React.Fragment>
             ))
           ) : (
-            <EmptyState title="开始聊天吧" text="消息会实时出现在这里。" />
+            <EmptyState title="还没有消息" text="发出第一条私信后，会显示在这里。" />
           )}
         </Messages>
         <Composer>

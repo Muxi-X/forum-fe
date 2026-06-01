@@ -76,21 +76,16 @@ const Tag = styled.button<{ active: boolean }>`
 `;
 
 const TablePicker = styled.div`
-  display: grid;
-  grid-template-columns: 88px 1fr;
-  align-items: center;
-  min-height: 70px;
+  display: flex;
+  align-items: flex-end;
+  min-height: 58px;
   border-bottom: 1px solid #efefef;
-  .current {
-    justify-self: end;
-    color: #1a202c;
-    font-size: 16px;
-  }
 `;
 
 const TableChips = styled.div`
-  display: flex;
-  gap: 14px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
   overflow-x: auto;
   padding: 10px 0 12px;
   scrollbar-width: none;
@@ -100,7 +95,6 @@ const TableChips = styled.div`
 `;
 
 const TableChip = styled.button<{ active: boolean }>`
-  flex: 0 0 79px;
   height: 31px;
   padding: 0 8px;
   border-radius: 999px;
@@ -173,7 +167,9 @@ const Editor: React.FC = () => {
   const isUpdate = !!(state as any)?.isUpdate;
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
-  const [category, setCategory] = useState<string>(DEFAULT_TABLE.apiCategory);
+  const [category, setCategory] = useState<string>(
+    (state as any)?.category || DEFAULT_TABLE.apiCategory,
+  );
   const [tags, setTags] = useState<string[]>([]);
   const [customTag, setCustomTag] = useState('');
   const [image, setImage] = useState('');
@@ -302,11 +298,10 @@ const Editor: React.FC = () => {
     <MobileShell title={isUpdate ? '编辑帖子' : '发布帖子'} back tabs={false}>
       <Wrap>
         <TablePicker>
-          <FieldLabel style={{ margin: 0 }}>所在茶桌</FieldLabel>
-          <span className="current">{activeTable.name}</span>
+          <FieldLabel style={{ margin: 0 }}>发布到</FieldLabel>
         </TablePicker>
         <TableChips>
-          {MOBILE_TABLES.slice(0, 5).map((item) => (
+          {MOBILE_TABLES.map((item) => (
             <TableChip
               key={item.key}
               type="button"
@@ -316,7 +311,7 @@ const Editor: React.FC = () => {
                 setTags([]);
               }}
             >
-              {item.name.split(/\s+/)[0]}
+              {item.name}
             </TableChip>
           ))}
         </TableChips>

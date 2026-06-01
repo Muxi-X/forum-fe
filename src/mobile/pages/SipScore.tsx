@@ -132,18 +132,11 @@ const RankingTitle = styled.h2`
 
 const EntryRow = styled.div`
   display: grid;
-  grid-template-columns: 72px minmax(0, 1fr) 48px;
+  grid-template-columns: 72px minmax(0, 1fr);
   gap: 12px;
   align-items: start;
   margin-top: 12px;
   min-width: 0;
-`;
-
-const Score = styled.strong`
-  justify-self: end;
-  color: #ffc641;
-  font-size: 26px;
-  line-height: 1;
 `;
 
 const SipScore: React.FC = () => {
@@ -240,7 +233,6 @@ const SipScore: React.FC = () => {
                           {entry.description || sip.description || '暂无热评'}
                         </EntryPreview>
                       </Info>
-                      <Score>{((entry.score_avg || 0) / 100).toFixed(1)}</Score>
                     </EntryRow>
                   ))
                 ) : (

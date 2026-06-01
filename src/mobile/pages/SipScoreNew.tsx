@@ -4,12 +4,12 @@ import { Input, message } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import MobileShell from '../components/MobileShell';
 import UploadField from '../components/UploadField';
-import { mobilePalette, PrimaryButton } from '../styles';
+import { mobilePalette, PrimaryButton, mobileRadius } from '../styles';
 import { DEFAULT_TABLE } from '../constants';
 import { mobileApi } from '../api';
 
 const Wrap = styled.div`
-  padding: 74px 30px 28px;
+  padding: 16px 20px 112px;
   background: ${mobilePalette.paper};
   min-height: calc(100vh - 52px);
 
@@ -22,23 +22,26 @@ const Wrap = styled.div`
 
 const Label = styled.label`
   display: block;
-  margin: 30px 0 14px;
+  margin: 24px 0 12px;
   color: #1a202c;
   font-weight: 700;
 `;
 
-const Button = styled(PrimaryButton)`
-  width: 242px;
-  display: block;
-  margin: 96px auto 0;
-  background: #feaa00;
+const FixedBar = styled.div`
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  max-width: 520px;
+  margin: 0 auto;
+  padding: 12px 20px calc(12px + env(safe-area-inset-bottom));
+  background: rgba(255, 255, 255, 0.92);
+  border-top: 1px solid ${mobilePalette.lineSoft};
+  backdrop-filter: blur(18px);
 `;
 
-const PageTitle = styled.h1`
-  margin: 0 0 12px;
-  color: #1a202c;
-  font-size: 24px;
-  font-weight: 800;
+const SubmitButton = styled(PrimaryButton)`
+  width: 100%;
 `;
 
 const TagRow = styled.div`
@@ -57,12 +60,34 @@ const TagChip = styled.button<{ active?: boolean }>`
   color: ${(props) => (props.active ? '#fff' : '#1a202c')};
 `;
 
+const CustomTagForm = styled.form`
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+  input {
+    flex: 1;
+    min-width: 0;
+    height: 38px;
+    padding: 0 14px;
+    border: 1px solid #dfe3ea;
+    border-radius: ${mobileRadius.pill};
+  }
+  button {
+    width: 58px;
+    border-radius: ${mobileRadius.pill};
+    background: rgba(255, 198, 65, 0.2);
+    color: #c46c00;
+    font-weight: 800;
+  }
+`;
+
 const SipScoreNew: React.FC = () => {
   const nav = useNavigate();
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [cover, setCover] = useState('');
   const [tags, setTags] = useState('');
+  const [customTag, setCustomTag] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
   const submit = async () => {
@@ -94,10 +119,24 @@ const SipScoreNew: React.FC = () => {
     }
   };
 
+  const tagList = tags.split(/[,\s，]+/).filter(Boolean);
+
+  const addCustomTag = () => {
+    const next = customTag.replace(/^#/, '').trim();
+    if (!next) return;
+    if (next.length > 12) {
+      message.warning('标签最多 12 个字');
+      return;
+    }
+    const merged = new Set(tagList);
+    merged.add(next);
+    setTags(Array.from(merged).slice(0, 5).join(' '));
+    setCustomTag('');
+  };
+
   return (
-    <MobileShell title="" back tabs={false} showTopBar={false}>
+    <MobileShell title="创建榜单" back tabs={false}>
       <Wrap>
-        <PageTitle>创建新榜单</PageTitle>
         <Label>榜单名称</Label>
         <Input
           value={name}
@@ -117,9 +156,9 @@ const SipScoreNew: React.FC = () => {
         <UploadField value={cover} onChange={setCover} />
         <Label>#标签</Label>
         <TagRow>
-          {['校园生活', '学习资料', '#自定义'].map((tag) => {
+          {['校园生活', '学习资料', '美食', '课程', '宿舍', '工具'].map((tag) => {
             const value = tag.replace(/^#/, '');
-            const active = tags.split(/[,\s，]+/).includes(value);
+            const active = tagList.includes(value);
             return (
               <TagChip
                 key={tag}
@@ -137,9 +176,25 @@ const SipScoreNew: React.FC = () => {
             );
           })}
         </TagRow>
-        <Button disabled={submitting} onClick={submit}>
-          {submitting ? '发布中...' : '发布'}
-        </Button>
+        <CustomTagForm
+          onSubmit={(event) => {
+            event.preventDefault();
+            addCustomTag();
+          }}
+        >
+          <input
+            value={customTag}
+            maxLength={12}
+            placeholder="添加自定义标签"
+            onChange={(event) => setCustomTag(event.target.value)}
+          />
+          <button type="submit">添加</button>
+        </CustomTagForm>
+        <FixedBar>
+          <SubmitButton disabled={submitting} onClick={submit}>
+            {submitting ? '发布中...' : '发布榜单'}
+          </SubmitButton>
+        </FixedBar>
       </Wrap>
     </MobileShell>
   );

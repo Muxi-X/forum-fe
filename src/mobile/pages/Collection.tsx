@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import styled from 'styled-components';
 import { message } from 'antd';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import MobileShell from '../components/MobileShell';
 import SegmentTabs from '../components/SegmentTabs';
 import PostCard from '../components/PostCard';
@@ -62,7 +62,14 @@ const Collection: React.FC = () => {
   const { user_id } = useParams();
   const userId = Number(user_id);
   const nav = useNavigate();
-  const [tab, setTab] = useState('post');
+  const [searchParams] = useSearchParams();
+  const initialTab = searchParams.get('tab') || 'post';
+  const normalizeTab = (value: string) => (value === 'posts' ? 'post' : value);
+  const [tab, setTab] = useState(
+    ['published', 'post', 'posts', 'sipScore'].includes(initialTab)
+      ? normalizeTab(initialTab)
+      : 'post',
+  );
   const [posts, setPosts] = useState<MobilePost[]>([]);
   const [rankings, setRankings] = useState<SipScoreWithEntries[]>([]);
   const [loading, setLoading] = useState(true);
@@ -73,7 +80,9 @@ const Collection: React.FC = () => {
     setLoading(true);
     setError('');
     const request =
-      tab === 'post'
+      tab === 'published'
+        ? mobileApi.posts.published(userId, { limit: 30, page: 0 })
+        : tab === 'post'
         ? mobileApi.collection.list(userId, { limit: 30, page: 0 })
         : mobileApi.sipScore.collected(userId, { limit: 30, page: 0 });
 
@@ -90,7 +99,7 @@ const Collection: React.FC = () => {
           message.error(res.message || '加载失败');
           return;
         }
-        if (tab === 'post') {
+        if (tab === 'published' || tab === 'post') {
           setPosts(('posts' in res.data ? res.data.posts : []) || []);
         } else {
           setRankings(('sip_scores' in res.data ? res.data.sip_scores : []) || []);
@@ -103,12 +112,13 @@ const Collection: React.FC = () => {
   }, [tab, userId]);
 
   return (
-    <MobileShell title="我的收藏" back tabs={false}>
+    <MobileShell title={tab === 'published' ? '发布的帖子' : '收藏'} back tabs={false}>
       <SegmentTabs
         value={tab}
         items={[
-          { label: '帖子', value: 'post' },
-          { label: '榜单', value: 'sipScore' },
+          { label: '发布', value: 'published' },
+          { label: '收藏帖子', value: 'post' },
+          { label: '收藏榜单', value: 'sipScore' },
         ]}
         onChange={(value) => setTab(String(value))}
       />
@@ -116,7 +126,7 @@ const Collection: React.FC = () => {
         <LoadingState text="正在读取收藏..." />
       ) : error ? (
         <ErrorState text={error} />
-      ) : tab === 'post' ? (
+      ) : tab === 'published' || tab === 'post' ? (
         posts.length ? (
           <List>
             {posts.map((post) => (
@@ -124,7 +134,7 @@ const Collection: React.FC = () => {
             ))}
           </List>
         ) : (
-          <EmptyState text="还没有收藏帖子" />
+          <EmptyState title={tab === 'published' ? '还没有发过帖子' : '还没有收藏帖子'} />
         )
       ) : rankings.length ? (
         <List>

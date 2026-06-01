@@ -149,22 +149,27 @@ const PostList = styled.div`
 
 const DetailHero = styled.section`
   position: relative;
-  padding: 24px 20px 20px;
-  background: #ffedc6;
-  border-bottom: 1px solid #efefef;
+  padding: 18px 18px 20px;
+  background: linear-gradient(180deg, #fff4d8 0%, #ffffff 100%);
+  border-bottom: 1px solid ${mobilePalette.lineSoft};
 `;
 
 const TableIntro = styled.div`
   display: grid;
-  grid-template-columns: 62px 1fr;
-  gap: 16px;
+  grid-template-columns: 52px 1fr;
+  gap: 12px;
   align-items: center;
-  margin-bottom: 16px;
+  margin-bottom: 12px;
   .cover {
-    width: 62px;
-    height: 62px;
-    border-radius: 6px;
-    background: #fff;
+    width: 52px;
+    height: 52px;
+    display: grid;
+    place-items: center;
+    border-radius: 18px;
+    color: #fff;
+    font-size: 22px;
+    font-weight: 900;
+    box-shadow: 0 10px 22px rgba(254, 152, 0, 0.16);
   }
   h2 {
     margin: 0 0 6px;
@@ -173,7 +178,7 @@ const TableIntro = styled.div`
     font-weight: 700;
     color: #1a202c;
   }
-  span {
+  .meta {
     color: #7f838a;
     font-size: 12px;
   }
@@ -229,6 +234,26 @@ const FeaturedCard = styled.button`
     overflow: hidden;
     text-overflow: ellipsis;
   }
+`;
+
+const TableActions = styled.div`
+  display: flex;
+  justify-content: flex-end;
+  padding: 12px 16px 14px;
+  background: #fff;
+`;
+
+const InlinePublish = styled.button`
+  height: 34px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 14px;
+  border-radius: ${mobileRadius.pill};
+  background: rgba(255, 198, 65, 0.2);
+  color: #c46c00;
+  font-size: 13px;
+  font-weight: 800;
 `;
 
 const SortButton = styled.button<{ active: boolean }>`
@@ -454,13 +479,18 @@ const Home: React.FC = () => {
             </DetailTopControls>
             <DetailHero>
               <TableIntro>
-                <span className="cover" />
+                <span
+                  className="cover"
+                  style={{ background: tableVisuals[activeTable.key].gradient }}
+                >
+                  {tableVisuals[activeTable.key].glyph}
+                </span>
                 <div>
                   <h2>{activeTable.name}</h2>
-                  <span>{posts[0]?.comment_num || 0} 评论</span>
+                  <span className="meta">官方分区</span>
                 </div>
               </TableIntro>
-              <TableDesc>茶桌简介：{activeTable.intro}</TableDesc>
+              <TableDesc>{activeTable.intro}</TableDesc>
             </DetailHero>
             <TableTabsPanel>
               <SegmentTabs
@@ -468,23 +498,19 @@ const Home: React.FC = () => {
                 items={activeTable.tags.map((tag) => ({ label: tag, value: tag }))}
                 onChange={(value) => setActiveTag(String(value))}
               />
-              {posts[0] ? (
-                <FeaturedCard
+              <TableActions>
+                <InlinePublish
                   type="button"
-                  onClick={() => posts[0].id && nav(`/article/${posts[0].id}`)}
+                  onClick={() =>
+                    nav(`/editor/article${Date.now()}`, {
+                      state: { category: activeTable.apiCategory },
+                    })
+                  }
                 >
-                  <span className="tag">
-                    #{posts[0].tags?.[0] || activeTable.tags[1] || '精选'}{' '}
-                    {posts[0].comment_num || 0}讨论
-                  </span>
-                  <h3>{posts[0].title || '未命名帖子'}</h3>
-                  <p>
-                    {posts[0].summary ||
-                      posts[0].content?.replace(/<[^>]+>/g, '').slice(0, 60) ||
-                      '暂无摘要'}
-                  </p>
-                </FeaturedCard>
-              ) : null}
+                  <span aria-hidden>+</span>
+                  发到这个茶桌
+                </InlinePublish>
+              </TableActions>
             </TableTabsPanel>
           </>
         )}

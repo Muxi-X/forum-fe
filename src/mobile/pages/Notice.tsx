@@ -92,7 +92,10 @@ const Notice: React.FC = () => {
             ))}
           </List>
         ) : (
-          <EmptyState title="还没有私信" text="去他的主页点私信，就能开始聊天。" />
+          <EmptyState
+            title="还没有私信"
+            text="进入对方主页后，可以从私信按钮开始会话。"
+          />
         )
       ) : filtered.length ? (
         <List>
@@ -126,7 +129,7 @@ const Notice: React.FC = () => {
         <EmptyState
           title={tab === 'mention' ? '还没有 @ 你的消息' : '还没有通知'}
           text={
-            tab === 'mention' ? '后端暂未提供 @ 类型时，这里会保持空状态。' : undefined
+            tab === 'mention' ? '有人在帖子或评论里提到你时，会出现在这里。' : undefined
           }
         />
       )}

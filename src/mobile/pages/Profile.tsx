@@ -1,6 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import styled from 'styled-components';
-import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import {
+  useLocation,
+  useNavigate,
+  useParams,
+  createSearchParams,
+} from 'react-router-dom';
 import { message } from 'antd';
 import MobileShell from '../components/MobileShell';
 import PostCard from '../components/PostCard';
@@ -243,6 +248,13 @@ const CollectionGroupButton = styled.button`
   }
 `;
 
+const ViewAllButton = styled(CollectionGroupButton)`
+  min-height: 44px;
+  color: #c46c00;
+  font-weight: 800;
+  background: rgba(255, 198, 65, 0.14);
+`;
+
 const RankingCard = styled.button`
   width: calc(100% - 40px);
   display: grid;
@@ -285,6 +297,9 @@ const RankingCard = styled.button`
 const ActionGroup = styled.div`
   border-top: 1px solid rgba(60, 60, 67, 0.1);
 `;
+
+const profileListPath = (profileId: number | string, tab: string) =>
+  `/user/${profileId}/collect?${createSearchParams({ tab }).toString()}`;
 
 const Profile: React.FC = () => {
   const { user_id } = useParams();
@@ -335,7 +350,7 @@ const Profile: React.FC = () => {
       id: id || 0,
       name: '茶友',
       avatar: '',
-      signature: '热爱生活，喜欢分享校园趣事',
+      signature: '',
       following_count: 0,
       follower_count: 0,
       is_following: false,
@@ -460,7 +475,7 @@ const Profile: React.FC = () => {
               </button>
             ) : null}
           </NameRow>
-          <Signature>{profile.signature || '热爱生活，喜欢分享校园趣事'}</Signature>
+          <Signature>{profile.signature || '还没有填写简介'}</Signature>
           <Counts>
             <span>
               <strong>{profile.following_count || 0}</strong>关注
@@ -491,7 +506,7 @@ const Profile: React.FC = () => {
           }
         >
           <DesignIcon name="post" size={23} />
-          <span>{isMine ? '我发过的帖子' : 'Ta发过的帖子'}</span>
+          <span>{isMine ? '我发过的帖子' : '发过的帖子'}</span>
           <span className="chevron">
             <DesignIcon name={expanded.posts ? 'chevronUp' : 'chevronDown'} size={22} />
           </span>
@@ -504,10 +519,14 @@ const Profile: React.FC = () => {
               ) : (
                 <MiniEmpty>{isMine ? '还没有发过帖子' : 'Ta 还没有发过帖子'}</MiniEmpty>
               )}
-              {posts.length ? (
-                <ViewAll type="button" onClick={() => nav(`/user/${profileId}`)}>
-                  查看全部 &gt;
-                </ViewAll>
+              {posts.length > 1 ? (
+                <ViewAllButton
+                  type="button"
+                  onClick={() => nav(profileListPath(profileId, 'published'))}
+                >
+                  <span>查看全部帖子</span>
+                  <DesignIcon name="chevronRight" size={18} />
+                </ViewAllButton>
               ) : null}
             </ExpandedPosts>
           </ExpandedPanel>
@@ -527,7 +546,7 @@ const Profile: React.FC = () => {
           }
         >
           <DesignIcon name="star" size={24} />
-          <span>{isMine ? '我的收藏' : 'Ta的收藏'}</span>
+          <span>{isMine ? '我的收藏' : '公开收藏'}</span>
           <span className="chevron">
             <DesignIcon
               name={expanded.collections ? 'chevronUp' : 'chevronDown'}
@@ -561,13 +580,14 @@ const Profile: React.FC = () => {
                 ) : (
                   <MiniEmpty>{isMine ? '还没有收藏帖子' : 'Ta 还没有收藏帖子'}</MiniEmpty>
                 )}
-                {collectedPosts.length ? (
-                  <ViewAll
+                {collectedPosts.length > 1 ? (
+                  <ViewAllButton
                     type="button"
-                    onClick={() => nav(`/user/${profileId}/collect`)}
+                    onClick={() => nav(profileListPath(profileId, 'post'))}
                   >
-                    查看全部 &gt;
-                  </ViewAll>
+                    <span>查看全部收藏帖子</span>
+                    <DesignIcon name="chevronRight" size={18} />
+                  </ViewAllButton>
                 ) : null}
               </ExpandedPosts>
             ) : null}
@@ -615,13 +635,14 @@ const Profile: React.FC = () => {
                 ) : (
                   <MiniEmpty>{isMine ? '还没有收藏榜单' : 'Ta 还没有收藏榜单'}</MiniEmpty>
                 )}
-                {collectedRankings.length ? (
-                  <ViewAll
+                {collectedRankings.length > 1 ? (
+                  <ViewAllButton
                     type="button"
-                    onClick={() => nav(`/user/${profileId}/collect?tab=sipScore`)}
+                    onClick={() => nav(profileListPath(profileId, 'sipScore'))}
                   >
-                    查看全部 &gt;
-                  </ViewAll>
+                    <span>查看全部收藏榜单</span>
+                    <DesignIcon name="chevronRight" size={18} />
+                  </ViewAllButton>
                 ) : null}
               </ExpandedPosts>
             ) : null}
@@ -636,7 +657,7 @@ const Profile: React.FC = () => {
             </MenuItem>
             <MenuItem onClick={logout}>
               <DesignIcon name="power" size={24} />
-              <span>退出与登录</span>
+              <span>退出登录</span>
               <span />
             </MenuItem>
           </ActionGroup>

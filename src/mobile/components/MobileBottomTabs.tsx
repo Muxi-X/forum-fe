@@ -68,6 +68,7 @@ const MobileBottomTabs: React.FC = () => {
     userProfile: { id },
   } = useProfile();
   const me = id || Number(localStorage.getItem('userId')) || 0;
+  const viewingUserId = pathname.match(/^\/user\/(\d+)$/)?.[1];
 
   const items = [
     {
@@ -88,7 +89,7 @@ const MobileBottomTabs: React.FC = () => {
     {
       label: '我的',
       path: `/user/${me || ''}`,
-      active: pathname.startsWith('/user'),
+      active: Boolean(me && viewingUserId && Number(viewingUserId) === Number(me)),
       icon: 'user' as const,
     },
   ];
