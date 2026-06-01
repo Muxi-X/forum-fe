@@ -55,17 +55,17 @@ const TabInner = styled.span<{ active: boolean }>`
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 4px;
-  width: 74px;
-  height: 50px;
-  border-radius: 24px;
+  gap: 3px;
+  width: 68px;
+  height: 44px;
+  border-radius: 22px;
   background: ${(props) =>
     props.active
       ? 'linear-gradient(180deg, rgba(255, 248, 224, 0.98), rgba(255, 233, 168, 0.78))'
       : 'transparent'};
   box-shadow: ${(props) =>
     props.active
-      ? 'inset 0 0 0 1px rgba(255, 198, 65, 0.24), 0 8px 18px rgba(255, 198, 65, 0.14)'
+      ? 'inset 0 0 0 1px rgba(255, 198, 65, 0.2), 0 6px 14px rgba(255, 198, 65, 0.12)'
       : 'none'};
   transition: background ${mobileMotion.fast}, box-shadow ${mobileMotion.fast},
     transform ${mobileMotion.fast};
