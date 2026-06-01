@@ -66,6 +66,14 @@ const getStudentOAuthCallbackURL = () => {
   return `${window.location.origin}/login/student-oauth`;
 };
 
+const rememberStudentOAuthRedirectURL = (redirectURL: string) => {
+  try {
+    sessionStorage.setItem('student_oauth_redirect_url', redirectURL);
+  } catch {
+    // Ignore storage failures; navigation should not depend on debug state.
+  }
+};
+
 const getSecondAuthTarget = (
   loginFlow: StudentLoginFlowState | null,
   method: SecondAuthMethod,
@@ -211,6 +219,7 @@ const Login: React.FC = () => {
 
     const data = res.data as StudentLoginFlowState;
     if (data.redirect_url) {
+      rememberStudentOAuthRedirectURL(data.redirect_url);
       window.location.href = data.redirect_url;
       return;
     }
@@ -278,11 +287,13 @@ const Login: React.FC = () => {
 
   useEffect(() => {
     if (studentOAuthCode) {
+      window.history.replaceState(null, '', window.location.pathname);
       runStudent(
         {},
         {
           provider: 'oauth',
           oauth_code: studentOAuthCode,
+          callback_url: getStudentOAuthCallbackURL(),
         },
       );
       return;
