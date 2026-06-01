@@ -2,7 +2,7 @@ import React from 'react';
 import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom';
 import { mastergoAssets } from '../assets/mastergo';
-import { mobilePalette } from '../styles';
+import { mobilePalette, mobileRadius } from '../styles';
 
 const Bar = styled.header<{ borderless?: boolean }>`
   position: sticky;
@@ -11,7 +11,7 @@ const Bar = styled.header<{ borderless?: boolean }>`
   height: calc(56px + env(safe-area-inset-top));
   padding-top: env(safe-area-inset-top);
   display: grid;
-  grid-template-columns: 56px 1fr 56px;
+  grid-template-columns: 64px 1fr 64px;
   align-items: center;
   background: rgba(255, 255, 255, 0.86);
   border-bottom: ${(props) =>
@@ -33,7 +33,7 @@ const Title = styled.h1`
 `;
 
 const IconButton = styled.button`
-  width: 56px;
+  width: 64px;
   height: 56px;
   display: grid;
   place-items: center;
@@ -49,6 +49,16 @@ const IconButton = styled.button`
     display: block;
     object-fit: contain;
   }
+`;
+
+const BackPill = styled.span`
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  border-radius: ${mobileRadius.pill};
+  background: rgba(255, 255, 255, 0.72);
+  box-shadow: 0 4px 12px rgba(16, 24, 40, 0.06);
 `;
 
 type RightAction = 'notice' | 'edit' | 'add';
@@ -98,11 +108,13 @@ const MobileTopBar: React.FC<{
         aria-label="返回"
       >
         {back ? (
-          <img
-            src={mastergoAssets.icons.backButtonDark}
-            alt=""
-            style={{ width: 8, height: 14 }}
-          />
+          <BackPill>
+            <img
+              src={mastergoAssets.icons.backButtonDark}
+              alt=""
+              style={{ width: 10, height: 18 }}
+            />
+          </BackPill>
         ) : null}
       </IconButton>
       <Title>{title}</Title>
