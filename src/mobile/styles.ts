@@ -34,7 +34,7 @@ export const mobileMotion = {
 };
 
 export const safeBottom = css`
-  padding-bottom: calc(72px + env(safe-area-inset-bottom));
+  padding-bottom: calc(96px + env(safe-area-inset-bottom));
 `;
 
 export const MobilePage = styled.div`

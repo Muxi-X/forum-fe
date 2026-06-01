@@ -13,7 +13,7 @@ import TeaCupHeroSvg from '../components/TeaCupHeroSvg';
 
 const Wrap = styled.div`
   min-height: calc(100vh - 60px);
-  padding: 28px 20px 28px;
+  padding: 28px 20px 112px;
   background: linear-gradient(180deg, #ffe6b6 0%, #fff4d8 38%, #ffffff 100%);
   position: relative;
 
@@ -34,16 +34,16 @@ const Wrap = styled.div`
 
 const IdentityHero = styled.div`
   position: relative;
-  min-height: 116px;
+  min-height: 126px;
   display: grid;
   grid-template-columns: 91px 1fr;
   align-items: start;
   gap: 18px;
   margin-bottom: 12px;
   h1 {
-    margin: 20px 0 0;
+    margin: 18px 0 0;
     color: #1a202c;
-    font-size: 27px;
+    font-size: 26px;
     line-height: 1.2;
     font-weight: 400;
   }
@@ -58,7 +58,7 @@ const Cup = styled(TeaCupHeroSvg)`
 const AvatarField = styled.div`
   display: flex;
   justify-content: flex-end;
-  margin: -28px 6px 28px;
+  margin: -18px 6px 26px;
 `;
 
 const AvatarButton = styled.button`
@@ -85,7 +85,7 @@ const AvatarButton = styled.button`
 
 const Label = styled.label`
   display: block;
-  margin: 26px 0 8px;
+  margin: 24px 0 8px;
   color: #3d3d3d;
   font-size: 12px;
 `;
@@ -94,9 +94,8 @@ const FixedSubmit = styled(PrimaryButton)`
   position: fixed;
   left: 24px;
   right: 24px;
-  bottom: calc(35px + env(safe-area-inset-bottom));
-  height: 38px;
-  background: #ffc641;
+  bottom: calc(20px + env(safe-area-inset-bottom));
+  height: 50px;
 `;
 
 const AvatarSheet = styled.div`

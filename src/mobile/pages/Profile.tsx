@@ -21,7 +21,7 @@ import { mastergoAssets } from '../assets/mastergo';
 
 const Hero = styled.section`
   position: relative;
-  min-height: 348px;
+  min-height: 338px;
   overflow: hidden;
   background: #fff;
   &::before {
@@ -65,15 +65,15 @@ const ProfilePanel = styled.div`
   right: 0;
   bottom: 0;
   z-index: 2;
-  min-height: 208px;
-  padding: 78px 26px 18px;
+  min-height: 216px;
+  padding: 74px 24px 20px;
   isolation: isolate;
   &::before {
     content: '';
     position: absolute;
     inset: 0;
     z-index: -1;
-    background: rgba(255, 255, 255, 0.94);
+    background: rgba(255, 255, 255, 0.96);
     border-top-left-radius: ${mobileRadius.xl};
     border-top-right-radius: ${mobileRadius.xl};
     clip-path: polygon(0 13%, 100% 0, 100% 100%, 0 100%);
@@ -83,7 +83,7 @@ const ProfilePanel = styled.div`
 const Avatar = styled(MobileAvatar)`
   position: absolute;
   left: 28px;
-  top: -28px;
+  top: -42px;
 `;
 
 const NameRow = styled.div`
@@ -93,13 +93,13 @@ const NameRow = styled.div`
   margin-top: 0;
   h1 {
     margin: 0;
-    max-width: 250px;
+    max-width: min(250px, calc(100vw - 128px));
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    font-size: 24px;
+    font-size: 25px;
     line-height: 1.1;
-    font-weight: 500;
+    font-weight: 800;
     color: #1a202c;
   }
   .anticon {
@@ -118,26 +118,29 @@ const NameRow = styled.div`
 `;
 
 const Signature = styled.p`
-  margin: 12px 0 14px;
-  max-width: 286px;
+  margin: 10px 0 16px;
+  max-width: min(310px, calc(100vw - 64px));
   overflow: hidden;
   text-overflow: ellipsis;
-  white-space: nowrap;
+  display: -webkit-box;
+  white-space: normal;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
   color: #7f838a;
   font-size: 14px;
 `;
 
 const Counts = styled.div`
   display: flex;
-  gap: 48px;
+  gap: 34px;
   color: #7f838a;
   font-size: 14px;
   strong {
     display: block;
     margin-bottom: 4px;
     color: #3d3d3d;
-    font-size: 16px;
-    font-weight: 400;
+    font-size: 17px;
+    font-weight: 800;
   }
 `;
 
@@ -150,19 +153,20 @@ const ActionBar = styled.div`
 `;
 
 const VisitorButton = styled.button<{ primary?: boolean }>`
-  height: 25px;
-  min-width: 53px;
-  padding: 0 10px;
+  height: 32px;
+  min-width: 64px;
+  padding: 0 13px;
   border-radius: 999px;
   border: 1px solid ${(props) => (props.primary ? '#fe9800' : '#ffc641')};
   background: ${(props) => (props.primary ? '#fe9800' : '#fff')};
   color: ${(props) => (props.primary ? '#fff' : '#fe9800')};
-  font-size: 12px;
+  font-size: 13px;
+  font-weight: 800;
 `;
 
 const Menu = styled(Section)`
   margin-top: 0;
-  padding: 10px 0 22px;
+  padding: 12px 0 28px;
   background: ${mobilePalette.bg};
   border-top: 1px solid rgba(60, 60, 67, 0.12);
   border-bottom: 0;
@@ -170,7 +174,7 @@ const Menu = styled(Section)`
 
 const MenuItem = styled.button`
   width: 100%;
-  min-height: 68px;
+  min-height: 66px;
   display: grid;
   grid-template-columns: 46px minmax(0, 1fr) 32px;
   align-items: center;
@@ -178,7 +182,7 @@ const MenuItem = styled.button`
   margin: 0 auto 10px;
   padding: 0 16px;
   background: rgba(255, 255, 255, 0.96);
-  border-radius: ${mobileRadius.lg};
+  border-radius: 20px;
   box-shadow: 0 10px 28px rgba(16, 24, 40, 0.05);
   border-bottom: 0;
   text-align: left;
@@ -198,7 +202,7 @@ const MenuItem = styled.button`
 `;
 
 const ExpandedPanel = styled.div`
-  margin: -6px 0 10px;
+  margin: -4px 0 12px;
   background: transparent;
   border-bottom: 0;
 `;
@@ -250,7 +254,7 @@ const CollectionGroupButton = styled.button`
 
 const ViewAllButton = styled(CollectionGroupButton)`
   min-height: 44px;
-  color: #c46c00;
+  color: #b06400;
   font-weight: 800;
   background: rgba(255, 198, 65, 0.14);
 `;

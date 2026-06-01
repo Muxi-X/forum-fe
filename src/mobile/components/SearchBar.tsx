@@ -6,12 +6,13 @@ const Form = styled.form`
   display: flex;
   align-items: center;
   gap: 8px;
-  height: 42px;
-  background: #fff;
-  border: 1px solid #f0f1f4;
+  height: 44px;
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(60, 60, 67, 0.1);
   border-radius: 999px;
   padding: 0 16px;
   color: #fe9800;
+  box-shadow: 0 8px 24px rgba(16, 24, 40, 0.05);
 `;
 
 const Input = styled.input`
@@ -20,6 +21,7 @@ const Input = styled.input`
   background: transparent;
   color: #3d3d3d;
   font-size: 14px;
+  min-height: 24px;
   &::placeholder {
     color: #9ca3af;
   }

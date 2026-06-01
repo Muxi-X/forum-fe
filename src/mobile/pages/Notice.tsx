@@ -7,26 +7,31 @@ import SegmentTabs from '../components/SegmentTabs';
 import EmptyState from '../components/EmptyState';
 import LoadingState from '../components/LoadingState';
 import MobileAvatar from '../components/MobileAvatar';
-import { mobilePalette, Section } from '../styles';
+import { mobilePalette, mobileRadius, Section } from '../styles';
 import { ChatUser, mobileApi } from '../api';
 import useNotification, { Notification } from 'store/useNotification';
 import moment from 'utils/moment';
 
 const List = styled(Section)`
   margin-top: 0;
+  padding: 2px 0 18px;
+  background: ${mobilePalette.bg};
   border-top: 0;
+  border-bottom: 0;
 `;
 
 const Item = styled.button`
-  width: 100%;
-  min-height: 70px;
+  width: calc(100% - 28px);
+  min-height: 72px;
   display: grid;
   grid-template-columns: 42px 1fr;
   gap: 12px;
   align-items: center;
-  padding: 12px 16px;
-  background: transparent;
-  border-bottom: 1px solid ${mobilePalette.line};
+  margin: 0 auto 10px;
+  padding: 13px 14px;
+  background: ${mobilePalette.paper};
+  border-radius: ${mobileRadius.lg};
+  box-shadow: 0 8px 22px rgba(16, 24, 40, 0.05);
   text-align: left;
   h3 {
     margin: 0 0 5px;
@@ -37,6 +42,10 @@ const Item = styled.button`
     margin: 0;
     color: ${mobilePalette.muted};
     line-height: 1.45;
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
   }
 `;
 

@@ -21,9 +21,9 @@ const HomeSurface = styled.div`
 
 const Hero = styled.section`
   position: relative;
-  min-height: 292px;
+  min-height: 306px;
   overflow: hidden;
-  padding: calc(24px + env(safe-area-inset-top)) 16px 0;
+  padding: calc(24px + env(safe-area-inset-top)) 18px 0;
   background: linear-gradient(180deg, #fff9ed 0%, #ffffff 72%);
   &::before {
     content: '';
@@ -69,7 +69,7 @@ const SearchPageHeader = styled.section`
 const TableGrid = styled.section`
   position: relative;
   z-index: 2;
-  padding: 20px 0 18px;
+  padding: 22px 0 18px;
   h3 {
     margin: 0 0 13px;
     font-size: 20px;
@@ -79,20 +79,20 @@ const TableGrid = styled.section`
   .grid {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 10px;
+    gap: 12px;
     padding-bottom: 4px;
   }
 `;
 
 const TableButton = styled.button`
   min-width: 0;
-  min-height: 94px;
-  padding: 10px 4px 8px;
+  min-height: 98px;
+  padding: 12px 5px 10px;
   text-align: center;
   background: rgba(255, 255, 255, 0.76);
   border: 0;
-  border-radius: ${mobileRadius.lg};
-  box-shadow: 0 10px 28px rgba(16, 24, 40, 0.06);
+  border-radius: 20px;
+  box-shadow: 0 12px 30px rgba(16, 24, 40, 0.06);
   transition: transform ${mobileMotion.fast}, box-shadow ${mobileMotion.fast};
   &:active {
     transform: scale(0.98);
@@ -100,8 +100,8 @@ const TableButton = styled.button`
   }
   .table-avatar {
     position: relative;
-    width: 46px;
-    height: 46px;
+    width: 48px;
+    height: 48px;
     display: grid;
     place-items: center;
     margin: 0 auto;
@@ -124,7 +124,7 @@ const TableButton = styled.button`
     transform: rotate(-22deg);
   }
   h4 {
-    margin: 8px 0 0;
+    margin: 9px 0 0;
     font-size: 12px;
     line-height: 1.35;
     font-weight: 800;
@@ -192,20 +192,20 @@ const TableDesc = styled.p`
 `;
 
 const SortRow = styled.div`
-  display: flex;
-  gap: 24px;
-  padding: 10px 16px 8px;
-  background: rgba(255, 255, 255, 0.9);
-  border-bottom: 1px solid ${mobilePalette.lineSoft};
-  backdrop-filter: blur(16px);
+  display: inline-flex;
+  gap: 4px;
+  margin: 12px 16px 2px;
+  padding: 4px;
+  border: 1px solid rgba(60, 60, 67, 0.08);
+  border-radius: ${mobileRadius.pill};
+  background: rgba(255, 255, 255, 0.76);
+  box-shadow: 0 8px 24px rgba(16, 24, 40, 0.05);
 `;
 
 const TableTabsPanel = styled.div`
   margin: 0;
-  padding-top: 8px;
-  background: #fff;
-  border-top-left-radius: 8px;
-  border-top-right-radius: 8px;
+  padding: 4px 0 10px;
+  background: rgba(255, 255, 255, 0.9);
 `;
 
 const FeaturedCard = styled.button`
@@ -239,8 +239,8 @@ const FeaturedCard = styled.button`
 const TableActions = styled.div`
   display: flex;
   justify-content: flex-end;
-  padding: 12px 16px 14px;
-  background: #fff;
+  padding: 0 16px 10px;
+  background: transparent;
 `;
 
 const InlinePublish = styled.button`
@@ -257,23 +257,17 @@ const InlinePublish = styled.button`
 `;
 
 const SortButton = styled.button<{ active: boolean }>`
-  position: relative;
-  height: 28px;
-  padding: 0;
-  background: transparent;
+  height: 32px;
+  min-width: 58px;
+  padding: 0 14px;
+  border-radius: ${mobileRadius.pill};
+  background: ${(props) => (props.active ? '#fff' : 'transparent')};
   color: ${(props) => (props.active ? '#fe9800' : '#9ca3af')};
   border: 0;
   font-size: 14px;
-  &::after {
-    content: '';
-    position: absolute;
-    left: 0;
-    right: 0;
-    bottom: -8px;
-    height: 2px;
-    border-radius: 999px;
-    background: ${(props) => (props.active ? '#ffc641' : 'transparent')};
-  }
+  font-weight: ${(props) => (props.active ? 700 : 500)};
+  box-shadow: ${(props) =>
+    props.active ? '0 6px 16px rgba(254, 152, 0, 0.14)' : 'none'};
 `;
 
 const FloatingEdit = styled.button`
@@ -281,13 +275,13 @@ const FloatingEdit = styled.button`
   left: 50%;
   bottom: calc(86px + env(safe-area-inset-bottom));
   z-index: 35;
-  width: 52px;
-  height: 52px;
+  width: 54px;
+  height: 54px;
   display: grid;
   place-items: center;
   margin-left: min(176px, calc(50vw - 70px));
   border-radius: 50%;
-  background: #ffc641;
+  background: linear-gradient(135deg, #ffc641, #fe9800);
   color: #1a202c;
   font-size: 21px;
   box-shadow: 0 12px 28px rgba(255, 159, 26, 0.32);
@@ -300,17 +294,18 @@ const FloatingEdit = styled.button`
 
 const DetailTopControls = styled.div`
   display: grid;
-  grid-template-columns: 28px 1fr 28px;
+  grid-template-columns: 40px 1fr 40px;
   gap: 10px;
   align-items: center;
-  padding: 22px 16px 14px;
-  background: #ffedc6;
+  padding: calc(12px + env(safe-area-inset-top)) 16px 14px;
+  background: linear-gradient(180deg, #fff4d8 0%, #fffaf0 100%);
   .ghost {
-    width: 28px;
-    height: 28px;
+    width: 40px;
+    height: 40px;
     display: grid;
     place-items: center;
-    background: transparent;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.66);
     color: #fe9800;
   }
 `;

@@ -24,22 +24,23 @@ import { TARGET_TYPE, TYPE_NAME, SORT_TYPE, mobileTableByCategory } from '../con
 import moment from 'utils/moment';
 
 const ArticleWrap = styled.article`
-  background: ${mobilePalette.paper};
-  padding: 16px 20px 18px;
+  background: linear-gradient(180deg, #fffaf0 0%, #fff 108px);
+  padding: 18px 20px 20px;
 `;
 
 const TableLabel = styled.button`
-  height: 28px;
-  padding: 0 10px;
+  height: 30px;
+  padding: 0 12px;
   border-radius: 999px;
-  background: transparent;
-  color: #fe9800;
+  background: rgba(255, 198, 65, 0.18);
+  color: #c46c00;
   font-size: 12px;
+  font-weight: 800;
 `;
 
 const Title = styled.h1`
-  margin: 14px 0 10px;
-  font-size: 18px;
+  margin: 16px 0 12px;
+  font-size: 22px;
   line-height: 1.35;
   font-weight: 900;
   color: ${mobilePalette.ink};
@@ -54,7 +55,7 @@ const Author = styled.div`
 `;
 
 const Content = styled.div`
-  margin-top: 18px;
+  margin-top: 20px;
   color: #303745;
   font-size: 15px;
   line-height: 1.75;
@@ -66,23 +67,25 @@ const Content = styled.div`
 `;
 
 const ActionRow = styled.div`
-  display: flex;
-  justify-content: space-around;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
   gap: 8px;
-  padding: 10px 14px;
-  background: ${mobilePalette.paper};
-  border-top: 1px solid ${mobilePalette.lineSoft};
-  border-bottom: 1px solid ${mobilePalette.lineSoft};
+  margin: 10px 14px 0;
+  padding: 8px;
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 10px 30px rgba(16, 24, 40, 0.06);
 `;
 
 const ActionButton = styled.button<{ active?: boolean }>`
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  height: 28px;
-  padding: 0 2px;
+  justify-content: center;
+  height: 38px;
+  padding: 0 6px;
   border-radius: 999px;
-  background: transparent;
+  background: ${(props) => (props.active ? 'rgba(255, 198, 65, 0.18)' : 'transparent')};
   color: ${(props) => (props.active ? mobilePalette.orange : mobilePalette.ink)};
   border: 0;
   transition: transform ${mobileMotion.fast};
@@ -92,9 +95,8 @@ const ActionButton = styled.button<{ active?: boolean }>`
 `;
 
 const CommentSection = styled.section`
-  margin-top: 10px;
-  background: ${mobilePalette.paper};
-  border-top: 1px solid ${mobilePalette.line};
+  margin-top: 12px;
+  background: transparent;
   h2 {
     margin: 0;
     padding: 16px 20px;
@@ -103,8 +105,11 @@ const CommentSection = styled.section`
 `;
 
 const CommentItem = styled.div`
-  padding: 14px 16px;
-  border-top: 1px solid ${mobilePalette.line};
+  margin: 0 14px 10px;
+  padding: 14px;
+  border-radius: 18px;
+  background: ${mobilePalette.paper};
+  box-shadow: 0 8px 22px rgba(16, 24, 40, 0.05);
 `;
 
 const CommentHead = styled.div`
@@ -142,15 +147,19 @@ const Composer = styled.div`
   bottom: 0;
   z-index: 40;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 64px;
+  grid-template-columns: minmax(0, 1fr) 68px;
   gap: 8px;
   padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
-  background: rgba(255, 254, 250, 0.98);
-  border-top: 1px solid ${mobilePalette.lineSoft};
+  background: rgba(255, 255, 255, 0.9);
+  border-top: 1px solid rgba(60, 60, 67, 0.08);
   backdrop-filter: blur(18px);
   textarea {
     resize: none;
     border-radius: ${mobileRadius.lg};
+  }
+  button {
+    height: 40px;
+    align-self: end;
   }
 `;
 

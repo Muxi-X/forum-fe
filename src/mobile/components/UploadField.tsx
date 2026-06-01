@@ -4,7 +4,7 @@ import { message } from 'antd';
 import useProfile from 'store/useProfile';
 import qiniupload, { observer, CompleteRes } from 'utils/qiniup';
 import { QiniuServer } from 'config';
-import { mobilePalette } from '../styles';
+import { mobileMotion, mobilePalette, mobileRadius } from '../styles';
 import { mastergoAssets } from '../assets/mastergo';
 import DesignIcon from './DesignIcon';
 
@@ -13,13 +13,30 @@ const Box = styled.label<{ compact?: boolean; round?: boolean }>`
   min-height: ${(props) => (props.compact ? '88px' : '88px')};
   display: grid;
   place-items: center;
-  border: 1px dashed #d8dce3;
-  border-radius: ${(props) => (props.round ? '50%' : '8px')};
-  background: #fff;
+  border: 1px dashed rgba(127, 131, 138, 0.34);
+  border-radius: ${(props) => (props.round ? '50%' : mobileRadius.lg)};
+  background: rgba(255, 255, 255, 0.86);
   color: ${mobilePalette.muted};
   overflow: hidden;
+  transition: background ${mobileMotion.fast}, border-color ${mobileMotion.fast},
+    transform ${mobileMotion.fast};
+  &:active {
+    transform: scale(0.98);
+    background: #fff;
+    border-color: rgba(254, 152, 0, 0.35);
+  }
   input {
     display: none;
+  }
+  > span {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-width: 0;
+    color: ${mobilePalette.muted};
+    font-size: 13px;
+    font-weight: 600;
   }
 `;
 
@@ -28,6 +45,8 @@ const Preview = styled.label<{ compact?: boolean; round?: boolean }>`
   width: ${(props) => (props.compact ? '88px' : '96px')};
   height: ${(props) => (props.compact ? '88px' : '96px')};
   display: block;
+  border-radius: ${(props) => (props.round ? '50%' : mobileRadius.lg)};
+  box-shadow: 0 10px 26px rgba(16, 24, 40, 0.08);
   input {
     display: none;
   }
@@ -35,7 +54,7 @@ const Preview = styled.label<{ compact?: boolean; round?: boolean }>`
     width: 100%;
     height: 100%;
     object-fit: cover;
-    border-radius: ${(props) => (props.round ? '50%' : '8px')};
+    border-radius: ${(props) => (props.round ? '50%' : mobileRadius.lg)};
   }
   button {
     position: absolute;

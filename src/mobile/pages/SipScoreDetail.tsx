@@ -10,7 +10,13 @@ import LoadingState from '../components/LoadingState';
 import ErrorState from '../components/ErrorState';
 import MobileBottomSheet from '../components/MobileBottomSheet';
 import MobileImage from '../components/MobileImage';
-import { mobilePalette, CardSurface, PrimaryButton, GhostButton } from '../styles';
+import {
+  mobilePalette,
+  mobileRadius,
+  CardSurface,
+  PrimaryButton,
+  GhostButton,
+} from '../styles';
 import { SORT_TYPE, TARGET_TYPE } from '../constants';
 import { mobileApi, SipScore, SipScoreEntry } from '../api';
 import DesignIcon from '../components/DesignIcon';
@@ -18,16 +24,16 @@ import { mastergoAssets } from '../assets/mastergo';
 
 const Hero = styled.section`
   position: relative;
-  min-height: 358px;
+  min-height: 340px;
   padding: 0;
-  background: ${mobilePalette.paper};
-  border-bottom: 1px solid ${mobilePalette.line};
+  background: linear-gradient(180deg, #fffaf0 0%, #fff 100%);
+  border-bottom: 1px solid ${mobilePalette.lineSoft};
 `;
 
 const CoverWrap = styled.div`
   position: relative;
   width: 100%;
-  height: 210px;
+  height: 206px;
   overflow: hidden;
   background: linear-gradient(120deg, #d4d4d4 0%, #777 100%);
 `;
@@ -59,18 +65,19 @@ const CoverTitle = styled.div`
 
 const Cover = styled.div`
   width: 100%;
-  height: 210px;
+  height: 206px;
   border-radius: 0;
   overflow: hidden;
 `;
 
 const EntryCover = styled(Cover)`
-  width: 72px;
-  height: 72px;
+  width: 64px;
+  height: 64px;
+  border-radius: ${mobileRadius.lg};
 `;
 
 const Info = styled.div`
-  padding: 22px 20px 0;
+  padding: 18px 20px 0;
   h1 {
     margin: 0 0 8px;
     font-size: 24px;
@@ -88,7 +95,7 @@ const Collect = styled.button<{ active?: boolean }>`
   align-items: center;
   gap: 5px;
   margin-top: 14px;
-  height: 28px;
+  height: 34px;
   padding: 0 14px;
   border-radius: 999px;
   background: ${(props) => (props.active ? '#fff5d7' : '#fff')};
@@ -98,19 +105,19 @@ const Collect = styled.button<{ active?: boolean }>`
 
 const EntryList = styled.div`
   display: grid;
-  gap: 10px;
-  padding: 18px 20px 86px;
+  gap: 12px;
+  padding: 4px 16px 94px;
 `;
 
 const EntryCard = styled(CardSurface)`
   display: grid;
-  grid-template-columns: 36px 72px 1fr;
+  grid-template-columns: 30px 64px minmax(0, 1fr);
   gap: 12px;
   align-items: center;
-  padding: 16px 14px;
+  padding: 14px;
   border: 0;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+  border-radius: 22px;
+  box-shadow: 0 10px 28px rgba(16, 24, 40, 0.06);
 `;
 
 const RankNumber = styled.strong`
@@ -122,16 +129,16 @@ const RankNumber = styled.strong`
 const AddButton = styled.button`
   position: fixed;
   left: 50%;
-  bottom: calc(28px + env(safe-area-inset-bottom));
+  bottom: calc(24px + env(safe-area-inset-bottom));
   transform: translateX(-50%);
-  width: 132px;
-  height: 48px;
+  width: 138px;
+  height: 50px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 7px;
   border-radius: 999px;
-  background: #ffb300;
+  background: linear-gradient(135deg, #ffc641, #fe9800);
   color: #fff;
   font-size: 14px;
   box-shadow: 0 12px 28px rgba(255, 159, 26, 0.32);

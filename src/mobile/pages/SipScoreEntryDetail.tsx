@@ -10,14 +10,14 @@ import LoadingState from '../components/LoadingState';
 import ErrorState from '../components/ErrorState';
 import MobileAvatar from '../components/MobileAvatar';
 import MobileImage from '../components/MobileImage';
-import { mobilePalette, PrimaryButton, CardSurface } from '../styles';
+import { mobilePalette, mobileRadius, PrimaryButton, CardSurface } from '../styles';
 import { SORT_TYPE } from '../constants';
 import { mobileApi, SipScoreEntry, SipScoreRating } from '../api';
 import moment from 'utils/moment';
 
 const Hero = styled.section`
-  background: ${mobilePalette.paper};
-  padding: 16px 20px;
+  background: linear-gradient(180deg, #fffaf0 0%, #fff 100%);
+  padding: 18px 20px;
   overflow: hidden;
 `;
 
@@ -26,14 +26,15 @@ const Cover = styled.div`
   height: 86px;
   float: left;
   margin: 0 14px 12px 0;
-  border-radius: 8px;
+  border-radius: 20px;
   overflow: hidden;
 `;
 
 const Title = styled.h1`
   margin: 0 0 8px;
-  font-size: 18px;
-  font-weight: 700;
+  font-size: 22px;
+  line-height: 1.25;
+  font-weight: 800;
 `;
 
 const Muted = styled.p`
@@ -43,24 +44,26 @@ const Muted = styled.p`
 `;
 
 const RateBox = styled(CardSurface)`
-  margin: 12px;
-  padding: 14px 20px;
+  margin: 12px 14px;
+  padding: 16px;
   display: grid;
   gap: 10px;
   border: 0;
-  border-radius: 8px;
+  border-radius: 22px;
+  box-shadow: 0 12px 30px rgba(16, 24, 40, 0.06);
 `;
 
 const RatingList = styled.div`
   display: grid;
-  gap: 10px;
-  padding: 0 12px 20px;
+  gap: 12px;
+  padding: 0 14px 24px;
 `;
 
 const RatingCard = styled(CardSurface)`
-  padding: 12px;
+  padding: 14px;
   border: 0;
-  border-radius: 8px;
+  border-radius: 20px;
+  box-shadow: 0 8px 24px rgba(16, 24, 40, 0.05);
 `;
 
 const RatingHead = styled.div`

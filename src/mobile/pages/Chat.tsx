@@ -4,7 +4,7 @@ import { Input, message } from 'antd';
 import { useLocation, useSearchParams } from 'react-router-dom';
 import MobileShell from '../components/MobileShell';
 import EmptyState from '../components/EmptyState';
-import { mobilePalette, PrimaryButton } from '../styles';
+import { mobilePalette, mobileRadius, PrimaryButton } from '../styles';
 import { mobileApi, MobileUser } from '../api';
 import useProfile from 'store/useProfile';
 import useWS from 'store/useWS';
@@ -21,19 +21,22 @@ const Wrap = styled.div`
 const Messages = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  padding: 14px;
+  gap: 12px;
+  padding: 14px 14px 18px;
   overflow-y: auto;
 `;
 
 const Bubble = styled.div<{ mine?: boolean }>`
   max-width: 78%;
   align-self: ${(props) => (props.mine ? 'flex-end' : 'flex-start')};
-  padding: 10px 12px;
-  border-radius: 8px;
-  background: ${(props) => (props.mine ? mobilePalette.orange : '#fff')};
+  padding: 10px 13px;
+  border-radius: ${(props) => (props.mine ? '18px 18px 6px 18px' : '18px 18px 18px 6px')};
+  background: ${(props) =>
+    props.mine ? 'linear-gradient(135deg, #ffc641, #fe9800)' : '#fff'};
   color: ${(props) => (props.mine ? '#fff' : mobilePalette.ink)};
-  box-shadow: 0 4px 12px rgba(31, 35, 41, 0.05);
+  box-shadow: 0 8px 22px rgba(31, 35, 41, 0.06);
+  line-height: 1.55;
+  word-break: break-word;
 `;
 
 const Time = styled.div`
@@ -48,8 +51,17 @@ const Composer = styled.div`
   grid-template-columns: minmax(0, 1fr) 72px;
   gap: 8px;
   padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
-  background: ${mobilePalette.paper};
-  border-top: 1px solid ${mobilePalette.line};
+  background: rgba(255, 255, 255, 0.9);
+  border-top: 1px solid rgba(60, 60, 67, 0.08);
+  backdrop-filter: blur(18px);
+  .ant-input {
+    height: 42px;
+    border-radius: ${mobileRadius.pill};
+    border-color: rgba(60, 60, 67, 0.1);
+  }
+  button {
+    height: 42px;
+  }
 `;
 
 const Chat: React.FC = () => {

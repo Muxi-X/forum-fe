@@ -10,30 +10,32 @@ import LoadingState from '../components/LoadingState';
 import ErrorState from '../components/ErrorState';
 import MobileImage from '../components/MobileImage';
 import DesignIcon from '../components/DesignIcon';
-import { CardSurface, mobilePalette } from '../styles';
+import { CardSurface, mobilePalette, mobileRadius } from '../styles';
 import { mobileApi, MobilePost, SipScoreWithEntries } from '../api';
 
 const List = styled.div`
   display: grid;
-  gap: 10px;
-  padding: 0 0 20px;
-  background: #fff;
+  gap: 12px;
+  padding: 2px 0 24px;
+  background: ${mobilePalette.bg};
 `;
 
 const RankingCard = styled(CardSurface)`
   display: grid;
-  grid-template-columns: 72px 1fr;
+  grid-template-columns: 68px minmax(0, 1fr);
   gap: 12px;
+  width: calc(100% - 28px);
+  margin: 0 auto;
   padding: 12px;
   border: 0;
-  border-bottom: 1px solid #efefef;
-  border-radius: 0;
+  border-radius: 22px;
+  box-shadow: 0 10px 28px rgba(16, 24, 40, 0.06);
 `;
 
 const Cover = styled.div`
-  width: 72px;
-  height: 72px;
-  border-radius: 8px;
+  width: 68px;
+  height: 68px;
+  border-radius: ${mobileRadius.lg};
   overflow: hidden;
 `;
 
@@ -50,6 +52,10 @@ const RankingInfo = styled.div`
     margin: 0;
     color: ${mobilePalette.muted};
     line-height: 1.5;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
   }
   .meta {
     margin-top: 8px;

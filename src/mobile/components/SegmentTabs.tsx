@@ -1,13 +1,18 @@
 import React from 'react';
 import styled from 'styled-components';
-import { mobilePalette } from '../styles';
+import { mobileMotion, mobilePalette, mobileRadius } from '../styles';
 
 const Wrap = styled.div`
-  display: flex;
-  gap: 22px;
+  display: inline-flex;
+  max-width: calc(100% - 32px);
+  gap: 4px;
   overflow-x: auto;
-  padding: 10px 16px 12px;
-  background: #fff;
+  margin: 12px 16px;
+  padding: 4px;
+  border: 1px solid rgba(60, 60, 67, 0.08);
+  border-radius: ${mobileRadius.pill};
+  background: rgba(255, 255, 255, 0.76);
+  box-shadow: 0 8px 24px rgba(16, 24, 40, 0.05);
   scrollbar-width: none;
   &::-webkit-scrollbar {
     display: none;
@@ -15,25 +20,21 @@ const Wrap = styled.div`
 `;
 
 const Tab = styled.button<{ active: boolean }>`
-  position: relative;
   flex: 0 0 auto;
-  min-width: 34px;
-  height: 30px;
-  padding: 0;
-  border-radius: 0;
-  background: transparent;
+  min-width: 58px;
+  height: 32px;
+  padding: 0 14px;
+  border-radius: ${mobileRadius.pill};
+  background: ${(props) => (props.active ? '#fff' : 'transparent')};
   border: 0;
   color: ${(props) => (props.active ? '#fe9800' : mobilePalette.muted)};
   font-weight: ${(props) => (props.active ? 700 : 500)};
-  &::after {
-    content: '';
-    position: absolute;
-    left: 0;
-    right: 0;
-    bottom: -5px;
-    height: 3px;
-    border-radius: 999px;
-    background: ${(props) => (props.active ? '#ffc641' : 'transparent')};
+  box-shadow: ${(props) =>
+    props.active ? '0 6px 16px rgba(254, 152, 0, 0.14)' : 'none'};
+  transition: background ${mobileMotion.fast}, color ${mobileMotion.fast},
+    box-shadow ${mobileMotion.fast}, transform ${mobileMotion.fast};
+  &:active {
+    transform: scale(0.96);
   }
 `;
 

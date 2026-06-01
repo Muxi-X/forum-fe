@@ -4,42 +4,43 @@ import { Input, message } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import MobileShell from '../components/MobileShell';
 import UploadField from '../components/UploadField';
-import { mobilePalette, PrimaryButton } from '../styles';
+import { mobilePalette, mobileRadius, PrimaryButton } from '../styles';
 import { mobileApi } from '../api';
 
 const Wrap = styled.div`
   min-height: calc(100vh - 52px);
-  padding: 18px 16px 28px;
-  background: ${mobilePalette.paper};
+  padding: 18px 16px 34px;
+  background: linear-gradient(180deg, #fffaf0 0%, #f7f8fb 38%, #f7f8fb 100%);
 
   .ant-input,
   .ant-input-affix-wrapper {
-    border-radius: 8px;
-    border-color: #dfe3ea;
+    border-radius: ${mobileRadius.lg};
+    border-color: rgba(60, 60, 67, 0.1);
+    box-shadow: 0 8px 22px rgba(16, 24, 40, 0.04);
   }
 `;
 
 const Label = styled.label`
   display: block;
-  margin: 18px 0 14px;
+  margin: 20px 0 10px;
   color: #1a202c;
   font-weight: 700;
 `;
 
 const TypeGrid = styled.div`
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px 14px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
 `;
 
 const TypeChip = styled.button<{ active: boolean }>`
-  min-width: 86px;
-  min-height: 40px;
-  padding: 0 14px;
-  border-radius: 14px;
-  background: ${(props) => (props.active ? '#fff8e1' : '#fff')};
-  border: 1px solid ${(props) => (props.active ? '#ffc641' : '#e6e6e6')};
+  min-height: 42px;
+  padding: 0 12px;
+  border-radius: ${mobileRadius.lg};
+  background: ${(props) => (props.active ? '#fff8e1' : 'rgba(255, 255, 255, 0.86)')};
+  border: 1px solid ${(props) => (props.active ? '#ffc641' : 'rgba(60, 60, 67, 0.1)')};
   color: ${(props) => (props.active ? '#fe9800' : '#7f838a')};
+  font-weight: ${(props) => (props.active ? 800 : 500)};
 `;
 
 const Feedback: React.FC = () => {

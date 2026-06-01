@@ -9,20 +9,21 @@ import { DEFAULT_TABLE } from '../constants';
 import { mobileApi } from '../api';
 
 const Wrap = styled.div`
-  padding: 16px 20px 112px;
-  background: ${mobilePalette.paper};
+  padding: 16px 18px 118px;
+  background: linear-gradient(180deg, #fffaf0 0%, #f7f8fb 36%, #f7f8fb 100%);
   min-height: calc(100vh - 52px);
 
   .ant-input,
   .ant-input-affix-wrapper {
-    border-radius: 10px;
-    border-color: #dfe3ea;
+    border-radius: ${mobileRadius.lg};
+    border-color: rgba(60, 60, 67, 0.1);
+    box-shadow: 0 8px 22px rgba(16, 24, 40, 0.04);
   }
 `;
 
 const Label = styled.label`
   display: block;
-  margin: 24px 0 12px;
+  margin: 22px 0 10px;
   color: #1a202c;
   font-weight: 700;
 `;
@@ -47,16 +48,16 @@ const SubmitButton = styled(PrimaryButton)`
 const TagRow = styled.div`
   display: flex;
   flex-wrap: wrap;
-  gap: 12px;
+  gap: 10px;
 `;
 
 const TagChip = styled.button<{ active?: boolean }>`
-  height: 38px;
-  min-width: 90px;
+  height: 36px;
+  min-width: 82px;
   padding: 0 16px;
   border-radius: 999px;
-  border: 1px solid ${(props) => (props.active ? '#feaa00' : '#dfe3ea')};
-  background: ${(props) => (props.active ? '#feaa00' : '#fff')};
+  border: 1px solid ${(props) => (props.active ? '#feaa00' : 'rgba(60, 60, 67, 0.1)')};
+  background: ${(props) => (props.active ? '#feaa00' : 'rgba(255, 255, 255, 0.86)')};
   color: ${(props) => (props.active ? '#fff' : '#1a202c')};
 `;
 
@@ -69,7 +70,7 @@ const CustomTagForm = styled.form`
     min-width: 0;
     height: 38px;
     padding: 0 14px;
-    border: 1px solid #dfe3ea;
+    border: 1px solid rgba(60, 60, 67, 0.12);
     border-radius: ${mobileRadius.pill};
   }
   button {

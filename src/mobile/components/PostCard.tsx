@@ -17,9 +17,9 @@ const stripHtml = (value?: string) =>
 const Card = styled.article`
   width: calc(100% - 28px);
   margin: 0 auto 12px;
-  padding: 14px 14px 12px;
+  padding: 15px 15px 13px;
   border: 0;
-  border-radius: ${mobileRadius.lg};
+  border-radius: 22px;
   background: rgba(255, 255, 255, 0.96);
   box-shadow: 0 10px 28px rgba(16, 24, 40, 0.06);
   transition: transform ${mobileMotion.fast}, box-shadow ${mobileMotion.fast};
@@ -51,6 +51,14 @@ const Meta = styled.div`
     display: inline-block;
     margin-top: 2px;
     color: #bfbfc0;
+  }
+  .dot {
+    margin: 0 5px;
+    color: rgba(127, 131, 138, 0.48);
+  }
+  .table {
+    color: #c46c00;
+    font-weight: 700;
   }
 `;
 
@@ -119,11 +127,6 @@ const Tags = styled.div`
     text-overflow: ellipsis;
     white-space: nowrap;
   }
-  .table {
-    max-width: 96px;
-    background: rgba(254, 152, 0, 0.12);
-    color: #c46c00;
-  }
 `;
 
 const getSummary = (post: MobilePost) =>
@@ -141,14 +144,17 @@ const PostCard: React.FC<{ post: MobilePost }> = ({ post }) => {
         <MobileAvatar url={post.creator_avatar} size={36} />
         <span>
           <span className="author">{post.creator_name || '茶友'}</span>
-          <span className="time">{post.time ? moment(post.time).fromNow() : ''}</span>
+          <span className="time">
+            {post.time ? moment(post.time).fromNow() : ''}
+            <span className="dot">·</span>
+            <span className="table">{table.name}</span>
+          </span>
         </span>
       </Meta>
       <Title>{post.title || '未命名帖子'}</Title>
       <Summary>{getSummary(post)}</Summary>
       <Footer>
         <Tags>
-          <span className="table">{table.name}</span>
           {(post.tags || []).slice(0, 2).map((tag) => (
             <span key={tag}>#{tag}</span>
           ))}
