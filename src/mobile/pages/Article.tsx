@@ -2,21 +2,30 @@ import React, { useEffect, useMemo, useState } from 'react';
 import styled from 'styled-components';
 import DOMPurify from 'dompurify';
 import MarkdownIt from 'markdown-it';
-import { Input, message, Modal } from 'antd';
+import { Input, message } from 'antd';
 import { useNavigate, useParams } from 'react-router-dom';
 import MobileShell from '../components/MobileShell';
 import EmptyState from '../components/EmptyState';
+import LoadingState from '../components/LoadingState';
+import ErrorState from '../components/ErrorState';
+import MobileBottomSheet from '../components/MobileBottomSheet';
 import UploadField from '../components/UploadField';
 import MobileAvatar from '../components/MobileAvatar';
 import DesignIcon from '../components/DesignIcon';
-import { mobilePalette, PrimaryButton, GhostButton } from '../styles';
+import {
+  mobileMotion,
+  mobilePalette,
+  mobileRadius,
+  PrimaryButton,
+  GhostButton,
+} from '../styles';
 import { mobileApi, MobileComment, MobilePost } from '../api';
 import { TARGET_TYPE, TYPE_NAME, SORT_TYPE, mobileTableByCategory } from '../constants';
 import moment from 'utils/moment';
 
 const ArticleWrap = styled.article`
   background: ${mobilePalette.paper};
-  padding: 14px 20px 8px;
+  padding: 16px 20px 18px;
 `;
 
 const TableLabel = styled.button`
@@ -52,19 +61,18 @@ const Content = styled.div`
   word-break: break-word;
   img {
     max-width: 100%;
-    border-radius: 0;
+    border-radius: ${mobileRadius.md};
   }
 `;
 
 const ActionRow = styled.div`
-  display: grid;
-  grid-template-columns: repeat(4, auto);
-  justify-content: start;
-  gap: 14px;
-  padding: 12px 20px;
+  display: flex;
+  justify-content: space-around;
+  gap: 8px;
+  padding: 10px 14px;
   background: ${mobilePalette.paper};
-  border-top: 1px solid ${mobilePalette.line};
-  border-bottom: 1px solid ${mobilePalette.line};
+  border-top: 1px solid ${mobilePalette.lineSoft};
+  border-bottom: 1px solid ${mobilePalette.lineSoft};
 `;
 
 const ActionButton = styled.button<{ active?: boolean }>`
@@ -77,6 +85,10 @@ const ActionButton = styled.button<{ active?: boolean }>`
   background: transparent;
   color: ${(props) => (props.active ? mobilePalette.orange : mobilePalette.ink)};
   border: 0;
+  transition: transform ${mobileMotion.fast};
+  &:active {
+    transform: scale(0.96);
+  }
 `;
 
 const CommentSection = styled.section`
@@ -125,23 +137,31 @@ const Composer = styled.div`
   position: fixed;
   left: 0;
   right: 0;
+  max-width: 520px;
+  margin: 0 auto;
   bottom: 0;
   z-index: 40;
   display: grid;
-  grid-template-columns: 1fr 56px;
+  grid-template-columns: minmax(0, 1fr) 64px;
   gap: 8px;
   padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
   background: rgba(255, 254, 250, 0.98);
-  border-top: 1px solid ${mobilePalette.line};
+  border-top: 1px solid ${mobilePalette.lineSoft};
+  backdrop-filter: blur(18px);
   textarea {
     resize: none;
-    border-radius: 999px;
+    border-radius: ${mobileRadius.lg};
   }
 `;
 
 const ReportForm = styled.div`
   display: grid;
   gap: 12px;
+  .actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
 `;
 
 const md = new MarkdownIt({ html: true, linkify: true, typographer: true });
@@ -213,6 +233,8 @@ const Article: React.FC = () => {
   const [reportContact, setReportContact] = useState('');
   const [reportImg, setReportImg] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
   const html = useMemo(() => {
     if (!post) return '';
@@ -223,12 +245,20 @@ const Article: React.FC = () => {
   }, [post]);
 
   const load = async () => {
-    const res = await mobileApi.posts.get(postId);
-    if (res.code !== 0) {
-      message.error(res.message);
-      return;
+    setLoading(true);
+    setError('');
+    try {
+      const res = await mobileApi.posts.get(postId);
+      if (res.code !== 0) {
+        setError(res.message || '帖子加载失败');
+        return;
+      }
+      setPost(res.data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '帖子加载失败');
+    } finally {
+      setLoading(false);
     }
-    setPost(res.data);
   };
 
   const loadComments = async () => {
@@ -251,26 +281,46 @@ const Article: React.FC = () => {
 
   const toggleLike = async () => {
     if (!post?.id) return;
+    if (!localStorage.getItem('token')) {
+      nav('/login');
+      return;
+    }
     setPost({
       ...post,
       is_liked: !post.is_liked,
       like_num: (post.like_num || 0) + (post.is_liked ? -1 : 1),
     });
-    await mobileApi.like(post.id, TYPE_NAME.post);
+    const res = await mobileApi.like(post.id, TYPE_NAME.post);
+    if (res.code !== 0) {
+      message.error(res.message || '操作失败');
+      load();
+    }
   };
 
   const toggleCollect = async () => {
     if (!post?.id) return;
+    if (!localStorage.getItem('token')) {
+      nav('/login');
+      return;
+    }
     setPost({
       ...post,
       is_collection: !post.is_collection,
       collection_num: (post.collection_num || 0) + (post.is_collection ? -1 : 1),
     });
-    await mobileApi.collection.toggle(post.id, TARGET_TYPE.post);
+    const res = await mobileApi.collection.toggle(post.id, TARGET_TYPE.post);
+    if (res.code !== 0) {
+      message.error(res.message || '操作失败');
+      load();
+    }
   };
 
   const submitComment = async () => {
     if (!content.trim() || !post?.id) return;
+    if (!localStorage.getItem('token')) {
+      nav('/login');
+      return;
+    }
     setSubmitting(true);
     const body = replyTo
       ? {
@@ -323,13 +373,23 @@ const Article: React.FC = () => {
     }
   };
 
-  if (!post) {
+  if (loading && !post) {
     return (
       <MobileShell title="帖子详情" back tabs={false}>
-        <EmptyState text="加载中..." />
+        <LoadingState text="正在打开帖子..." />
       </MobileShell>
     );
   }
+
+  if (error && !post) {
+    return (
+      <MobileShell title="帖子详情" back tabs={false}>
+        <ErrorState text={error} onRetry={load} />
+      </MobileShell>
+    );
+  }
+
+  if (!post) return null;
 
   return (
     <MobileShell title="帖子详情" back tabs={false}>
@@ -378,7 +438,7 @@ const Article: React.FC = () => {
         {comments.length ? (
           <CommentList comments={comments} onReply={setReplyTo} />
         ) : (
-          <EmptyState text="还没有评论" />
+          <EmptyState title="还没有评论" text="坐下聊两句，可能就有人接上了。" />
         )}
       </CommentSection>
       <Composer>
@@ -395,18 +455,10 @@ const Article: React.FC = () => {
           发送
         </PrimaryButton>
       </Composer>
-      <Modal
-        title="投诉"
+      <MobileBottomSheet
         open={reportOpen}
-        onCancel={() => setReportOpen(false)}
-        footer={[
-          <GhostButton key="cancel" onClick={() => setReportOpen(false)}>
-            取消
-          </GhostButton>,
-          <PrimaryButton key="ok" onClick={submitReport}>
-            提交
-          </PrimaryButton>,
-        ]}
+        title="投诉内容"
+        onClose={() => setReportOpen(false)}
       >
         <ReportForm>
           <Input.TextArea
@@ -421,8 +473,16 @@ const Article: React.FC = () => {
             placeholder="联系方式（可选）"
           />
           <UploadField value={reportImg} onChange={setReportImg} />
+          <div className="actions">
+            <GhostButton type="button" onClick={() => setReportOpen(false)}>
+              取消
+            </GhostButton>
+            <PrimaryButton type="button" onClick={submitReport}>
+              提交
+            </PrimaryButton>
+          </div>
         </ReportForm>
-      </Modal>
+      </MobileBottomSheet>
     </MobileShell>
   );
 };

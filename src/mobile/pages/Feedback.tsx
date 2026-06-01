@@ -48,25 +48,30 @@ const Feedback: React.FC = () => {
   const [contact, setContact] = useState('');
   const [img, setImg] = useState('');
   const [category, setCategory] = useState('产品改进');
+  const [submitting, setSubmitting] = useState(false);
 
   const submit = async () => {
     if (!content.trim()) {
       message.warning('请填写反馈内容');
       return;
     }
-    const res = await mobileApi.feedback({
-      category: 'mobile',
-      feedback_category: category,
-      content,
-      contact,
-      img_url: img,
-    });
-    if (res.code !== 0) {
-      message.error(res.message);
-      return;
+    setSubmitting(true);
+    try {
+      const res = await mobileApi.feedback({
+        category,
+        content,
+        contact,
+        img_url: img,
+      });
+      if (res.code !== 0) {
+        message.error(res.message);
+        return;
+      }
+      message.success('感谢反馈');
+      nav(-1);
+    } finally {
+      setSubmitting(false);
     }
-    message.success('感谢反馈');
-    nav(-1);
   };
 
   return (
@@ -103,8 +108,12 @@ const Feedback: React.FC = () => {
           onChange={(event) => setContact(event.target.value)}
           placeholder="QQ/邮箱"
         />
-        <PrimaryButton style={{ width: '100%', marginTop: 22 }} onClick={submit}>
-          提交
+        <PrimaryButton
+          style={{ width: '100%', marginTop: 22 }}
+          disabled={submitting}
+          onClick={submit}
+        >
+          {submitting ? '提交中...' : '提交'}
         </PrimaryButton>
       </Wrap>
     </MobileShell>

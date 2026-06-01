@@ -14,7 +14,7 @@ import moment from 'utils/moment';
 const Wrap = styled.div`
   display: grid;
   grid-template-rows: 1fr auto;
-  min-height: calc(100vh - 52px);
+  min-height: calc(100dvh - 56px - env(safe-area-inset-top));
   background: ${mobilePalette.bg};
 `;
 
@@ -23,6 +23,7 @@ const Messages = styled.div`
   flex-direction: column;
   gap: 10px;
   padding: 14px;
+  overflow-y: auto;
 `;
 
 const Bubble = styled.div<{ mine?: boolean }>`
@@ -44,7 +45,7 @@ const Time = styled.div`
 
 const Composer = styled.div`
   display: grid;
-  grid-template-columns: 1fr 72px;
+  grid-template-columns: minmax(0, 1fr) 72px;
   gap: 8px;
   padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
   background: ${mobilePalette.paper};
@@ -60,6 +61,7 @@ const Chat: React.FC = () => {
   const [target, setTarget] = useState<MobileUser | null>(null);
   const [records, setRecords] = useState<MsgResponse[]>([]);
   const [text, setText] = useState('');
+  const [sending, setSending] = useState(false);
 
   const myId = userProfile.id || Number(localStorage.getItem('userId')) || 0;
   const title = useMemo(() => target?.name || '私信', [target]);
@@ -93,6 +95,7 @@ const Chat: React.FC = () => {
 
   const send = () => {
     if (!text.trim() || !targetId) return;
+    setSending(true);
     const payload = {
       target_user_id: targetId,
       content: text.trim(),
@@ -101,26 +104,33 @@ const Chat: React.FC = () => {
     };
     if (!ws?.ws || ws.ws.readyState !== WebSocket.OPEN) {
       message.warning('连接尚未建立');
+      setSending(false);
       return;
     }
-    ws.send(payload);
-    setRecords((prev) => [
-      ...prev,
-      {
-        sender_id: myId,
-        receiver_id: targetId,
-        content: payload.content,
-        type_name: payload.type_name,
-        time: payload.time,
-      },
-    ]);
-    setText('');
+    try {
+      ws.send(payload);
+      setRecords((prev) => [
+        ...prev,
+        {
+          sender_id: myId,
+          receiver_id: targetId,
+          content: payload.content,
+          type_name: payload.type_name,
+          time: payload.time,
+        },
+      ]);
+      setText('');
+    } catch {
+      message.error('发送失败，请稍后重试');
+    } finally {
+      setSending(false);
+    }
   };
 
   if (!targetId) {
     return (
       <MobileShell title="私信" back tabs={false}>
-        <EmptyState text="请选择聊天对象" />
+        <EmptyState title="请选择聊天对象" />
       </MobileShell>
     );
   }
@@ -137,7 +147,7 @@ const Chat: React.FC = () => {
               </React.Fragment>
             ))
           ) : (
-            <EmptyState text="开始聊天吧" />
+            <EmptyState title="开始聊天吧" text="消息会实时出现在这里。" />
           )}
         </Messages>
         <Composer>
@@ -145,8 +155,11 @@ const Chat: React.FC = () => {
             value={text}
             onChange={(event) => setText(event.target.value)}
             onPressEnter={send}
+            placeholder="写点什么..."
           />
-          <PrimaryButton onClick={send}>发送</PrimaryButton>
+          <PrimaryButton disabled={sending || !text.trim()} onClick={send}>
+            发送
+          </PrimaryButton>
         </Composer>
       </Wrap>
     </MobileShell>

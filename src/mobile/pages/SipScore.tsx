@@ -6,7 +6,10 @@ import MobileShell from '../components/MobileShell';
 import SearchBar from '../components/SearchBar';
 import SegmentTabs from '../components/SegmentTabs';
 import EmptyState from '../components/EmptyState';
-import { mobilePalette, CardSurface } from '../styles';
+import LoadingState from '../components/LoadingState';
+import ErrorState from '../components/ErrorState';
+import MobileImage from '../components/MobileImage';
+import { mobileMotion, mobilePalette, CardSurface } from '../styles';
 import { SORT_TYPE } from '../constants';
 import { mobileApi, SipScoreWithEntries } from '../api';
 import DesignIcon from '../components/DesignIcon';
@@ -23,26 +26,31 @@ const Header = styled.section`
 
 const List = styled.div`
   display: grid;
-  gap: 40px;
+  gap: 16px;
   padding: 18px 20px 30px;
-  background: #fff;
+  background: ${mobilePalette.bg};
 `;
 
 const Card = styled(CardSurface)`
   display: block;
   padding: 16px 14px 20px;
   border: 0;
-  border-radius: 12px;
+  border-radius: 18px;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
   overflow: hidden;
+  transition: transform ${mobileMotion.fast}, box-shadow ${mobileMotion.fast};
+  &:active {
+    transform: scale(0.985);
+    box-shadow: 0 6px 18px rgba(16, 24, 40, 0.06);
+  }
 `;
 
-const Cover = styled.div<{ src?: string }>`
-  width: 84px;
-  height: 80px;
-  flex: 0 0 84px;
+const Cover = styled.div`
+  width: 72px;
+  height: 72px;
+  flex: 0 0 72px;
   border-radius: 10px;
-  background: ${(props) => (props.src ? `url(${props.src}) center/cover` : '#fcf4d4')};
+  overflow: hidden;
 `;
 
 const Info = styled.div`
@@ -66,8 +74,8 @@ const Info = styled.div`
 
 const Stats = styled.div`
   display: flex;
-  justify-content: flex-end;
-  gap: 4px;
+  flex-wrap: wrap;
+  gap: 4px 8px;
   margin-top: 8px;
   color: ${mobilePalette.muted};
   font-size: 12px;
@@ -112,6 +120,7 @@ const RankingTitle = styled.h2`
   font-size: 20px;
   font-weight: 700;
   .more {
+    flex: 0 0 auto;
     display: inline-flex;
     align-items: center;
     gap: 4px;
@@ -122,17 +131,18 @@ const RankingTitle = styled.h2`
 `;
 
 const EntryRow = styled.div`
-  display: flex;
-  gap: 14px;
+  display: grid;
+  grid-template-columns: 72px minmax(0, 1fr) 48px;
+  gap: 12px;
+  align-items: start;
   margin-top: 12px;
   min-width: 0;
 `;
 
 const Score = styled.strong`
-  flex: 0 0 auto;
-  margin-left: auto;
+  justify-self: end;
   color: #ffc641;
-  font-size: 32px;
+  font-size: 26px;
   line-height: 1;
 `;
 
@@ -142,20 +152,27 @@ const SipScore: React.FC = () => {
   const [sort, setSort] = useState<number>(SORT_TYPE.newest);
   const [keyword, setKeyword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [loaded, setLoaded] = useState(false);
+  const [error, setError] = useState('');
 
   const load = async () => {
     setLoading(true);
+    setError('');
     try {
       const res = keyword
         ? await mobileApi.sipScore.search({ keyword, page_size: 20 })
         : await mobileApi.sipScore.list({ sort_type: sort, page_size: 20 });
       if (res.code !== 0) {
-        message.error(res.message);
+        setError(res.message || '榜单加载失败');
+        message.error(res.message || '榜单加载失败');
         return;
       }
       setItems(res.data.sip_scores || []);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '榜单加载失败');
     } finally {
       setLoading(false);
+      setLoaded(true);
     }
   };
 
@@ -201,13 +218,19 @@ const SipScore: React.FC = () => {
                 {entries.length ? (
                   entries.map((entry) => (
                     <EntryRow key={entry.id || entry.name}>
-                      <Cover src={entry.cover_img || sip.cover_img} />
+                      <Cover>
+                        <MobileImage
+                          src={entry.cover_img || sip.cover_img}
+                          fallbackText="茶评"
+                          radius={10}
+                        />
+                      </Cover>
                       <Info>
                         <h2>{entry.name || '未命名项目'}</h2>
                         <Stats>
                           <span>
                             <DesignIcon name="star" size={13} color="#ffb300" />{' '}
-                            {((entry.score_avg || 490) / 100).toFixed(1)}
+                            {((entry.score_avg || 0) / 100).toFixed(1)}
                           </span>
                           <span>
                             {entry.participant_num || entry.participant_count || 0} 人参与
@@ -217,12 +240,14 @@ const SipScore: React.FC = () => {
                           {entry.description || sip.description || '暂无热评'}
                         </EntryPreview>
                       </Info>
-                      <Score>{((entry.score_avg || 490) / 100).toFixed(1)}</Score>
+                      <Score>{((entry.score_avg || 0) / 100).toFixed(1)}</Score>
                     </EntryRow>
                   ))
                 ) : (
                   <EntryRow>
-                    <Cover src={sip.cover_img} />
+                    <Cover>
+                      <MobileImage src={sip.cover_img} fallbackText="茶评" radius={10} />
+                    </Cover>
                     <Info>
                       <h2>等待第一个评分对象</h2>
                       <p>{sip.description || '暂无简介'}</p>
@@ -233,8 +258,17 @@ const SipScore: React.FC = () => {
             );
           })}
         </List>
+      ) : error ? (
+        <ErrorState text={error} onRetry={load} />
+      ) : loading || !loaded ? (
+        <LoadingState text="正在读取茶评榜..." />
       ) : (
-        <EmptyState text={loading ? '加载中...' : '还没有榜单'} />
+        <EmptyState
+          title={keyword ? '没有找到相关榜单' : '还没有榜单'}
+          text={keyword ? '换个关键词看看。' : '创建一个榜单，让大家一起评分。'}
+          actionText="创建榜单"
+          onAction={() => nav('/sip-score/new')}
+        />
       )}
     </MobileShell>
   );

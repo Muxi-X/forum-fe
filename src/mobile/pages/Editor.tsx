@@ -14,7 +14,7 @@ import moment from 'utils/moment';
 const Wrap = styled.div`
   min-height: calc(100vh - 52px);
   background: ${mobilePalette.paper};
-  padding: 0 12px 118px;
+  padding: 0 16px 118px;
 `;
 
 const TitleInput = styled.input`
@@ -111,6 +111,13 @@ const TableChip = styled.button<{ active: boolean }>`
   white-space: nowrap;
 `;
 
+const Helper = styled.p`
+  margin: 8px 0 0;
+  color: ${mobilePalette.muted};
+  font-size: 12px;
+  line-height: 1.5;
+`;
+
 const ImageUploadWrap = styled.div`
   margin: 18px 0;
   width: 92px;
@@ -147,10 +154,16 @@ const CustomTagRow = styled.form`
 
 const Bar = styled.div`
   position: fixed;
-  left: 28px;
-  right: 28px;
+  left: 0;
+  right: 0;
+  max-width: 520px;
+  margin: 0 auto;
   bottom: calc(34px + env(safe-area-inset-bottom));
   z-index: 20;
+  padding: 0 24px;
+  button {
+    width: 100%;
+  }
 `;
 
 const Editor: React.FC = () => {
@@ -268,7 +281,7 @@ const Editor: React.FC = () => {
       return;
     }
     if (tags.length >= 4) {
-      message.warning('最多选择四个标签');
+      message.warning('最多选择 4 个标签');
       return;
     }
     setTags([...tags, tag]);
@@ -310,16 +323,18 @@ const Editor: React.FC = () => {
         <TitleInput
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          placeholder="今日品得一款十年陈年普洱"
+          maxLength={60}
+          placeholder="给这杯茶起个标题"
         />
         <ContentInput
           value={content}
           rows={7}
           maxLength={6000}
           showCount={false}
-          placeholder="东一最好吃东一最好吃东一最好吃东一最好吃东一最好吃..."
+          placeholder="写下你想分享的事情..."
           onChange={(event) => setContent(event.target.value)}
         />
+        <Helper>{content.length}/6000，发布前会自动生成摘要。</Helper>
         <ImageUploadWrap>
           <UploadField compact iconOnly value={image} onChange={setImage} />
         </ImageUploadWrap>
@@ -343,7 +358,8 @@ const Editor: React.FC = () => {
         >
           <input
             value={customTag}
-            placeholder="自定义标签"
+            maxLength={12}
+            placeholder="添加自定义标签"
             onChange={(event) => setCustomTag(event.target.value)}
           />
           <button type="submit" aria-label="添加标签">
@@ -351,7 +367,7 @@ const Editor: React.FC = () => {
           </button>
         </CustomTagRow>
         <Bar>
-          <PrimaryButton style={{ width: '100%' }} disabled={submitting} onClick={submit}>
+          <PrimaryButton disabled={submitting} onClick={submit}>
             {submitting ? '提交中...' : isUpdate ? '更新' : '发布'}
           </PrimaryButton>
         </Bar>

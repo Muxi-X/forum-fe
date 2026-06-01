@@ -6,7 +6,10 @@ import MobileShell from '../components/MobileShell';
 import StarRating from '../components/StarRating';
 import UploadField from '../components/UploadField';
 import EmptyState from '../components/EmptyState';
+import LoadingState from '../components/LoadingState';
+import ErrorState from '../components/ErrorState';
 import MobileAvatar from '../components/MobileAvatar';
+import MobileImage from '../components/MobileImage';
 import { mobilePalette, PrimaryButton, CardSurface } from '../styles';
 import { SORT_TYPE } from '../constants';
 import { mobileApi, SipScoreEntry, SipScoreRating } from '../api';
@@ -18,16 +21,13 @@ const Hero = styled.section`
   overflow: hidden;
 `;
 
-const Cover = styled.div<{ src?: string }>`
+const Cover = styled.div`
   width: 86px;
   height: 86px;
   float: left;
   margin: 0 14px 12px 0;
   border-radius: 8px;
-  background: ${(props) =>
-    props.src
-      ? `url(${props.src}) center/cover`
-      : 'linear-gradient(135deg, #ffe8a8, #8bc6a4)'};
+  overflow: hidden;
 `;
 
 const Title = styled.h1`
@@ -82,19 +82,31 @@ const EntryDetail: React.FC = () => {
   const [comment, setComment] = useState('');
   const [img, setImg] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
   const load = async () => {
-    const detail = await mobileApi.sipScore.entryDetail(sipScoreId, scoreEntryId);
-    if (detail.code === 0) {
-      setEntry(detail.data.entry || null);
-      setMyRating(detail.data.my_rating || null);
-      if (detail.data.my_rating?.rating) setScore(detail.data.my_rating.rating);
+    setLoading(true);
+    setError('');
+    try {
+      const detail = await mobileApi.sipScore.entryDetail(sipScoreId, scoreEntryId);
+      if (detail.code === 0) {
+        setEntry(detail.data.entry || null);
+        setMyRating(detail.data.my_rating || null);
+        if (detail.data.my_rating?.rating) setScore(detail.data.my_rating.rating);
+      } else {
+        setError(detail.message || '评分对象加载失败');
+      }
+      const list = await mobileApi.sipScore.ratings(sipScoreId, scoreEntryId, {
+        sort_type: SORT_TYPE.newest,
+        page_size: 30,
+      });
+      if (list.code === 0) setRatings(list.data.ratings || []);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '评分对象加载失败');
+    } finally {
+      setLoading(false);
     }
-    const list = await mobileApi.sipScore.ratings(sipScoreId, scoreEntryId, {
-      sort_type: SORT_TYPE.newest,
-      page_size: 30,
-    });
-    if (list.code === 0) setRatings(list.data.ratings || []);
   };
 
   useEffect(() => {
@@ -128,18 +140,30 @@ const EntryDetail: React.FC = () => {
     }
   };
 
-  if (!entry) {
+  if (loading && !entry) {
     return (
       <MobileShell title="评分对象" back tabs={false}>
-        <EmptyState text="加载中..." />
+        <LoadingState text="正在打开评分对象..." />
       </MobileShell>
     );
   }
 
+  if (error && !entry) {
+    return (
+      <MobileShell title="评分对象" back tabs={false}>
+        <ErrorState text={error} onRetry={load} />
+      </MobileShell>
+    );
+  }
+
+  if (!entry) return null;
+
   return (
     <MobileShell title="评分对象" back tabs={false}>
       <Hero>
-        <Cover src={entry.cover_img} />
+        <Cover>
+          <MobileImage src={entry.cover_img} fallbackText="项目" radius={8} />
+        </Cover>
         <Title>{entry.name}</Title>
         <Muted>{entry.description || '暂无简介'}</Muted>
         <Muted style={{ marginTop: 8 }}>
@@ -201,7 +225,7 @@ const EntryDetail: React.FC = () => {
           ))}
         </RatingList>
       ) : (
-        <EmptyState text="还没有点评" />
+        <EmptyState title="还没有点评" text="写下第一条体验，给后来的人一点参考。" />
       )}
     </MobileShell>
   );

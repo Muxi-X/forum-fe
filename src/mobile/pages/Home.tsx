@@ -7,56 +7,74 @@ import SearchBar from '../components/SearchBar';
 import SegmentTabs from '../components/SegmentTabs';
 import PostCard from '../components/PostCard';
 import EmptyState from '../components/EmptyState';
+import LoadingState from '../components/LoadingState';
+import ErrorState from '../components/ErrorState';
 import { DEFAULT_TABLE, MOBILE_TABLES, mobileTableByRoute } from '../constants';
 import { mobileApi, MobilePost } from '../api';
 import DesignIcon from '../components/DesignIcon';
 import { mastergoAssets } from '../assets/mastergo';
+import { mobileMotion, mobilePalette, mobileRadius } from '../styles';
 
 const HomeSurface = styled.div`
-  background: #f9fafc;
+  background: ${mobilePalette.bg};
 `;
 
 const Hero = styled.section`
   position: relative;
-  min-height: 266px;
+  min-height: 292px;
   overflow: hidden;
-  padding: 88px 16px 0;
-  background: #fff;
+  padding: calc(24px + env(safe-area-inset-top)) 16px 0;
+  background: linear-gradient(180deg, #fff9ed 0%, #ffffff 72%);
   &::before {
     content: '';
     position: absolute;
-    left: 0;
-    right: 0;
-    top: 0;
-    height: 60px;
-    background: #d9d9d9;
+    left: -24px;
+    right: -24px;
+    top: -88px;
+    height: 190px;
+    background: radial-gradient(
+        circle at 18% 60%,
+        rgba(255, 198, 65, 0.34),
+        transparent 35%
+      ),
+      radial-gradient(circle at 82% 36%, rgba(254, 152, 0, 0.18), transparent 32%);
   }
 `;
 
 const SearchWrap = styled.div`
   position: relative;
   z-index: 3;
-  margin: 0 16px;
+  margin: 0;
+`;
+
+const HomeTitle = styled.div`
+  position: relative;
+  z-index: 2;
+  margin: 0 0 18px;
+  h1 {
+    margin: 0 0 6px;
+    color: ${mobilePalette.ink};
+    font-size: 28px;
+    font-weight: 900;
+    line-height: 1.12;
+  }
+  p {
+    margin: 0;
+    color: ${mobilePalette.muted};
+    font-size: 13px;
+  }
 `;
 
 const SearchPageHeader = styled.section`
   position: relative;
-  padding: 88px 16px 16px;
-  background: #fff;
-  &::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 0;
-    height: 60px;
-    background: #d9d9d9;
-  }
+  padding: calc(18px + env(safe-area-inset-top)) 16px 16px;
+  background: linear-gradient(180deg, #fff9ed, #fff);
 `;
 
 const TableGrid = styled.section`
-  padding: 16px 0 10px;
-  background: #fff;
+  position: relative;
+  z-index: 2;
+  padding: 20px 0 16px;
   h3 {
     margin: 0 0 13px;
     font-size: 20px;
@@ -73,11 +91,18 @@ const TableGrid = styled.section`
 
 const TableButton = styled.button`
   min-width: 0;
-  min-height: 92px;
-  padding: 0 2px;
+  min-height: 104px;
+  padding: 10px 6px 8px;
   text-align: center;
-  background: transparent;
+  background: rgba(255, 255, 255, 0.76);
   border: 0;
+  border-radius: ${mobileRadius.lg};
+  box-shadow: 0 10px 28px rgba(16, 24, 40, 0.06);
+  transition: transform ${mobileMotion.fast}, box-shadow ${mobileMotion.fast};
+  &:active {
+    transform: scale(0.98);
+    box-shadow: 0 6px 18px rgba(16, 24, 40, 0.05);
+  }
   .table-avatar {
     position: relative;
     width: 50px;
@@ -123,8 +148,8 @@ const TableButton = styled.button`
 
 const PostList = styled.div`
   display: block;
-  padding: 0 0 20px;
-  background: #fff;
+  padding: 14px 0 20px;
+  background: ${mobilePalette.bg};
 `;
 
 const DetailHero = styled.section`
@@ -170,8 +195,9 @@ const SortRow = styled.div`
   display: flex;
   gap: 24px;
   padding: 10px 16px 8px;
-  background: #fff;
-  border-bottom: 1px solid #efefef;
+  background: rgba(255, 255, 255, 0.9);
+  border-bottom: 1px solid ${mobilePalette.lineSoft};
+  backdrop-filter: blur(16px);
 `;
 
 const TableTabsPanel = styled.div`
@@ -232,13 +258,14 @@ const SortButton = styled.button<{ active: boolean }>`
 
 const FloatingEdit = styled.button`
   position: fixed;
-  right: 18px;
-  bottom: calc(82px + env(safe-area-inset-bottom));
+  left: 50%;
+  bottom: calc(86px + env(safe-area-inset-bottom));
   z-index: 35;
   width: 52px;
   height: 52px;
   display: grid;
   place-items: center;
+  margin-left: min(176px, calc(50vw - 70px));
   border-radius: 50%;
   background: #ffc641;
   color: #1a202c;
@@ -269,43 +296,21 @@ const DetailTopControls = styled.div`
 `;
 
 const MoreButton = styled.button`
-  height: 42px;
-  margin: 4px 20px 24px;
-  border-radius: 8px;
+  width: calc(100% - 40px);
+  height: 44px;
+  margin: 4px 20px 28px;
+  border-radius: ${mobileRadius.pill};
   background: #fff;
-  border: 1px solid #e6e6e6;
+  border: 1px solid ${mobilePalette.lineSoft};
   color: #3d3d3d;
 `;
 
-const LoadingPanel = styled.div`
-  min-height: 224px;
-  display: grid;
-  place-items: center;
-  background: #fff;
-  border-top: 1px solid #f0f1f4;
-  color: #8a9099;
-`;
-
-const LoadingBubble = styled.div`
-  display: grid;
-  justify-items: center;
-  gap: 12px;
-  .spinner {
-    width: 30px;
-    height: 30px;
-    border-radius: 50%;
-    border: 3px solid rgba(254, 152, 0, 0.16);
-    border-top-color: #fe9800;
-    animation: mobile-spin 0.86s linear infinite;
-  }
-  .copy {
-    font-size: 13px;
-  }
-  @keyframes mobile-spin {
-    to {
-      transform: rotate(360deg);
-    }
-  }
+const FeedIntro = styled.div`
+  padding: 16px 20px 2px;
+  color: ${mobilePalette.ink};
+  font-size: 18px;
+  font-weight: 900;
+  background: ${mobilePalette.bg};
 `;
 
 const tableVisuals: Record<string, { glyph: string; gradient: string }> = {
@@ -330,11 +335,13 @@ const Home: React.FC = () => {
   const [page, setPage] = useState(0);
   const [loading, setLoading] = useState(true);
   const [loaded, setLoaded] = useState(false);
+  const [error, setError] = useState('');
   const [activeTag, setActiveTag] = useState('全部');
   const [sort, setSort] = useState<'newest' | 'hottest'>('newest');
 
   const fetchPosts = async (nextPage = 0, append = false) => {
     setLoading(true);
+    setError('');
     try {
       const res = await mobileApi.posts.list({
         domain: 'normal',
@@ -346,12 +353,15 @@ const Home: React.FC = () => {
         filter: sort === 'hottest' ? 'hot' : '',
       });
       if (res.code !== 0) {
-        message.error(res.message);
+        setError(res.message || '加载失败');
+        if (append) message.error(res.message || '加载失败');
         return;
       }
       const next = res.data.posts || [];
-      setPosts(append ? [...posts, ...next] : next);
+      setPosts((current) => (append ? [...current, ...next] : next));
       setPage(nextPage);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '加载失败');
     } finally {
       setLoaded(true);
       setLoading(false);
@@ -377,6 +387,10 @@ const Home: React.FC = () => {
         {!table && !isSearch ? (
           <>
             <Hero>
+              <HomeTitle>
+                <h1>木犀茶馆</h1>
+                <p>校园里的新鲜事，慢慢喝一口再说。</p>
+              </HomeTitle>
               <SearchWrap>
                 <SearchBar
                   defaultValue={query}
@@ -480,6 +494,7 @@ const Home: React.FC = () => {
       ) : null}
       {posts.length ? (
         <>
+          {!table && !isSearch ? <FeedIntro>正在聊</FeedIntro> : null}
           <PostList>
             {posts.map((post) => (
               <PostCard key={post.id} post={post} />
@@ -489,15 +504,19 @@ const Home: React.FC = () => {
             {loading ? '加载中...' : '加载更多'}
           </MoreButton>
         </>
+      ) : error ? (
+        <ErrorState text={error} onRetry={() => fetchPosts(0, false)} />
       ) : loading || !loaded ? (
-        <LoadingPanel>
-          <LoadingBubble>
-            <span className="spinner" />
-            <span className="copy">正在沏茶...</span>
-          </LoadingBubble>
-        </LoadingPanel>
+        <LoadingState text="正在沏茶..." />
       ) : (
-        <EmptyState text="还没有帖子" />
+        <EmptyState
+          title={query ? '没有找到相关帖子' : '还没有帖子'}
+          text={
+            query ? '换个关键词再试试，或回到首页看看新的茶桌。' : '成为第一个开聊的人。'
+          }
+          actionText={query ? '回到首页' : '发布帖子'}
+          onAction={() => nav(query ? '/' : `/editor/article${Date.now()}`)}
+        />
       )}
       <FloatingEdit type="button" onClick={() => nav(`/editor/article${Date.now()}`)}>
         <img src={mastergoAssets.icons.addSmall} alt="" />

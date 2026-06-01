@@ -1,7 +1,15 @@
 import React from 'react';
+import styled from 'styled-components';
 import MobileTopBar from './MobileTopBar';
 import MobileBottomTabs from './MobileBottomTabs';
-import { MobilePage, ScrollBody } from '../styles';
+import { MobilePage, ScrollBody, mobilePalette } from '../styles';
+
+const Page = styled(MobilePage)`
+  width: 100%;
+  max-width: 520px;
+  margin: 0 auto;
+  background: ${mobilePalette.bg};
+`;
 
 const MobileShell: React.FC<{
   title?: string;
@@ -22,7 +30,7 @@ const MobileShell: React.FC<{
   onRight,
   children,
 }) => (
-  <MobilePage>
+  <Page>
     {showTopBar ? (
       <MobileTopBar
         title={title}
@@ -34,7 +42,7 @@ const MobileShell: React.FC<{
     ) : null}
     <ScrollBody withTabs={tabs}>{children}</ScrollBody>
     {tabs ? <MobileBottomTabs /> : null}
-  </MobilePage>
+  </Page>
 );
 
 export default MobileShell;

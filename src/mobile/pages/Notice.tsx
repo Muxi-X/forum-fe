@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import MobileShell from '../components/MobileShell';
 import SegmentTabs from '../components/SegmentTabs';
 import EmptyState from '../components/EmptyState';
+import LoadingState from '../components/LoadingState';
 import MobileAvatar from '../components/MobileAvatar';
 import { mobilePalette, Section } from '../styles';
 import { ChatUser, mobileApi } from '../api';
@@ -43,12 +44,17 @@ const Notice: React.FC = () => {
   const nav = useNavigate();
   const [tab, setTab] = useState('all');
   const [chatUsers, setChatUsers] = useState<ChatUser[]>([]);
+  const [loadingChat, setLoadingChat] = useState(false);
   const { notifications, markAsRead } = useNotification();
 
   useEffect(() => {
-    mobileApi.chat.users({ limit: 50, page: 0 }).then((res) => {
-      if (res.code === 0) setChatUsers(res.data || []);
-    });
+    setLoadingChat(true);
+    mobileApi.chat
+      .users({ limit: 50, page: 0 })
+      .then((res) => {
+        if (res.code === 0) setChatUsers(res.data || []);
+      })
+      .finally(() => setLoadingChat(false));
   }, []);
 
   const filtered = notifications.filter((item) => {
@@ -70,7 +76,9 @@ const Notice: React.FC = () => {
         ]}
         onChange={(value) => setTab(String(value))}
       />
-      {tab === 'chat' ? (
+      {tab === 'chat' && loadingChat ? (
+        <LoadingState text="正在读取私信..." />
+      ) : tab === 'chat' ? (
         chatUsers.length ? (
           <List>
             {chatUsers.map((user) => (
@@ -84,7 +92,7 @@ const Notice: React.FC = () => {
             ))}
           </List>
         ) : (
-          <EmptyState text="还没有私信" />
+          <EmptyState title="还没有私信" text="去他的主页点私信，就能开始聊天。" />
         )
       ) : filtered.length ? (
         <List>
@@ -115,7 +123,12 @@ const Notice: React.FC = () => {
           ))}
         </List>
       ) : (
-        <EmptyState text={tab === 'mention' ? '还没有 @ 你的消息' : '还没有通知'} />
+        <EmptyState
+          title={tab === 'mention' ? '还没有 @ 你的消息' : '还没有通知'}
+          text={
+            tab === 'mention' ? '后端暂未提供 @ 类型时，这里会保持空状态。' : undefined
+          }
+        />
       )}
     </MobileShell>
   );

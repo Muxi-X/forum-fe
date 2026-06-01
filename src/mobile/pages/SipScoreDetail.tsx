@@ -1,11 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import styled from 'styled-components';
-import { Input, Modal, message } from 'antd';
+import { Input, message } from 'antd';
 import { useNavigate, useParams } from 'react-router-dom';
 import MobileShell from '../components/MobileShell';
 import SegmentTabs from '../components/SegmentTabs';
 import UploadField from '../components/UploadField';
 import EmptyState from '../components/EmptyState';
+import LoadingState from '../components/LoadingState';
+import ErrorState from '../components/ErrorState';
+import MobileBottomSheet from '../components/MobileBottomSheet';
+import MobileImage from '../components/MobileImage';
 import { mobilePalette, CardSurface, PrimaryButton, GhostButton } from '../styles';
 import { SORT_TYPE, TARGET_TYPE } from '../constants';
 import { mobileApi, SipScore, SipScoreEntry } from '../api';
@@ -28,11 +32,10 @@ const CoverWrap = styled.div`
   background: linear-gradient(120deg, #d4d4d4 0%, #777 100%);
 `;
 
-const CoverImg = styled.img`
+const CoverImg = styled.div`
   width: 100%;
   height: 100%;
   display: block;
-  object-fit: cover;
   opacity: 0.78;
 `;
 
@@ -54,14 +57,11 @@ const CoverTitle = styled.div`
   }
 `;
 
-const Cover = styled.div<{ src?: string }>`
+const Cover = styled.div`
   width: 100%;
   height: 210px;
   border-radius: 0;
-  background: ${(props) =>
-    props.src
-      ? `url(${props.src}) center/cover`
-      : 'linear-gradient(120deg, #d4d4d4 0%, #777 100%)'};
+  overflow: hidden;
 `;
 
 const EntryCover = styled(Cover)`
@@ -145,6 +145,11 @@ const AddButton = styled.button`
 const FormGrid = styled.div`
   display: grid;
   gap: 12px;
+  .actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
 `;
 
 const scoreText = (score?: number) => ((score || 0) / 100).toFixed(1);
@@ -160,15 +165,26 @@ const SipScoreDetail: React.FC = () => {
   const [entryName, setEntryName] = useState('');
   const [entryDesc, setEntryDesc] = useState('');
   const [entryCover, setEntryCover] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
   const load = async () => {
-    const meta = await mobileApi.sipScore.get(sipScoreId);
-    if (meta.code === 0) setSipScore(meta.data.sip_score || {});
-    const list = await mobileApi.sipScore.entries(sipScoreId, {
-      sort_type: sort,
-      page_size: 50,
-    });
-    if (list.code === 0) setEntries(list.data.entries || []);
+    setLoading(true);
+    setError('');
+    try {
+      const meta = await mobileApi.sipScore.get(sipScoreId);
+      if (meta.code === 0) setSipScore(meta.data.sip_score || {});
+      else setError(meta.message || '榜单加载失败');
+      const list = await mobileApi.sipScore.entries(sipScoreId, {
+        sort_type: sort,
+        page_size: 50,
+      });
+      if (list.code === 0) setEntries(list.data.entries || []);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '榜单加载失败');
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -205,19 +221,31 @@ const SipScoreDetail: React.FC = () => {
     load();
   };
 
-  if (!sipScore) {
+  if (loading && !sipScore) {
     return (
       <MobileShell title="榜单详情" back tabs={false}>
-        <EmptyState text="加载中..." />
+        <LoadingState text="正在打开榜单..." />
       </MobileShell>
     );
   }
+
+  if (error && !sipScore) {
+    return (
+      <MobileShell title="榜单详情" back tabs={false}>
+        <ErrorState text={error} onRetry={load} />
+      </MobileShell>
+    );
+  }
+
+  if (!sipScore) return null;
 
   return (
     <MobileShell title="榜单详情" back tabs={false}>
       <Hero>
         <CoverWrap>
-          {sipScore.cover_img ? <CoverImg src={sipScore.cover_img} alt="" /> : null}
+          <CoverImg>
+            <MobileImage src={sipScore.cover_img} fallbackText="茶评" radius={0} />
+          </CoverImg>
           <CoverTitle>
             <h1>{sipScore.name}</h1>
             <span>由 {sipScore.creator?.name || '茶友'} 创建</span>
@@ -253,7 +281,9 @@ const SipScoreDetail: React.FC = () => {
               onClick={() => nav(`/sip-score/${sipScoreId}/entry/${entry.id}`)}
             >
               <RankNumber>{index + 1}</RankNumber>
-              <EntryCover src={entry.cover_img} />
+              <EntryCover>
+                <MobileImage src={entry.cover_img} fallbackText="项目" radius={0} />
+              </EntryCover>
               <Info>
                 <h1 style={{ fontSize: 16 }}>{entry.name}</h1>
                 <p>{entry.description || '暂无简介'}</p>
@@ -266,25 +296,18 @@ const SipScoreDetail: React.FC = () => {
           ))}
         </EntryList>
       ) : (
-        <EmptyState text="还没有评分对象" />
+        <EmptyState
+          title="还没有评分对象"
+          text="添加第一个项目，大家就能开始评分了。"
+          actionText="添加新项目"
+          onAction={() => setOpen(true)}
+        />
       )}
       <AddButton onClick={() => setOpen(true)}>
         <img src={mastergoAssets.icons.addSmall} alt="" />
         添加新项目
       </AddButton>
-      <Modal
-        title="添加评分对象"
-        open={open}
-        onCancel={() => setOpen(false)}
-        footer={[
-          <GhostButton key="cancel" onClick={() => setOpen(false)}>
-            取消
-          </GhostButton>,
-          <PrimaryButton key="ok" onClick={submitEntry}>
-            添加
-          </PrimaryButton>,
-        ]}
-      >
+      <MobileBottomSheet open={open} title="添加评分对象" onClose={() => setOpen(false)}>
         <FormGrid>
           <Input
             value={entryName}
@@ -298,8 +321,16 @@ const SipScoreDetail: React.FC = () => {
             rows={3}
           />
           <UploadField value={entryCover} onChange={setEntryCover} />
+          <div className="actions">
+            <GhostButton type="button" onClick={() => setOpen(false)}>
+              取消
+            </GhostButton>
+            <PrimaryButton type="button" onClick={submitEntry}>
+              添加
+            </PrimaryButton>
+          </div>
         </FormGrid>
-      </Modal>
+      </MobileBottomSheet>
     </MobileShell>
   );
 };

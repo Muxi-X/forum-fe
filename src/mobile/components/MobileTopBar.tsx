@@ -2,36 +2,49 @@ import React from 'react';
 import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom';
 import { mastergoAssets } from '../assets/mastergo';
+import { mobilePalette } from '../styles';
 
 const Bar = styled.header<{ borderless?: boolean }>`
   position: sticky;
   top: 0;
   z-index: 20;
-  height: 60px;
+  height: calc(56px + env(safe-area-inset-top));
+  padding-top: env(safe-area-inset-top);
   display: grid;
-  grid-template-columns: 60px 1fr 60px;
+  grid-template-columns: 56px 1fr 56px;
   align-items: center;
-  background: #fff;
-  border-bottom: ${(props) => (props.borderless ? '0' : '1px solid #d8d8d8')};
+  background: rgba(255, 255, 255, 0.86);
+  border-bottom: ${(props) =>
+    props.borderless ? '0' : `1px solid ${mobilePalette.lineSoft}`};
+  backdrop-filter: blur(18px);
 `;
 
 const Title = styled.h1`
   margin: 0;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   text-align: center;
-  font-size: 22px;
+  font-size: 20px;
   line-height: 1;
-  font-weight: 400;
+  font-weight: 700;
   color: #3d3d3d;
 `;
 
 const IconButton = styled.button`
-  width: 60px;
-  height: 60px;
+  width: 56px;
+  height: 56px;
   display: grid;
   place-items: center;
   background: transparent;
   color: #3d3d3d;
   font-size: 18px;
+  transition: transform 150ms ease, background 150ms ease;
+  &:active {
+    transform: scale(0.96);
+    background: rgba(60, 60, 67, 0.06);
+  }
   img {
     display: block;
     object-fit: contain;

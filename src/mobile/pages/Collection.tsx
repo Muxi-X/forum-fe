@@ -6,6 +6,9 @@ import MobileShell from '../components/MobileShell';
 import SegmentTabs from '../components/SegmentTabs';
 import PostCard from '../components/PostCard';
 import EmptyState from '../components/EmptyState';
+import LoadingState from '../components/LoadingState';
+import ErrorState from '../components/ErrorState';
+import MobileImage from '../components/MobileImage';
 import DesignIcon from '../components/DesignIcon';
 import { CardSurface, mobilePalette } from '../styles';
 import { mobileApi, MobilePost, SipScoreWithEntries } from '../api';
@@ -27,14 +30,11 @@ const RankingCard = styled(CardSurface)`
   border-radius: 0;
 `;
 
-const Cover = styled.div<{ src?: string }>`
+const Cover = styled.div`
   width: 72px;
   height: 72px;
   border-radius: 8px;
-  background: ${(props) =>
-    props.src
-      ? `url(${props.src}) center/cover`
-      : 'linear-gradient(135deg, #ffe8a8, #8bc6a4)'};
+  overflow: hidden;
 `;
 
 const RankingInfo = styled.div`
@@ -66,10 +66,12 @@ const Collection: React.FC = () => {
   const [posts, setPosts] = useState<MobilePost[]>([]);
   const [rankings, setRankings] = useState<SipScoreWithEntries[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     if (!userId) return;
     setLoading(true);
+    setError('');
     const request =
       tab === 'post'
         ? mobileApi.collection.list(userId, { limit: 30, page: 0 })
@@ -78,12 +80,13 @@ const Collection: React.FC = () => {
     request
       .then((res) => {
         if (res.code === 20103) {
-          message.warning('对方打开了隐私权限哦');
+          setError('对方打开了隐私权限哦');
           setPosts([]);
           setRankings([]);
           return;
         }
         if (res.code !== 0) {
+          setError(res.message || '加载失败');
           message.error(res.message || '加载失败');
           return;
         }
@@ -92,6 +95,9 @@ const Collection: React.FC = () => {
         } else {
           setRankings(('sip_scores' in res.data ? res.data.sip_scores : []) || []);
         }
+      })
+      .catch((err) => {
+        setError(err instanceof Error ? err.message : '加载失败');
       })
       .finally(() => setLoading(false));
   }, [tab, userId]);
@@ -107,7 +113,9 @@ const Collection: React.FC = () => {
         onChange={(value) => setTab(String(value))}
       />
       {loading ? (
-        <EmptyState text="加载中..." />
+        <LoadingState text="正在读取收藏..." />
+      ) : error ? (
+        <ErrorState text={error} />
       ) : tab === 'post' ? (
         posts.length ? (
           <List>
@@ -127,7 +135,9 @@ const Collection: React.FC = () => {
                 key={ranking?.id}
                 onClick={() => ranking?.id && nav(`/sip-score/${ranking.id}`)}
               >
-                <Cover src={ranking?.cover_img} />
+                <Cover>
+                  <MobileImage src={ranking?.cover_img} fallbackText="榜单" radius={8} />
+                </Cover>
                 <RankingInfo>
                   <h3>{ranking?.name || '未命名榜单'}</h3>
                   <p>{ranking?.description || '暂无简介'}</p>
@@ -142,7 +152,7 @@ const Collection: React.FC = () => {
           })}
         </List>
       ) : (
-        <EmptyState text="还没有收藏榜单" />
+        <EmptyState title="还没有收藏榜单" text="遇到好榜单，可以先收藏起来。" />
       )}
     </MobileShell>
   );

@@ -2,33 +2,49 @@ import React from 'react';
 import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom';
 import { MobilePost } from '../api';
-import { CardSurface } from '../styles';
+import { mobileMotion, mobilePalette, mobileRadius } from '../styles';
 import { mobileTableByCategory } from '../constants';
 import moment from 'utils/moment';
 import MobileAvatar from './MobileAvatar';
 import DesignIcon from './DesignIcon';
 
-const Card = styled(CardSurface)`
-  padding: 12px 20px 9px;
+const stripHtml = (value?: string) =>
+  (value || '')
+    .replace(/<[^>]+>/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+const Card = styled.article`
+  width: calc(100% - 28px);
+  margin: 0 auto 12px;
+  padding: 14px 14px 12px;
   border: 0;
-  border-radius: 0;
-  background: #fff;
-  border-bottom: 1px solid #efefef;
-  box-shadow: none;
+  border-radius: ${mobileRadius.lg};
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 10px 28px rgba(16, 24, 40, 0.06);
+  transition: transform ${mobileMotion.fast}, box-shadow ${mobileMotion.fast};
+  &:active {
+    transform: scale(0.985);
+    box-shadow: 0 6px 18px rgba(16, 24, 40, 0.05);
+  }
 `;
 
 const Meta = styled.div`
   display: grid;
-  grid-template-columns: 36px 1fr;
+  grid-template-columns: 36px minmax(0, 1fr);
   align-items: start;
   column-gap: 10px;
   color: #7f838a;
   font-size: 12px;
   .name {
     display: block;
-    color: #1a202c;
-    font-size: 19px;
-    font-weight: 700;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: ${mobilePalette.ink};
+    font-size: 15px;
+    font-weight: 800;
     line-height: 1.25;
   }
   .time {
@@ -38,39 +54,55 @@ const Meta = styled.div`
   }
   .creator {
     display: inline-block;
-    margin-left: 12px;
+    max-width: 128px;
+    margin-left: 10px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    vertical-align: bottom;
+    white-space: nowrap;
     color: #fe9800;
   }
 `;
 
 const Title = styled.h2`
   margin: 12px 0 8px;
-  font-size: 13px;
-  line-height: 1.35;
-  font-weight: 700;
+  display: -webkit-box;
+  overflow: hidden;
   color: #1a202c;
+  font-size: 16px;
+  font-weight: 800;
+  line-height: 1.42;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 `;
 
 const Summary = styled.p`
+  min-height: 20px;
   margin: 0;
-  color: #7f838a;
-  line-height: 1.52;
+  display: -webkit-box;
+  overflow: hidden;
+  color: #1a202c;
   font-size: 13px;
+  line-height: 1.62;
   word-break: break-word;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
 `;
 
 const Footer = styled.div`
   display: flex;
-  justify-content: flex-start;
+  justify-content: space-between;
   align-items: center;
-  margin-top: 10px;
+  gap: 8px;
+  margin-top: 12px;
   color: #7f838a;
   font-size: 11px;
 `;
 
 const Stats = styled.div`
   display: flex;
-  gap: 14px;
+  flex: 0 0 auto;
+  gap: 12px;
   span {
     display: inline-flex;
     align-items: center;
@@ -80,21 +112,30 @@ const Stats = styled.div`
 
 const Tags = styled.div`
   display: flex;
-  flex-wrap: wrap;
+  min-width: 0;
   gap: 6px;
-  display: none;
-  margin-top: 10px;
+  overflow: hidden;
   span {
+    max-width: 88px;
     height: 24px;
     display: inline-flex;
     align-items: center;
     padding: 0 8px;
-    border-radius: 8px;
-    background: rgba(255, 211, 107, 0.2);
-    color: #795548;
-    font-size: 12px;
+    overflow: hidden;
+    border-radius: ${mobileRadius.pill};
+    background: rgba(255, 198, 65, 0.16);
+    color: #8a6410;
+    font-size: 11px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 `;
+
+const getSummary = (post: MobilePost) =>
+  post.summary ||
+  stripHtml(post.content) ||
+  stripHtml(post.compiled_content) ||
+  '暂无摘要';
 
 const PostCard: React.FC<{ post: MobilePost }> = ({ post }) => {
   const nav = useNavigate();
@@ -110,17 +151,13 @@ const PostCard: React.FC<{ post: MobilePost }> = ({ post }) => {
         </span>
       </Meta>
       <Title>{post.title || '未命名帖子'}</Title>
-      <Summary>
-        {post.summary || post.content?.replace(/<[^>]+>/g, '').slice(0, 90)}
-      </Summary>
-      {post.tags?.length ? (
+      <Summary>{getSummary(post)}</Summary>
+      <Footer>
         <Tags>
-          {post.tags.slice(0, 2).map((tag) => (
-            <span key={tag}>{tag}</span>
+          {(post.tags || []).slice(0, 2).map((tag) => (
+            <span key={tag}>#{tag}</span>
           ))}
         </Tags>
-      ) : null}
-      <Footer>
         <Stats>
           <span>
             <DesignIcon name="like" size={14} />

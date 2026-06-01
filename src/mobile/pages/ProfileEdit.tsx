@@ -4,7 +4,9 @@ import { Input, message } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import MobileShell from '../components/MobileShell';
 import UploadField from '../components/UploadField';
-import { mobilePalette, PrimaryButton } from '../styles';
+import MobileAvatar from '../components/MobileAvatar';
+import MobileBottomSheet from '../components/MobileBottomSheet';
+import { mobilePalette, mobileRadius, PrimaryButton } from '../styles';
 import { mobileApi, MobileUser } from '../api';
 import useProfile from 'store/useProfile';
 import TeaCupHeroSvg from '../components/TeaCupHeroSvg';
@@ -65,6 +67,7 @@ const AvatarButton = styled.button`
   height: 64px;
   border-radius: 50%;
   background: #d7dce4;
+  overflow: visible;
   .badge {
     position: absolute;
     right: 0;
@@ -96,22 +99,9 @@ const FixedSubmit = styled(PrimaryButton)`
   background: #ffc641;
 `;
 
-const SheetMask = styled.div`
-  position: fixed;
-  inset: 0;
-  z-index: 70;
-  background: rgba(18, 27, 41, 0.86);
-`;
-
 const AvatarSheet = styled.div`
-  position: fixed;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 80;
   overflow: hidden;
-  border-top-left-radius: 8px;
-  border-top-right-radius: 8px;
+  border-radius: ${mobileRadius.lg};
   background: #fff;
   button,
   label {
@@ -168,18 +158,7 @@ const ProfileEdit: React.FC = () => {
         </IdentityHero>
         <AvatarField>
           <AvatarButton type="button" onClick={() => setAvatarSheet(true)}>
-            {form.avatar || form.avatar_url ? (
-              <img
-                src={form.avatar || form.avatar_url}
-                alt=""
-                style={{
-                  width: '100%',
-                  height: '100%',
-                  borderRadius: '50%',
-                  objectFit: 'cover',
-                }}
-              />
-            ) : null}
+            <MobileAvatar url={form.avatar || form.avatar_url} size={64} />
             <span className="badge">+</span>
           </AvatarButton>
         </AvatarField>
@@ -197,25 +176,26 @@ const ProfileEdit: React.FC = () => {
           onChange={(event) => setForm({ ...form, signature: event.target.value })}
         />
         <FixedSubmit onClick={submit}>确定</FixedSubmit>
-        {avatarSheet ? (
-          <>
-            <SheetMask onClick={() => setAvatarSheet(false)} />
-            <AvatarSheet>
-              <UploadField
-                label="从手机相册选择"
-                value={form.avatar || form.avatar_url}
-                onChange={(url) => {
-                  setForm({ ...form, avatar: url, avatar_url: url });
-                  setAvatarSheet(false);
-                }}
-              />
-              <button type="button">相机拍摄</button>
-              <button type="button" onClick={() => setAvatarSheet(false)}>
-                取消
-              </button>
-            </AvatarSheet>
-          </>
-        ) : null}
+        <MobileBottomSheet
+          open={avatarSheet}
+          title="更换头像"
+          onClose={() => setAvatarSheet(false)}
+        >
+          <AvatarSheet>
+            <UploadField
+              label="从手机相册选择"
+              value={form.avatar || form.avatar_url}
+              onChange={(url) => {
+                setForm({ ...form, avatar: url, avatar_url: url });
+                setAvatarSheet(false);
+              }}
+            />
+            <button type="button">相机拍摄</button>
+            <button type="button" onClick={() => setAvatarSheet(false)}>
+              取消
+            </button>
+          </AvatarSheet>
+        </MobileBottomSheet>
       </Wrap>
     </MobileShell>
   );

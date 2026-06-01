@@ -5,9 +5,12 @@ import { message } from 'antd';
 import MobileShell from '../components/MobileShell';
 import PostCard from '../components/PostCard';
 import EmptyState from '../components/EmptyState';
+import LoadingState from '../components/LoadingState';
+import ErrorState from '../components/ErrorState';
+import MobileToast from '../components/MobileToast';
 import MobileAvatar from '../components/MobileAvatar';
 import DesignIcon from '../components/DesignIcon';
-import { mobilePalette, Section } from '../styles';
+import { mobileMotion, mobilePalette, mobileRadius, Section } from '../styles';
 import { mobileApi, MobilePost, MobileUser, SipScoreWithEntries } from '../api';
 import { mastergoAssets } from '../assets/mastergo';
 
@@ -66,8 +69,8 @@ const ProfilePanel = styled.div`
     inset: 0;
     z-index: -1;
     background: rgba(255, 255, 255, 0.94);
-    border-top-left-radius: 8px;
-    border-top-right-radius: 8px;
+    border-top-left-radius: ${mobileRadius.xl};
+    border-top-right-radius: ${mobileRadius.xl};
     clip-path: polygon(0 13%, 100% 0, 100% 100%, 0 100%);
   }
 `;
@@ -154,29 +157,35 @@ const VisitorButton = styled.button<{ primary?: boolean }>`
 
 const Menu = styled(Section)`
   margin-top: 0;
-  background: #fff;
+  padding: 10px 0 22px;
+  background: ${mobilePalette.bg};
   border-top: 1px solid rgba(60, 60, 67, 0.12);
   border-bottom: 0;
 `;
 
 const MenuItem = styled.button`
   width: 100%;
-  height: 70px;
+  min-height: 68px;
   display: grid;
-  grid-template-columns: 50px 1fr 32px;
+  grid-template-columns: 46px minmax(0, 1fr) 32px;
   align-items: center;
-  padding: 0 22px;
-  background: transparent;
+  width: calc(100% - 28px);
+  margin: 0 auto 10px;
+  padding: 0 16px;
+  background: rgba(255, 255, 255, 0.96);
+  border-radius: ${mobileRadius.lg};
+  box-shadow: 0 10px 28px rgba(16, 24, 40, 0.05);
   border-bottom: 0;
   text-align: left;
   color: #3d3d3d;
   font-size: 16px;
+  transition: transform ${mobileMotion.fast}, background ${mobileMotion.fast};
   .chevron {
     justify-self: end;
   }
-  transition: background 0.18s ease;
   &:active {
-    background: rgba(0, 0, 0, 0.035);
+    transform: scale(0.985);
+    background: #fff;
   }
   &:last-child {
     border-bottom: 0;
@@ -184,7 +193,8 @@ const MenuItem = styled.button`
 `;
 
 const ExpandedPanel = styled.div`
-  background: #fff;
+  margin: -6px 0 10px;
+  background: transparent;
   border-bottom: 0;
 `;
 
@@ -219,7 +229,7 @@ const CollectionGroupButton = styled.button`
   margin: 8px 18px;
   padding: 0 14px;
   text-align: left;
-  border-radius: 8px;
+  border-radius: ${mobileRadius.md};
   background: rgba(255, 255, 255, 0.96);
   color: #7f838a;
   box-shadow: 0 8px 22px rgba(16, 24, 40, 0.06);
@@ -243,7 +253,7 @@ const RankingCard = styled.button`
   padding: 10px;
   background: ${mobilePalette.paper};
   border: 1px solid rgba(60, 60, 67, 0.1);
-  border-radius: 8px;
+  border-radius: ${mobileRadius.md};
   box-shadow: 0 8px 22px rgba(16, 24, 40, 0.05);
   text-align: left;
   .cover {
@@ -276,22 +286,6 @@ const ActionGroup = styled.div`
   border-top: 1px solid rgba(60, 60, 67, 0.1);
 `;
 
-const CenterToast = styled.div`
-  position: fixed;
-  left: 50%;
-  top: 50%;
-  z-index: 80;
-  transform: translate(-50%, -50%);
-  width: 154px;
-  height: 70px;
-  display: grid;
-  place-items: center;
-  border-radius: 8px;
-  background: rgba(98, 103, 111, 0.76);
-  color: #fff;
-  font-size: 18px;
-`;
-
 const Profile: React.FC = () => {
   const { user_id } = useParams();
   const { state } = useLocation();
@@ -312,6 +306,8 @@ const Profile: React.FC = () => {
     rankings: false,
   });
   const [toast, setToast] = useState<string>((state as any)?.profileToast || '');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const isMine = Boolean(
     !userId ||
       (currentUserId && userId === currentUserId) ||
@@ -319,6 +315,8 @@ const Profile: React.FC = () => {
   );
 
   const load = async () => {
+    setLoading(true);
+    setError('');
     let resolvedCurrentUserId = currentUserId;
     if (!resolvedCurrentUserId) {
       try {
@@ -349,6 +347,7 @@ const Profile: React.FC = () => {
         ? await mobileApi.user.profile(target)
         : await mobileApi.user.myProfile();
       if (profileRes.code === 0) nextProfile = profileRes.data;
+      else setError(profileRes.message || '资料加载失败');
     } catch (error) {
       if (import.meta.env.DEV) {
         try {
@@ -388,6 +387,7 @@ const Profile: React.FC = () => {
     } else {
       setCollectedRankings([]);
     }
+    setLoading(false);
   };
 
   useEffect(() => {
@@ -419,13 +419,24 @@ const Profile: React.FC = () => {
     nav('/login');
   };
 
-  if (!profile) {
+  if (loading && !profile) {
     return (
       <MobileShell title="我的" tabs>
-        <EmptyState text="加载中..." />
+        <LoadingState text="正在读取身份卡..." />
       </MobileShell>
     );
   }
+
+  if (error && !profile) {
+    return (
+      <MobileShell title="我的" tabs>
+        <ErrorState text={error} onRetry={load} />
+      </MobileShell>
+    );
+  }
+
+  if (!profile) return null;
+  const profileId = profile.id || userId || currentUserId;
 
   return (
     <MobileShell title={isMine ? '我的主页' : '他的主页'} tabs borderlessTopBar>
@@ -444,7 +455,7 @@ const Profile: React.FC = () => {
           <NameRow>
             <h1>{profile.name || '茶友'}</h1>
             {isMine ? (
-              <button type="button" onClick={() => nav(`/user/${profile.id}/seting`)}>
+              <button type="button" onClick={() => nav(`/user/${profileId}/seting`)}>
                 <img src={mastergoAssets.icons.editPencilGray} alt="编辑" />
               </button>
             ) : null}
@@ -460,7 +471,7 @@ const Profile: React.FC = () => {
           </Counts>
           {!isMine ? (
             <ActionBar>
-              <VisitorButton onClick={() => nav(`/user/chat?target_id=${profile.id}`)}>
+              <VisitorButton onClick={() => nav(`/user/chat?target_id=${profileId}`)}>
                 私信
               </VisitorButton>
               <VisitorButton primary onClick={follow}>
@@ -491,10 +502,10 @@ const Profile: React.FC = () => {
               {posts.length ? (
                 posts.slice(0, 1).map((post) => <PostCard key={post.id} post={post} />)
               ) : (
-                <MiniEmpty>{isMine ? '还没有发过帖子' : 'Ta还没有发过帖子'}</MiniEmpty>
+                <MiniEmpty>{isMine ? '还没有发过帖子' : 'Ta 还没有发过帖子'}</MiniEmpty>
               )}
               {posts.length ? (
-                <ViewAll type="button" onClick={() => nav(`/user/${profile.id}`)}>
+                <ViewAll type="button" onClick={() => nav(`/user/${profileId}`)}>
                   查看全部 &gt;
                 </ViewAll>
               ) : null}
@@ -548,12 +559,12 @@ const Profile: React.FC = () => {
                     .slice(0, 1)
                     .map((post) => <PostCard key={post.id} post={post} />)
                 ) : (
-                  <MiniEmpty>{isMine ? '还没有收藏帖子' : 'Ta还没有收藏帖子'}</MiniEmpty>
+                  <MiniEmpty>{isMine ? '还没有收藏帖子' : 'Ta 还没有收藏帖子'}</MiniEmpty>
                 )}
                 {collectedPosts.length ? (
                   <ViewAll
                     type="button"
-                    onClick={() => nav(`/user/${profile.id}/collect`)}
+                    onClick={() => nav(`/user/${profileId}/collect`)}
                   >
                     查看全部 &gt;
                   </ViewAll>
@@ -602,12 +613,12 @@ const Profile: React.FC = () => {
                     );
                   })
                 ) : (
-                  <MiniEmpty>{isMine ? '还没有收藏榜单' : 'Ta还没有收藏榜单'}</MiniEmpty>
+                  <MiniEmpty>{isMine ? '还没有收藏榜单' : 'Ta 还没有收藏榜单'}</MiniEmpty>
                 )}
                 {collectedRankings.length ? (
                   <ViewAll
                     type="button"
-                    onClick={() => nav(`/user/${profile.id}/collect?tab=sipScore`)}
+                    onClick={() => nav(`/user/${profileId}/collect?tab=sipScore`)}
                   >
                     查看全部 &gt;
                   </ViewAll>
@@ -631,7 +642,7 @@ const Profile: React.FC = () => {
           </ActionGroup>
         ) : null}
       </Menu>
-      {toast ? <CenterToast>{toast}</CenterToast> : null}
+      <MobileToast text={toast} onClose={() => setToast('')} />
     </MobileShell>
   );
 };
