@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { message } from 'antd';
+import { ArrowRightOutlined, SafetyCertificateOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router';
 import { useSearchParams } from 'react-router-dom';
 import useRequest from 'hooks/useRequest';
@@ -415,13 +416,13 @@ const Login: React.FC = () => {
   };
 
   const renderFlowButtonLabel = (
-    idleLabel: string,
+    idleLabel: React.ReactNode,
     loadingLabel: string,
     loading: boolean,
   ) => (
     <span className="flow-btn-content">
       {loading ? <span className="flow-btn-spinner" aria-hidden /> : null}
-      <span>{loading ? loadingLabel : idleLabel}</span>
+      {loading ? <span>{loadingLabel}</span> : idleLabel}
     </span>
   );
 
@@ -429,7 +430,26 @@ const Login: React.FC = () => {
     if (!showCaptchaFlow && !showSecondAuthFlow) {
       return (
         <div key="credentials" className="auth-stage">
-          <h2 className="title">登录</h2>
+          {isStudentOAuthLogin ? (
+            <div className="auth-visual" aria-hidden>
+              <img src="https://ossforum.muxixyz.com/default/register.svg" alt="" />
+            </div>
+          ) : null}
+          <div className="auth-heading">
+            {isStudentOAuthLogin ? (
+              <span className="auth-kicker">CCNU ACCOUNT</span>
+            ) : (
+              <span className="auth-kicker">STUDENT LOGIN</span>
+            )}
+            <h2 className="title">
+              {isStudentOAuthLogin ? '学校统一身份认证' : '学生登录'}
+            </h2>
+            <p className="auth-subtitle">
+              {isStudentOAuthLogin
+                ? '使用学校账号完成认证后返回茶馆'
+                : '使用已有学号进入茶馆'}
+            </p>
+          </div>
           {!isStudentOAuthLogin ? (
             <>
               <div className="input-field">
@@ -466,12 +486,21 @@ const Login: React.FC = () => {
           >
             {isStudentOAuthLogin
               ? renderFlowButtonLabel(
-                  '学校统一认证登录',
+                  <>
+                    <SafetyCertificateOutlined />
+                    <span>前往学校认证</span>
+                    <ArrowRightOutlined />
+                  </>,
                   '正在跳转',
                   pendingAction === 'start',
                 )
               : '立即登录'}
           </button>
+          {isStudentOAuthLogin ? (
+            <button onClick={handleLoginRole} type="button" className="auth-switch-link">
+              木犀成员登录
+            </button>
+          ) : null}
         </div>
       );
     }

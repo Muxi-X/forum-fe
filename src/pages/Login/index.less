@@ -58,9 +58,11 @@
   }
 
   .title {
-    font-size: 2.2em;
-    color: #444;
-    margin-bottom: 10px;
+    font-size: 2em;
+    color: #24314d;
+    margin: 0;
+    line-height: 1.18;
+    font-weight: 700;
   }
 
   .input-field {
@@ -156,19 +158,87 @@
 
   .auth-stage {
     width: 100%;
-    max-width: 380px;
+    max-width: 430px;
     display: flex;
     flex-direction: column;
+    align-items: stretch;
+    padding: 42px 44px 38px;
+    border-radius: 30px;
+    background: rgba(255, 255, 255, 0.9);
+    box-shadow: 0 28px 72px rgba(37, 62, 114, 0.12);
+    border: 1px solid rgba(68, 129, 235, 0.12);
+    backdrop-filter: blur(8px);
+  }
+
+  .auth-visual {
+    width: 100%;
+    height: 150px;
+    margin: -18px 0 22px;
+    display: flex;
     align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+
+  .auth-visual img {
+    width: min(100%, 270px);
+    height: 100%;
+    object-fit: contain;
+    display: block;
+  }
+
+  .auth-heading {
+    width: 100%;
+    margin-bottom: 26px;
+    text-align: left;
+  }
+
+  .auth-kicker {
+    display: inline-flex;
+    margin-bottom: 12px;
+    color: #4d84e2;
+    font-size: 0.76em;
+    line-height: 1;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+  }
+
+  .auth-subtitle {
+    margin: 12px 0 0;
+    color: #72809e;
+    font-size: 0.92em;
+    line-height: 1.6;
   }
 
   .stage-submit {
     width: 100%;
-    max-width: 380px;
-    margin-top: 12px;
+    max-width: none;
+    margin-top: 6px;
     text-transform: none;
-    font-size: 0.95em;
-    letter-spacing: 0.02em;
+    font-size: 0.96em;
+    letter-spacing: 0;
+    box-shadow: 0 18px 34px rgba(77, 132, 226, 0.24);
+  }
+
+  .stage-submit:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 20px 38px rgba(77, 132, 226, 0.3);
+  }
+
+  .auth-switch-link {
+    align-self: center;
+    margin-top: 16px;
+    padding: 8px 10px;
+    border: none;
+    background: transparent;
+    color: #7d8aa7;
+    font-size: 0.86em;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  .auth-switch-link:hover {
+    color: #4d84e2;
   }
 
   .flow-stage {
