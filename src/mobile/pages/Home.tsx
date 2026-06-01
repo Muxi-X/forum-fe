@@ -7,11 +7,7 @@ import SearchBar from '../components/SearchBar';
 import SegmentTabs from '../components/SegmentTabs';
 import PostCard from '../components/PostCard';
 import EmptyState from '../components/EmptyState';
-import {
-  DEFAULT_TABLE,
-  MOBILE_TABLES,
-  mobileTableByRoute,
-} from '../constants';
+import { DEFAULT_TABLE, MOBILE_TABLES, mobileTableByRoute } from '../constants';
 import { mobileApi, MobilePost } from '../api';
 import DesignIcon from '../components/DesignIcon';
 import { mastergoAssets } from '../assets/mastergo';
@@ -93,8 +89,7 @@ const TableButton = styled.button`
     color: #fff;
     font-size: 20px;
     font-weight: 700;
-    box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.45),
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45),
       0 8px 18px rgba(254, 152, 0, 0.16);
     overflow: hidden;
   }

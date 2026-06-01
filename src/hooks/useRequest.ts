@@ -3,8 +3,7 @@ import { message } from 'antd';
 
 // 20005 token
 
-const isMobileViewport = () =>
-  typeof window !== 'undefined' && window.innerWidth <= 576;
+const isMobileViewport = () => typeof window !== 'undefined' && window.innerWidth <= 576;
 
 const useRequest: typeof request = (service, options, plugins) => {
   options = options?.onError

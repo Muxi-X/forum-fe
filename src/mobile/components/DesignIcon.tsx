@@ -44,7 +44,12 @@ const DesignIcon: React.FC<{
   if (name === 'home') {
     return (
       <Svg width={size} height={size} viewBox="0 0 24 24" aria-hidden>
-        <path {...strokeProps} d="M3.5 10.6 12 4l8.5 6.6" stroke={ink} strokeWidth="1.35" />
+        <path
+          {...strokeProps}
+          d="M3.5 10.6 12 4l8.5 6.6"
+          stroke={ink}
+          strokeWidth="1.35"
+        />
         <path
           {...strokeProps}
           d="M5.8 10.2v8.7h4.1v-5.3h4.2v5.3h4.1v-8.7"
@@ -65,7 +70,12 @@ const DesignIcon: React.FC<{
           strokeWidth="1.35"
         />
         <path {...strokeProps} d="M15.9 3.5v2.7h2.6" stroke={ink} strokeWidth="1.2" />
-        <path {...strokeProps} d="M8.8 9.1h6.5M8.8 12.2h6.5M8.8 15.3h5" stroke={ink} strokeWidth="1.2" />
+        <path
+          {...strokeProps}
+          d="M8.8 9.1h6.5M8.8 12.2h6.5M8.8 15.3h5"
+          stroke={ink}
+          strokeWidth="1.2"
+        />
       </Svg>
     );
   }
@@ -73,8 +83,18 @@ const DesignIcon: React.FC<{
   if (name === 'user') {
     return (
       <Svg width={size} height={size} viewBox="0 0 24 24" aria-hidden>
-        <path {...strokeProps} d="M12 12.1a4.1 4.1 0 1 0 0-8.2 4.1 4.1 0 0 0 0 8.2Z" stroke={ink} strokeWidth="1.35" />
-        <path {...strokeProps} d="M4.7 21c.7-4.1 3.3-6.4 7.3-6.4s6.6 2.3 7.3 6.4" stroke={ink} strokeWidth="1.35" />
+        <path
+          {...strokeProps}
+          d="M12 12.1a4.1 4.1 0 1 0 0-8.2 4.1 4.1 0 0 0 0 8.2Z"
+          stroke={ink}
+          strokeWidth="1.35"
+        />
+        <path
+          {...strokeProps}
+          d="M4.7 21c.7-4.1 3.3-6.4 7.3-6.4s6.6 2.3 7.3 6.4"
+          stroke={ink}
+          strokeWidth="1.35"
+        />
       </Svg>
     );
   }
@@ -82,8 +102,22 @@ const DesignIcon: React.FC<{
   if (name === 'post') {
     return (
       <Svg width={size} height={size} viewBox="0 0 24 24" aria-hidden>
-        <rect {...strokeProps} x="5.2" y="3.4" width="13.6" height="17.2" rx="1.5" stroke={ink} strokeWidth="1.35" />
-        <path {...strokeProps} d="M8.2 8h7.8M8.2 11h6.2M8.2 14h5" stroke={ink} strokeWidth="1.2" />
+        <rect
+          {...strokeProps}
+          x="5.2"
+          y="3.4"
+          width="13.6"
+          height="17.2"
+          rx="1.5"
+          stroke={ink}
+          strokeWidth="1.35"
+        />
+        <path
+          {...strokeProps}
+          d="M8.2 8h7.8M8.2 11h6.2M8.2 14h5"
+          stroke={ink}
+          strokeWidth="1.2"
+        />
         <path d="M8.1 5.4h7.7v2.2H8.1z" fill="#ffc641" />
       </Svg>
     );
@@ -106,8 +140,22 @@ const DesignIcon: React.FC<{
   if (name === 'feedback') {
     return (
       <Svg width={size} height={size} viewBox="0 0 24 24" aria-hidden>
-        <rect {...strokeProps} x="5.1" y="5.4" width="12.2" height="13.6" rx="1.6" stroke={ink} strokeWidth="1.35" />
-        <path {...strokeProps} d="m13.6 4.5 1.7-1.7 2.1 2.1-1.7 1.7-2.8.7z" stroke={orange} strokeWidth="1.35" />
+        <rect
+          {...strokeProps}
+          x="5.1"
+          y="5.4"
+          width="12.2"
+          height="13.6"
+          rx="1.6"
+          stroke={ink}
+          strokeWidth="1.35"
+        />
+        <path
+          {...strokeProps}
+          d="m13.6 4.5 1.7-1.7 2.1 2.1-1.7 1.7-2.8.7z"
+          stroke={orange}
+          strokeWidth="1.35"
+        />
       </Svg>
     );
   }
@@ -116,7 +164,12 @@ const DesignIcon: React.FC<{
     return (
       <Svg width={size} height={size} viewBox="0 0 24 24" aria-hidden>
         <path {...strokeProps} d="M12 4.2v7.1" stroke={orange} strokeWidth="1.5" />
-        <path {...strokeProps} d="M8 6.8a7.2 7.2 0 1 0 8 0" stroke={ink} strokeWidth="1.35" />
+        <path
+          {...strokeProps}
+          d="M8 6.8a7.2 7.2 0 1 0 8 0"
+          stroke={ink}
+          strokeWidth="1.35"
+        />
       </Svg>
     );
   }
@@ -143,7 +196,12 @@ const DesignIcon: React.FC<{
           stroke={ink}
           strokeWidth="1.45"
         />
-        <path {...strokeProps} d="M8.3 9.7h7.5M8.3 12.4h4.9" stroke={ink} strokeWidth="1.2" />
+        <path
+          {...strokeProps}
+          d="M8.3 9.7h7.5M8.3 12.4h4.9"
+          stroke={ink}
+          strokeWidth="1.2"
+        />
       </Svg>
     );
   }
@@ -164,7 +222,14 @@ const DesignIcon: React.FC<{
   if (name === 'search') {
     return (
       <Svg width={size} height={size} viewBox="0 0 24 24" aria-hidden>
-        <circle {...strokeProps} cx="10.8" cy="10.8" r="5.8" stroke={ink} strokeWidth="1.45" />
+        <circle
+          {...strokeProps}
+          cx="10.8"
+          cy="10.8"
+          r="5.8"
+          stroke={ink}
+          strokeWidth="1.45"
+        />
         <path {...strokeProps} d="m15.2 15.2 4.1 4.1" stroke={ink} strokeWidth="1.45" />
       </Svg>
     );
@@ -173,8 +238,22 @@ const DesignIcon: React.FC<{
   if (name === 'image') {
     return (
       <Svg width={size} height={size} viewBox="0 0 24 24" aria-hidden>
-        <rect {...strokeProps} x="4.4" y="5.2" width="15.2" height="13.6" rx="1.6" stroke={ink} strokeWidth="1.4" />
-        <path {...strokeProps} d="m6.8 16.1 3.6-3.8 2.7 2.5 2-2.2 2.6 3.5" stroke={orange} strokeWidth="1.35" />
+        <rect
+          {...strokeProps}
+          x="4.4"
+          y="5.2"
+          width="15.2"
+          height="13.6"
+          rx="1.6"
+          stroke={ink}
+          strokeWidth="1.4"
+        />
+        <path
+          {...strokeProps}
+          d="m6.8 16.1 3.6-3.8 2.7 2.5 2-2.2 2.6 3.5"
+          stroke={orange}
+          strokeWidth="1.35"
+        />
         <circle cx="15.7" cy="8.9" r="1.3" fill={orange} />
       </Svg>
     );
@@ -184,7 +263,12 @@ const DesignIcon: React.FC<{
     return (
       <Svg width={size} height={size} viewBox="0 0 24 24" aria-hidden>
         <circle cx="12" cy="12" r="9" fill="#f05d5e" />
-        <path {...strokeProps} d="m8.7 8.7 6.6 6.6M15.3 8.7l-6.6 6.6" stroke="#fff" strokeWidth="1.8" />
+        <path
+          {...strokeProps}
+          d="m8.7 8.7 6.6 6.6M15.3 8.7l-6.6 6.6"
+          stroke="#fff"
+          strokeWidth="1.8"
+        />
       </Svg>
     );
   }
@@ -202,7 +286,14 @@ const DesignIcon: React.FC<{
   if (name === 'chevronRight') {
     return (
       <Svg width={size} height={size} viewBox="0 0 24 24" aria-hidden>
-        <path d="M9 6.2 15.4 12 9 17.8" fill="none" stroke="#c6c6c6" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+        <path
+          d="M9 6.2 15.4 12 9 17.8"
+          fill="none"
+          stroke="#c6c6c6"
+          strokeWidth="1.6"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
       </Svg>
     );
   }

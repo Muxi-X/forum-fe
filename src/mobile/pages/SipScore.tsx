@@ -42,10 +42,7 @@ const Cover = styled.div<{ src?: string }>`
   height: 80px;
   flex: 0 0 84px;
   border-radius: 10px;
-  background: ${(props) =>
-    props.src
-      ? `url(${props.src}) center/cover`
-      : '#fcf4d4'};
+  background: ${(props) => (props.src ? `url(${props.src}) center/cover` : '#fcf4d4')};
 `;
 
 const Info = styled.div`

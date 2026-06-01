@@ -14,8 +14,7 @@ const Avatar = styled.img<{
   object-fit: cover;
   border-radius: 50%;
   background: #f0f1f4 padding-box;
-  background:
-    #f0f1f4 padding-box,
+  background: #f0f1f4 padding-box,
     ${(props) =>
         props.bordered
           ? 'linear-gradient(180deg, #fe9800 0%, #fff04e 60%, #ecff46 100%)'

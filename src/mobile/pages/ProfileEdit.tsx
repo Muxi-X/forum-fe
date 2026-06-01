@@ -154,7 +154,8 @@ const ProfileEdit: React.FC = () => {
       avatar: form.avatar || form.avatar_url,
     } as defs.UserProfile);
     message.success('修改成功');
-    const targetId = form.id || userProfile.id || Number(localStorage.getItem('userId')) || '';
+    const targetId =
+      form.id || userProfile.id || Number(localStorage.getItem('userId')) || '';
     nav(`/user/${targetId}`, { state: { profileToast: '修改成功' } });
   };
 
@@ -171,7 +172,12 @@ const ProfileEdit: React.FC = () => {
               <img
                 src={form.avatar || form.avatar_url}
                 alt=""
-                style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }}
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  borderRadius: '50%',
+                  objectFit: 'cover',
+                }}
               />
             ) : null}
             <span className="badge">+</span>
@@ -190,9 +196,7 @@ const ProfileEdit: React.FC = () => {
           maxLength={40}
           onChange={(event) => setForm({ ...form, signature: event.target.value })}
         />
-        <FixedSubmit onClick={submit}>
-          确定
-        </FixedSubmit>
+        <FixedSubmit onClick={submit}>确定</FixedSubmit>
         {avatarSheet ? (
           <>
             <SheetMask onClick={() => setAvatarSheet(false)} />

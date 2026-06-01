@@ -22,8 +22,7 @@ export const MobilePage = styled.div`
   background: ${mobilePalette.bg};
   color: ${mobilePalette.ink};
   font-size: 14px;
-  font-family:
-    'Source Han Sans', 'PingFang SC', 'Microsoft YaHei', -apple-system,
+  font-family: 'Source Han Sans', 'PingFang SC', 'Microsoft YaHei', -apple-system,
     BlinkMacSystemFont, 'Segoe UI', sans-serif;
   * {
     box-sizing: border-box;

@@ -223,9 +223,7 @@ const CollectionGroupButton = styled.button`
   background: rgba(255, 255, 255, 0.96);
   color: #7f838a;
   box-shadow: 0 8px 22px rgba(16, 24, 40, 0.06);
-  transition:
-    transform 0.18s ease,
-    box-shadow 0.18s ease;
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
   &:active {
     transform: scale(0.99);
     box-shadow: 0 5px 14px rgba(16, 24, 40, 0.05);
@@ -367,12 +365,11 @@ const Profile: React.FC = () => {
     setProfile(effectiveProfile);
 
     if (!effectiveId) return;
-    const [postsRes, collectedPostsRes, collectedRankingsRes] =
-      await Promise.allSettled([
-        mobileApi.posts.published(effectiveId, { limit: 10 }),
-        mobileApi.collection.list(effectiveId, { limit: 3, page: 0 }),
-        mobileApi.sipScore.collected(effectiveId, { limit: 3, page: 0 }),
-      ]);
+    const [postsRes, collectedPostsRes, collectedRankingsRes] = await Promise.allSettled([
+      mobileApi.posts.published(effectiveId, { limit: 10 }),
+      mobileApi.collection.list(effectiveId, { limit: 3, page: 0 }),
+      mobileApi.sipScore.collected(effectiveId, { limit: 3, page: 0 }),
+    ]);
     if (postsRes.status === 'fulfilled' && postsRes.value.code === 0) {
       setPosts(postsRes.value.data.posts || []);
     } else {
@@ -431,11 +428,7 @@ const Profile: React.FC = () => {
   }
 
   return (
-    <MobileShell
-      title={isMine ? '我的主页' : '他的主页'}
-      tabs
-      borderlessTopBar
-    >
+    <MobileShell title={isMine ? '我的主页' : '他的主页'} tabs borderlessTopBar>
       <Hero>
         {isMine ? (
           <NoticeIcon onClick={() => nav('/notice')}>
@@ -558,7 +551,10 @@ const Profile: React.FC = () => {
                   <MiniEmpty>{isMine ? '还没有收藏帖子' : 'Ta还没有收藏帖子'}</MiniEmpty>
                 )}
                 {collectedPosts.length ? (
-                  <ViewAll type="button" onClick={() => nav(`/user/${profile.id}/collect`)}>
+                  <ViewAll
+                    type="button"
+                    onClick={() => nav(`/user/${profile.id}/collect`)}
+                  >
                     查看全部 &gt;
                   </ViewAll>
                 ) : null}

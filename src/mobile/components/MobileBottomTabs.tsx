@@ -31,9 +31,7 @@ const Tab = styled.button<{ active: boolean }>`
   color: ${(props) => (props.active ? '#1a202c' : '#8a9099')};
   font-size: 12px;
   line-height: 1;
-  transition:
-    color 0.18s ease,
-    transform 0.18s ease;
+  transition: color 0.18s ease, transform 0.18s ease;
   span {
     font-weight: ${(props) => (props.active ? 600 : 400)};
   }
