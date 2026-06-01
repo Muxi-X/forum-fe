@@ -25,7 +25,6 @@ type ProfileCacheState = {
   collectedPosts: MobilePost[];
   collectedRankings: SipScoreWithEntries[];
   currentUserId: number;
-  updatedAt: number;
 };
 
 const profileCache = new Map<number, ProfileCacheState>();
@@ -50,14 +49,43 @@ const Hero = styled.section`
 const PageTitle = styled.div`
   position: absolute;
   left: 20px;
+  right: 20px;
   top: calc(22px + env(safe-area-inset-top));
   z-index: 4;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
   h1 {
     margin: 0;
     color: ${mobilePalette.ink};
     font-size: 30px;
     font-weight: 800;
     line-height: 1.12;
+  }
+`;
+
+const PageTitleActions = styled.div`
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+`;
+
+const RefreshButton = styled.button`
+  height: 34px;
+  padding: 0 14px;
+  border-radius: ${mobileRadius.pill};
+  background: rgba(255, 255, 255, 0.72);
+  color: ${mobilePalette.orange};
+  font-size: 13px;
+  font-weight: 700;
+  box-shadow: 0 8px 22px rgba(16, 24, 40, 0.06);
+  transition: transform ${mobileMotion.fast}, opacity ${mobileMotion.fast};
+  &:active {
+    transform: scale(0.96);
+  }
+  &:disabled {
+    opacity: 0.54;
   }
 `;
 
@@ -73,26 +101,24 @@ const StatusHeader = styled.section`
   }
 `;
 
-const NoticeIcon = styled.button`
-  position: absolute;
-  right: 18px;
-  top: calc(24px + env(safe-area-inset-top));
-  z-index: 4;
-  width: 26px;
-  height: 26px;
+const TitleIconButton = styled.button`
+  width: 34px;
+  height: 34px;
   display: grid;
   place-items: center;
-  background: transparent;
-  img {
-    width: 26px;
-    height: 26px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.72);
+  box-shadow: 0 8px 22px rgba(16, 24, 40, 0.06);
+  transition: transform ${mobileMotion.fast};
+  &:active {
+    transform: scale(0.96);
   }
-`;
-
-const HeroActionIcon = styled(NoticeIcon)`
   img {
-    width: auto;
-    height: auto;
+    width: 24px;
+    height: 24px;
+  }
+  .anticon {
+    color: ${mobilePalette.inkSoft};
   }
 `;
 
@@ -370,11 +396,12 @@ const Profile: React.FC = () => {
       (profile?.id && currentUserId && profile.id === currentUserId),
   );
 
-  const load = async () => {
+  const load = async (options?: { force?: boolean }) => {
     const targetBeforeResolve = userId || currentUserId;
-    const cached = targetBeforeResolve
-      ? profileCache.get(targetBeforeResolve)
-      : undefined;
+    const cached =
+      !options?.force && targetBeforeResolve
+        ? profileCache.get(targetBeforeResolve)
+        : undefined;
     if (cached) {
       setProfile(cached.profile);
       setPosts(cached.posts);
@@ -382,7 +409,7 @@ const Profile: React.FC = () => {
       setCollectedRankings(cached.collectedRankings);
       setCurrentUserId(cached.currentUserId);
       setLoading(false);
-      if (Date.now() - cached.updatedAt < 30000) return;
+      return;
     } else {
       setLoading(true);
     }
@@ -473,7 +500,6 @@ const Profile: React.FC = () => {
           ? collectedRankingsRes.value.data.sip_scores || []
           : [],
       currentUserId: resolvedCurrentUserId,
-      updatedAt: Date.now(),
     });
     setLoading(false);
   };
@@ -505,6 +531,12 @@ const Profile: React.FC = () => {
   const logout = () => {
     localStorage.removeItem('token');
     nav('/login');
+  };
+
+  const refreshProfile = async () => {
+    const target = profile?.id || userId || currentUserId;
+    if (target) profileCache.delete(Number(target));
+    await load({ force: true });
   };
 
   if (loading && !profile) {
@@ -542,16 +574,21 @@ const Profile: React.FC = () => {
       <Hero>
         <PageTitle>
           <h1>{isMine ? '我的' : 'TA 的主页'}</h1>
+          <PageTitleActions>
+            <RefreshButton type="button" disabled={loading} onClick={refreshProfile}>
+              刷新
+            </RefreshButton>
+            {isMine ? (
+              <TitleIconButton type="button" onClick={() => nav('/notice')}>
+                <img src={mastergoAssets.icons.notificationBellUnread} alt="" />
+              </TitleIconButton>
+            ) : (
+              <TitleIconButton type="button">
+                <DesignIcon name="more" size={23} />
+              </TitleIconButton>
+            )}
+          </PageTitleActions>
         </PageTitle>
-        {isMine ? (
-          <NoticeIcon onClick={() => nav('/notice')}>
-            <img src={mastergoAssets.icons.notificationBellUnread} alt="" />
-          </NoticeIcon>
-        ) : (
-          <HeroActionIcon type="button">
-            <DesignIcon name="more" size={24} />
-          </HeroActionIcon>
-        )}
         <ProfilePanel>
           <Avatar url={profile.avatar || profile.avatar_url} size={100} bordered />
           <NameRow>

@@ -39,6 +39,10 @@ const SearchWrap = styled.div`
 const HomeTitle = styled.div`
   position: relative;
   z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
   margin: 0 0 16px;
   h1 {
     margin: 0;
@@ -46,6 +50,25 @@ const HomeTitle = styled.div`
     font-size: 30px;
     font-weight: 800;
     line-height: 1.12;
+  }
+`;
+
+const RefreshButton = styled.button`
+  flex: 0 0 auto;
+  height: 34px;
+  padding: 0 14px;
+  border-radius: ${mobileRadius.pill};
+  background: rgba(255, 255, 255, 0.72);
+  color: ${mobilePalette.orange};
+  font-size: 13px;
+  font-weight: 700;
+  box-shadow: 0 8px 22px rgba(16, 24, 40, 0.06);
+  transition: transform ${mobileMotion.fast}, opacity ${mobileMotion.fast};
+  &:active {
+    transform: scale(0.96);
+  }
+  &:disabled {
+    opacity: 0.54;
   }
 `;
 
@@ -325,7 +348,6 @@ type HomeListCacheState = {
   page: number;
   hasMore: boolean;
   loaded: boolean;
-  updatedAt: number;
 };
 
 const homeListCache = new Map<string, HomeListCacheState>();
@@ -372,7 +394,7 @@ const Home: React.FC = () => {
 
   const fetchPosts = async (nextPage = 0, append = false, requestKey = cacheKey) => {
     if (append && (loading || !hasMore)) return;
-    setLoading(!posts.length);
+    setLoading(true);
     setError('');
     try {
       const res = await mobileApi.posts.list({
@@ -397,7 +419,6 @@ const Home: React.FC = () => {
           page: nextPage,
           hasMore: next.length >= PAGE_SIZE,
           loaded: true,
-          updatedAt: Date.now(),
         });
         return merged;
       });
@@ -419,8 +440,6 @@ const Home: React.FC = () => {
       setLoaded(cached.loaded);
       setHasMore(cached.hasMore);
       setLoading(false);
-      if (Date.now() - cached.updatedAt < 30000) return;
-      fetchPosts(cached.page || 0, false, cacheKey);
       return;
     }
     setPosts([]);
@@ -445,6 +464,10 @@ const Home: React.FC = () => {
     return () => observer.disconnect();
   }, [posts.length, hasMore, loading, page]);
 
+  const refreshPosts = async () => {
+    await fetchPosts(0, false, cacheKey);
+  };
+
   return (
     <MobileShell
       title={table ? activeTable.name : '木犀茶馆'}
@@ -459,6 +482,9 @@ const Home: React.FC = () => {
             <Hero>
               <HomeTitle>
                 <h1>木犀茶馆</h1>
+                <RefreshButton type="button" disabled={loading} onClick={refreshPosts}>
+                  刷新
+                </RefreshButton>
               </HomeTitle>
               <SearchWrap>
                 <SearchBar

@@ -36,6 +36,31 @@ const HeaderTop = styled.div`
   }
 `;
 
+const HeaderActions = styled.div`
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex: 0 0 auto;
+`;
+
+const RefreshButton = styled.button`
+  height: 36px;
+  padding: 0 13px;
+  border-radius: ${mobileRadius.pill};
+  background: rgba(255, 255, 255, 0.72);
+  color: ${mobilePalette.orange};
+  font-size: 13px;
+  font-weight: 700;
+  box-shadow: 0 8px 22px rgba(16, 24, 40, 0.06);
+  transition: transform ${mobileMotion.fast}, opacity ${mobileMotion.fast};
+  &:active {
+    transform: scale(0.96);
+  }
+  &:disabled {
+    opacity: 0.54;
+  }
+`;
+
 const SearchStack = styled.div`
   display: grid;
   gap: 12px;
@@ -306,7 +331,6 @@ type SipScoreCacheState = {
   sort: number;
   keyword: string;
   loaded: boolean;
-  updatedAt: number;
 };
 
 const sipScoreCache: SipScoreCacheState = {
@@ -314,7 +338,6 @@ const sipScoreCache: SipScoreCacheState = {
   sort: SORT_TYPE.newest,
   keyword: '',
   loaded: false,
-  updatedAt: 0,
 };
 
 const SipScore: React.FC = () => {
@@ -327,7 +350,7 @@ const SipScore: React.FC = () => {
   const [error, setError] = useState('');
 
   const load = async () => {
-    setLoading(!items.length);
+    setLoading(true);
     setError('');
     try {
       const res = keyword
@@ -344,7 +367,6 @@ const SipScore: React.FC = () => {
       sipScoreCache.sort = sort;
       sipScoreCache.keyword = keyword;
       sipScoreCache.loaded = true;
-      sipScoreCache.updatedAt = Date.now();
     } catch (err) {
       setError(err instanceof Error ? err.message : '榜单加载失败');
     } finally {
@@ -361,7 +383,8 @@ const SipScore: React.FC = () => {
     ) {
       setItems(sipScoreCache.items);
       setLoaded(true);
-      if (Date.now() - sipScoreCache.updatedAt < 30000) return;
+      setLoading(false);
+      return;
     }
     load();
   }, [sort, keyword]);
@@ -371,10 +394,15 @@ const SipScore: React.FC = () => {
       <Header>
         <HeaderTop>
           <h1>茶评</h1>
-          <CreateButton type="button" onClick={() => nav('/sip-score/new')}>
-            <img src={mastergoAssets.icons.addSmall} alt="" />
-            建榜
-          </CreateButton>
+          <HeaderActions>
+            <RefreshButton type="button" disabled={loading} onClick={load}>
+              刷新
+            </RefreshButton>
+            <CreateButton type="button" onClick={() => nav('/sip-score/new')}>
+              <img src={mastergoAssets.icons.addSmall} alt="" />
+              建榜
+            </CreateButton>
+          </HeaderActions>
         </HeaderTop>
         <SearchStack>
           <SearchBar
