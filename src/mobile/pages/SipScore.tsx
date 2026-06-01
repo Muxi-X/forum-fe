@@ -18,7 +18,7 @@ const PREVIEW_ENTRY_LIMIT = 2;
 
 const Header = styled.section`
   padding: calc(22px + env(safe-area-inset-top)) 20px 16px;
-  background: linear-gradient(180deg, #fff7e8 0%, #f8f9fc 100%);
+  background: linear-gradient(180deg, #fffaf0 0%, #f8f9fc 100%);
 `;
 
 const HeaderTop = styled.div`
@@ -301,17 +301,33 @@ const getScoreText = (entry: Record<string, any>) => {
   return ((Number(entry.score_avg) || 0) / 100).toFixed(1);
 };
 
+type SipScoreCacheState = {
+  items: SipScoreWithEntries[];
+  sort: number;
+  keyword: string;
+  loaded: boolean;
+  updatedAt: number;
+};
+
+const sipScoreCache: SipScoreCacheState = {
+  items: [],
+  sort: SORT_TYPE.newest,
+  keyword: '',
+  loaded: false,
+  updatedAt: 0,
+};
+
 const SipScore: React.FC = () => {
   const nav = useNavigate();
-  const [items, setItems] = useState<SipScoreWithEntries[]>([]);
-  const [sort, setSort] = useState<number>(SORT_TYPE.newest);
-  const [keyword, setKeyword] = useState('');
+  const [items, setItems] = useState<SipScoreWithEntries[]>(sipScoreCache.items);
+  const [sort, setSort] = useState<number>(sipScoreCache.sort);
+  const [keyword, setKeyword] = useState(sipScoreCache.keyword);
   const [loading, setLoading] = useState(false);
-  const [loaded, setLoaded] = useState(false);
+  const [loaded, setLoaded] = useState(sipScoreCache.loaded);
   const [error, setError] = useState('');
 
   const load = async () => {
-    setLoading(true);
+    setLoading(!items.length);
     setError('');
     try {
       const res = keyword
@@ -322,7 +338,13 @@ const SipScore: React.FC = () => {
         message.error(res.message || '榜单加载失败');
         return;
       }
-      setItems(res.data.sip_scores || []);
+      const nextItems = res.data.sip_scores || [];
+      setItems(nextItems);
+      sipScoreCache.items = nextItems;
+      sipScoreCache.sort = sort;
+      sipScoreCache.keyword = keyword;
+      sipScoreCache.loaded = true;
+      sipScoreCache.updatedAt = Date.now();
     } catch (err) {
       setError(err instanceof Error ? err.message : '榜单加载失败');
     } finally {
@@ -332,6 +354,15 @@ const SipScore: React.FC = () => {
   };
 
   useEffect(() => {
+    if (
+      sipScoreCache.loaded &&
+      sipScoreCache.sort === sort &&
+      sipScoreCache.keyword === keyword
+    ) {
+      setItems(sipScoreCache.items);
+      setLoaded(true);
+      if (Date.now() - sipScoreCache.updatedAt < 30000) return;
+    }
     load();
   }, [sort, keyword]);
 

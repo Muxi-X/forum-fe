@@ -19,6 +19,17 @@ import { mobileMotion, mobilePalette, mobileRadius, Section } from '../styles';
 import { mobileApi, MobilePost, MobileUser, SipScoreWithEntries } from '../api';
 import { mastergoAssets } from '../assets/mastergo';
 
+type ProfileCacheState = {
+  profile: MobileUser;
+  posts: MobilePost[];
+  collectedPosts: MobilePost[];
+  collectedRankings: SipScoreWithEntries[];
+  currentUserId: number;
+  updatedAt: number;
+};
+
+const profileCache = new Map<number, ProfileCacheState>();
+
 const Hero = styled.section`
   position: relative;
   min-height: 338px;
@@ -36,10 +47,36 @@ const Hero = styled.section`
   }
 `;
 
+const PageTitle = styled.div`
+  position: absolute;
+  left: 20px;
+  top: calc(22px + env(safe-area-inset-top));
+  z-index: 4;
+  h1 {
+    margin: 0;
+    color: ${mobilePalette.ink};
+    font-size: 30px;
+    font-weight: 800;
+    line-height: 1.12;
+  }
+`;
+
+const StatusHeader = styled.section`
+  padding: calc(22px + env(safe-area-inset-top)) 20px 16px;
+  background: linear-gradient(180deg, #fffaf0 0%, #f8f9fc 100%);
+  h1 {
+    margin: 0;
+    color: ${mobilePalette.ink};
+    font-size: 30px;
+    font-weight: 800;
+    line-height: 1.12;
+  }
+`;
+
 const NoticeIcon = styled.button`
   position: absolute;
-  right: 14px;
-  top: 18px;
+  right: 18px;
+  top: calc(24px + env(safe-area-inset-top));
   z-index: 4;
   width: 26px;
   height: 26px;
@@ -334,7 +371,21 @@ const Profile: React.FC = () => {
   );
 
   const load = async () => {
-    setLoading(true);
+    const targetBeforeResolve = userId || currentUserId;
+    const cached = targetBeforeResolve
+      ? profileCache.get(targetBeforeResolve)
+      : undefined;
+    if (cached) {
+      setProfile(cached.profile);
+      setPosts(cached.posts);
+      setCollectedPosts(cached.collectedPosts);
+      setCollectedRankings(cached.collectedRankings);
+      setCurrentUserId(cached.currentUserId);
+      setLoading(false);
+      if (Date.now() - cached.updatedAt < 30000) return;
+    } else {
+      setLoading(true);
+    }
     setError('');
     let resolvedCurrentUserId = currentUserId;
     if (!resolvedCurrentUserId) {
@@ -406,6 +457,24 @@ const Profile: React.FC = () => {
     } else {
       setCollectedRankings([]);
     }
+    profileCache.set(Number(effectiveId), {
+      profile: effectiveProfile,
+      posts:
+        postsRes.status === 'fulfilled' && postsRes.value.code === 0
+          ? postsRes.value.data.posts || []
+          : [],
+      collectedPosts:
+        collectedPostsRes.status === 'fulfilled' && collectedPostsRes.value.code === 0
+          ? collectedPostsRes.value.data.posts || []
+          : [],
+      collectedRankings:
+        collectedRankingsRes.status === 'fulfilled' &&
+        collectedRankingsRes.value.code === 0
+          ? collectedRankingsRes.value.data.sip_scores || []
+          : [],
+      currentUserId: resolvedCurrentUserId,
+      updatedAt: Date.now(),
+    });
     setLoading(false);
   };
 
@@ -440,7 +509,10 @@ const Profile: React.FC = () => {
 
   if (loading && !profile) {
     return (
-      <MobileShell title="我的" tabs>
+      <MobileShell title="我的" tabs showTopBar={false}>
+        <StatusHeader>
+          <h1>我的</h1>
+        </StatusHeader>
         <LoadingState text="正在读取身份卡..." />
       </MobileShell>
     );
@@ -448,7 +520,10 @@ const Profile: React.FC = () => {
 
   if (error && !profile) {
     return (
-      <MobileShell title="我的" tabs>
+      <MobileShell title="我的" tabs showTopBar={false}>
+        <StatusHeader>
+          <h1>我的</h1>
+        </StatusHeader>
         <ErrorState text={error} onRetry={load} />
       </MobileShell>
     );
@@ -458,8 +533,16 @@ const Profile: React.FC = () => {
   const profileId = profile.id || userId || currentUserId;
 
   return (
-    <MobileShell title={isMine ? '我的主页' : '他的主页'} tabs borderlessTopBar>
+    <MobileShell
+      title={isMine ? '我的主页' : '他的主页'}
+      tabs
+      borderlessTopBar
+      showTopBar={false}
+    >
       <Hero>
+        <PageTitle>
+          <h1>{isMine ? '我的' : 'TA 的主页'}</h1>
+        </PageTitle>
         {isMine ? (
           <NoticeIcon onClick={() => nav('/notice')}>
             <img src={mastergoAssets.icons.notificationBellUnread} alt="" />

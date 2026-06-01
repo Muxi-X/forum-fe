@@ -21,23 +21,12 @@ const HomeSurface = styled.div`
 
 const Hero = styled.section`
   position: relative;
-  min-height: 306px;
+  min-height: 304px;
   overflow: hidden;
-  padding: calc(24px + env(safe-area-inset-top)) 18px 0;
-  background: linear-gradient(180deg, #fff9ed 0%, #ffffff 72%);
+  padding: calc(22px + env(safe-area-inset-top)) 20px 0;
+  background: linear-gradient(180deg, #fffaf0 0%, #f8f9fc 100%);
   &::before {
-    content: '';
-    position: absolute;
-    left: -24px;
-    right: -24px;
-    top: -88px;
-    height: 190px;
-    background: radial-gradient(
-        circle at 18% 60%,
-        rgba(255, 198, 65, 0.34),
-        transparent 35%
-      ),
-      radial-gradient(circle at 82% 36%, rgba(254, 152, 0, 0.18), transparent 32%);
+    content: none;
   }
 `;
 
@@ -50,12 +39,12 @@ const SearchWrap = styled.div`
 const HomeTitle = styled.div`
   position: relative;
   z-index: 2;
-  margin: 0 0 20px;
+  margin: 0 0 16px;
   h1 {
     margin: 0;
     color: ${mobilePalette.ink};
-    font-size: 28px;
-    font-weight: 900;
+    font-size: 30px;
+    font-weight: 800;
     line-height: 1.12;
   }
 `;
@@ -331,6 +320,30 @@ const tableVisuals: Record<string, { glyph: string; gradient: string }> = {
 
 const PAGE_SIZE = 20;
 
+type HomeListCacheState = {
+  posts: MobilePost[];
+  page: number;
+  hasMore: boolean;
+  loaded: boolean;
+  updatedAt: number;
+};
+
+const homeListCache = new Map<string, HomeListCacheState>();
+const getHomeCacheKey = (input: {
+  pathname: string;
+  query: string;
+  category?: string;
+  activeTag: string;
+  sort: string;
+}) =>
+  [
+    input.pathname,
+    input.query || '',
+    input.category || '',
+    input.activeTag || '',
+    input.sort || '',
+  ].join('|');
+
 const Home: React.FC = () => {
   const nav = useNavigate();
   const { pathname } = useLocation();
@@ -349,10 +362,17 @@ const Home: React.FC = () => {
   const [activeTag, setActiveTag] = useState('全部');
   const [sort, setSort] = useState<'newest' | 'hottest'>('newest');
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
+  const cacheKey = getHomeCacheKey({
+    pathname,
+    query,
+    category: table?.apiCategory,
+    activeTag,
+    sort,
+  });
 
-  const fetchPosts = async (nextPage = 0, append = false) => {
+  const fetchPosts = async (nextPage = 0, append = false, requestKey = cacheKey) => {
     if (append && (loading || !hasMore)) return;
-    setLoading(true);
+    setLoading(!posts.length);
     setError('');
     try {
       const res = await mobileApi.posts.list({
@@ -370,7 +390,17 @@ const Home: React.FC = () => {
         return;
       }
       const next = res.data.posts || [];
-      setPosts((current) => (append ? [...current, ...next] : next));
+      setPosts((current) => {
+        const merged = append ? [...current, ...next] : next;
+        homeListCache.set(requestKey, {
+          posts: merged,
+          page: nextPage,
+          hasMore: next.length >= PAGE_SIZE,
+          loaded: true,
+          updatedAt: Date.now(),
+        });
+        return merged;
+      });
       setPage(nextPage);
       setHasMore(next.length >= PAGE_SIZE);
     } catch (err) {
@@ -382,12 +412,23 @@ const Home: React.FC = () => {
   };
 
   useEffect(() => {
+    const cached = homeListCache.get(cacheKey);
+    if (cached) {
+      setPosts(cached.posts);
+      setPage(cached.page);
+      setLoaded(cached.loaded);
+      setHasMore(cached.hasMore);
+      setLoading(false);
+      if (Date.now() - cached.updatedAt < 30000) return;
+      fetchPosts(cached.page || 0, false, cacheKey);
+      return;
+    }
     setPosts([]);
     setPage(0);
     setLoaded(false);
     setHasMore(true);
-    fetchPosts(0, false);
-  }, [query, params.category, activeTag, sort]);
+    fetchPosts(0, false, cacheKey);
+  }, [cacheKey]);
 
   useEffect(() => {
     const node = loadMoreRef.current;
