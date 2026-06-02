@@ -17,6 +17,7 @@ import DesignIcon from '../components/DesignIcon';
 import { mastergoAssets } from '../assets/mastergo';
 
 const PREVIEW_ENTRY_LIMIT = 2;
+const BRAND_LOGO = 'https://ossforum.muxixyz.com/logo1.png';
 
 const Header = styled.section`
   padding: calc(22px + env(safe-area-inset-top)) 20px 16px;
@@ -30,11 +31,20 @@ const HeaderTop = styled.div`
   gap: 14px;
   margin-bottom: 16px;
   h1 {
+    display: flex;
+    align-items: center;
+    gap: 10px;
     margin: 0;
     color: ${mobilePalette.ink};
     font-size: 30px;
     font-weight: 800;
     line-height: 1.12;
+    img {
+      width: 32px;
+      height: 32px;
+      flex: 0 0 32px;
+      object-fit: contain;
+    }
   }
 `;
 
@@ -303,27 +313,6 @@ const getScoreText = (entry: Record<string, any>) => {
   return ((Number(entry.score_avg) || 0) / 100).toFixed(1);
 };
 
-const filterSipScoresLocally = (
-  list: SipScoreWithEntries[],
-  keyword: string,
-): SipScoreWithEntries[] => {
-  const normalized = keyword.trim().toLowerCase();
-  if (!normalized) return list;
-  return list.filter((item) => {
-    const sip = item.sip_score || {};
-    const haystack = [
-      sip.name,
-      sip.description,
-      ...(sip.tags || []),
-      ...(item.entries || []).flatMap((entry) => [entry.name, entry.description]),
-    ]
-      .filter(Boolean)
-      .join(' ')
-      .toLowerCase();
-    return haystack.includes(normalized);
-  });
-};
-
 type SipScoreCacheState = {
   items: SipScoreWithEntries[];
   sort: number;
@@ -359,16 +348,7 @@ const SipScore: React.FC = () => {
         message.error(res.message || '榜单加载失败');
         return;
       }
-      let nextItems = res.data.sip_scores || [];
-      if (keyword && !nextItems.length) {
-        const fallback = await mobileApi.sipScore.list({
-          sort_type: sort,
-          page_size: 50,
-        });
-        if (fallback.code === 0) {
-          nextItems = filterSipScoresLocally(fallback.data.sip_scores || [], keyword);
-        }
-      }
+      const nextItems = res.data.sip_scores || [];
       setItems(nextItems);
       sipScoreCache.items = nextItems;
       sipScoreCache.sort = sort;
@@ -401,7 +381,10 @@ const SipScore: React.FC = () => {
       <PullToRefresh disabled={loading} onRefresh={load}>
         <Header>
           <HeaderTop>
-            <h1>茶评</h1>
+            <h1>
+              <img src={BRAND_LOGO} alt="" aria-hidden="true" />
+              茶评
+            </h1>
             <CreateButton type="button" onClick={() => nav('/sip-score/new')}>
               <img src={mastergoAssets.icons.addSmall} alt="" />
               建榜

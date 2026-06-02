@@ -13,9 +13,10 @@ import PullToRefresh from '../components/PullToRefresh';
 import BackToTopButton from '../components/BackToTopButton';
 import { DEFAULT_TABLE, MOBILE_TABLES, mobileTableByRoute } from '../constants';
 import { mobileApi, MobilePost } from '../api';
-import DesignIcon from '../components/DesignIcon';
 import { mastergoAssets } from '../assets/mastergo';
 import { mobileMotion, mobilePalette, mobileRadius } from '../styles';
+
+const BRAND_LOGO = 'https://ossforum.muxixyz.com/logo1.png';
 
 const HomeSurface = styled.div`
   background: ${mobilePalette.bg};
@@ -42,6 +43,15 @@ const HomeTitle = styled.div`
   position: relative;
   z-index: 2;
   margin: 0 0 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  img {
+    width: 32px;
+    height: 32px;
+    flex: 0 0 32px;
+    object-fit: contain;
+  }
   h1 {
     margin: 0;
     color: ${mobilePalette.ink};
@@ -159,9 +169,8 @@ const PostList = styled.div`
 
 const DetailHero = styled.section`
   position: relative;
-  padding: 18px 18px 20px;
-  background: linear-gradient(180deg, #fff4d8 0%, #ffffff 100%);
-  border-bottom: 1px solid ${mobilePalette.lineSoft};
+  padding: 20px 18px 16px;
+  background: linear-gradient(180deg, #fff6df 0%, #fffdf8 100%);
 `;
 
 const TableIntro = styled.div`
@@ -214,8 +223,19 @@ const SortRow = styled.div`
 
 const TableTabsPanel = styled.div`
   margin: 0;
-  padding: 4px 0 10px;
-  background: rgba(255, 255, 255, 0.9);
+  padding: 0 0 10px;
+  background: linear-gradient(180deg, #fffdf8 0%, ${mobilePalette.bg} 100%);
+  border-top: 1px solid rgba(60, 60, 67, 0.06);
+  & > div {
+    margin-top: 0;
+    margin-bottom: 0;
+  }
+`;
+
+const TableFilterPanel = styled.div`
+  display: grid;
+  gap: 10px;
+  padding: 14px 0 4px;
 `;
 
 const FeaturedCard = styled.button`
@@ -279,24 +299,6 @@ const FloatingEdit = styled.button`
     width: 14px;
     height: 14px;
     filter: brightness(0) invert(1);
-  }
-`;
-
-const DetailTopControls = styled.div`
-  display: grid;
-  grid-template-columns: 40px 1fr 40px;
-  gap: 10px;
-  align-items: center;
-  padding: calc(12px + env(safe-area-inset-top)) 16px 14px;
-  background: linear-gradient(180deg, #fff4d8 0%, #fffaf0 100%);
-  .ghost {
-    width: 40px;
-    height: 40px;
-    display: grid;
-    place-items: center;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.66);
-    color: #fe9800;
   }
 `;
 
@@ -465,6 +467,7 @@ const Home: React.FC = () => {
             <>
               <Hero>
                 <HomeTitle>
+                  <img src={BRAND_LOGO} alt="" aria-hidden="true" />
                   <h1>木犀茶馆</h1>
                 </HomeTitle>
                 <SearchWrap>
@@ -514,23 +517,6 @@ const Home: React.FC = () => {
             </SearchPageHeader>
           ) : (
             <>
-              <DetailTopControls>
-                <button className="ghost" type="button" onClick={() => nav(-1)}>
-                  <img
-                    src={mastergoAssets.icons.chevronLeftOrange}
-                    alt=""
-                    style={{ width: 7, height: 13 }}
-                  />
-                </button>
-                <SearchBar
-                  defaultValue={query}
-                  placeholder="搜索茶桌"
-                  onSearch={(value) => nav(value ? `/search?query=${value}` : '/')}
-                />
-                <button className="ghost" type="button">
-                  <DesignIcon name="more" size={22} />
-                </button>
-              </DetailTopControls>
               <DetailHero>
                 <TableIntro>
                   <span
@@ -547,11 +533,20 @@ const Home: React.FC = () => {
                 <TableDesc>{activeTable.intro}</TableDesc>
               </DetailHero>
               <TableTabsPanel>
-                <SegmentTabs
-                  value={activeTag}
-                  items={activeTable.tags.map((tag) => ({ label: tag, value: tag }))}
-                  onChange={(value) => setActiveTag(String(value))}
-                />
+                <TableFilterPanel>
+                  <SearchWrap>
+                    <SearchBar
+                      defaultValue={query}
+                      placeholder="搜索茶桌"
+                      onSearch={(value) => nav(value ? `/search?query=${value}` : '/')}
+                    />
+                  </SearchWrap>
+                  <SegmentTabs
+                    value={activeTag}
+                    items={activeTable.tags.map((tag) => ({ label: tag, value: tag }))}
+                    onChange={(value) => setActiveTag(String(value))}
+                  />
+                </TableFilterPanel>
               </TableTabsPanel>
             </>
           )}

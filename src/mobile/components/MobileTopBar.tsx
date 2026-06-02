@@ -14,9 +14,13 @@ const Bar = styled.header<{ borderless?: boolean }>`
   display: grid;
   grid-template-columns: 64px 1fr 64px;
   align-items: center;
-  background: rgba(255, 255, 255, 0.86);
+  background: linear-gradient(
+    180deg,
+    rgba(255, 250, 240, 0.94) 0%,
+    rgba(255, 255, 255, 0.84) 100%
+  );
   border-bottom: ${(props) =>
-    props.borderless ? '0' : `1px solid ${mobilePalette.lineSoft}`};
+    props.borderless ? '0' : '1px solid rgba(255, 198, 65, 0.18)'};
   backdrop-filter: blur(18px);
 `;
 
@@ -59,7 +63,7 @@ const BackPill = styled.span`
   place-items: center;
   border-radius: ${mobileRadius.pill};
   background: rgba(255, 255, 255, 0.72);
-  box-shadow: 0 4px 12px rgba(16, 24, 40, 0.06);
+  box-shadow: 0 6px 18px rgba(16, 24, 40, 0.06);
 `;
 
 type RightAction = 'notice' | 'edit' | 'add';
