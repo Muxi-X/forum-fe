@@ -160,7 +160,7 @@ const DividerDot = styled.span`
 `;
 
 const CreateButton = styled.button`
-  height: 36px;
+  height: 34px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -178,8 +178,8 @@ const CreateButton = styled.button`
     box-shadow: 0 6px 16px rgba(254, 152, 0, 0.18);
   }
   img {
-    width: 14px;
-    height: 14px;
+    width: 13px;
+    height: 13px;
     filter: brightness(0) invert(1);
   }
 `;
