@@ -66,6 +66,37 @@ const normalizeSipScoreId = (item: SipScoreWithEntries | SipScore) => {
 const sipEntryPatchKey = (sipScoreId: number, entryId?: number) =>
   `${Number(sipScoreId)}:${Number(entryId || 0)}`;
 
+const applyEntryPatchesForSipScore = (
+  sipScoreId: number,
+  entries: SipScoreEntry[],
+  options?: { includeCreated?: boolean },
+) => {
+  const nextEntries = entries.map((entry) => {
+    const patch = sipScoreEntryPatches.get(sipEntryPatchKey(sipScoreId, entry.id));
+    return patch ? applySipScoreEntryPatch(entry, patch) : entry;
+  });
+
+  if (!options?.includeCreated) {
+    return nextEntries;
+  }
+
+  const existingIds = new Set(nextEntries.map((entry) => Number(entry.id || 0)));
+  const createdEntries: SipScoreEntry[] = [];
+  sipScoreEntryPatches.forEach((patch) => {
+    if (
+      Number(patch.sipScoreId) === Number(sipScoreId) &&
+      patch.created &&
+      patch.entry &&
+      patch.entryId &&
+      !existingIds.has(Number(patch.entryId))
+    ) {
+      createdEntries.push(applySipScoreEntryPatch(patch.entry, patch));
+    }
+  });
+
+  return createdEntries.length ? [...createdEntries, ...nextEntries] : nextEntries;
+};
+
 export const getMobilePostId = normalizePostId;
 export const getSipScoreItemId = normalizeSipScoreId;
 
@@ -137,7 +168,6 @@ export const applySipScorePatch = (
   if (!itemId || itemId !== Number(patch.id)) return item;
   return {
     ...item,
-    ...(patch.withEntries || {}),
     sip_score: {
       ...(item.sip_score || {}),
       ...(patch.withEntries?.sip_score || {}),
@@ -155,12 +185,45 @@ export const applySipScorePatch = (
   };
 };
 
-export const applyStoredSipScorePatches = (items: SipScoreWithEntries[]) =>
-  items.map((item) => {
-    const id = normalizeSipScoreId(item);
-    const patch = sipScorePatches.get(id);
-    return patch ? applySipScorePatch(item, patch) : item;
-  });
+export const applyStoredSipScorePatches = (
+  items: SipScoreWithEntries[],
+  options?: { includeCreated?: boolean },
+) =>
+  (() => {
+    const existingIds = new Set<number>();
+    const patchedItems = items.map((item) => {
+      const id = normalizeSipScoreId(item);
+      existingIds.add(id);
+      const patch = sipScorePatches.get(id);
+      const patched = patch ? applySipScorePatch(item, patch) : item;
+      return {
+        ...patched,
+        entries: applyEntryPatchesForSipScore(id, patched.entries || [], {
+          includeCreated: true,
+        }),
+      };
+    });
+
+    const createdItems: SipScoreWithEntries[] = [];
+    sipScorePatches.forEach((patch) => {
+      if (
+        options?.includeCreated &&
+        patch.created &&
+        patch.withEntries &&
+        !existingIds.has(Number(patch.id))
+      ) {
+        const id = normalizeSipScoreId(patch.withEntries);
+        createdItems.push({
+          ...patch.withEntries,
+          entries: applyEntryPatchesForSipScore(id, patch.withEntries.entries || [], {
+            includeCreated: true,
+          }),
+        });
+      }
+    });
+
+    return createdItems.length ? [...createdItems, ...patchedItems] : patchedItems;
+  })();
 
 export const getSipScoreRevision = () => sipScoreRevision;
 
@@ -202,8 +265,4 @@ export const applySipScoreEntryPatch = (
 export const applyStoredSipScoreEntryPatches = (
   sipScoreId: number,
   entries: SipScoreEntry[],
-) =>
-  entries.map((entry) => {
-    const patch = sipScoreEntryPatches.get(sipEntryPatchKey(sipScoreId, entry.id));
-    return patch ? applySipScoreEntryPatch(entry, patch) : entry;
-  });
+) => applyEntryPatchesForSipScore(sipScoreId, entries);

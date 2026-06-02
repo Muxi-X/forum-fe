@@ -413,7 +413,7 @@ const SipScoreDetail: React.FC = () => {
         message.error(res.message || '添加失败');
         return;
       }
-      const createdId = Number(res.data.entry_ids?.[0] || 0);
+      const createdId = Number((res.data.entry_ids || res.data.ids)?.[0] || 0);
       const createdEntry: SipScoreEntry = {
         id: createdId || undefined,
         sip_score_id: sipScoreId,

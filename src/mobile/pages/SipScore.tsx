@@ -197,26 +197,6 @@ const DetailLink = styled.button`
   font-weight: 700;
 `;
 
-const TagRow = styled.div`
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin: 12px 0 2px;
-`;
-
-const Tag = styled.span`
-  max-width: 100%;
-  height: 24px;
-  display: inline-flex;
-  align-items: center;
-  border-radius: ${mobileRadius.pill};
-  padding: 0 9px;
-  background: rgba(255, 198, 65, 0.16);
-  color: #9d6400;
-  font-size: 12px;
-  font-weight: 700;
-`;
-
 const EntryList = styled.div`
   display: grid;
   gap: 13px;
@@ -381,17 +361,17 @@ const SipScore: React.FC = () => {
         message.error(res.message || '榜单加载失败');
         return;
       }
-      const nextItems = applyStoredSipScorePatches(res.data.sip_scores || []).map(
-        (item) => {
-          const sipId = getSipScoreId(item);
-          return {
-            ...item,
-            entries: sipId
-              ? applyStoredSipScoreEntryPatches(sipId, item.entries || [])
-              : item.entries || [],
-          };
-        },
-      );
+      const nextItems = applyStoredSipScorePatches(res.data.sip_scores || [], {
+        includeCreated: true,
+      }).map((item) => {
+        const sipId = getSipScoreId(item);
+        return {
+          ...item,
+          entries: sipId
+            ? applyStoredSipScoreEntryPatches(sipId, item.entries || [])
+            : item.entries || [],
+        };
+      });
       setItems(nextItems);
       sipScoreCache.items = nextItems;
       sipScoreCache.sort = sort;
@@ -576,13 +556,6 @@ const SipScore: React.FC = () => {
                         <DesignIcon name="chevronRight" size={15} />
                       </DetailLink>
                     </CardHead>
-                    {Array.isArray(sip.tags) && sip.tags.length ? (
-                      <TagRow>
-                        {sip.tags.slice(0, 3).map((tag) => (
-                          <Tag key={tag}>#{tag.replace(/^#/, '')}</Tag>
-                        ))}
-                      </TagRow>
-                    ) : null}
                     {entries.length ? (
                       <EntryList>
                         {entries.map((entry) => {

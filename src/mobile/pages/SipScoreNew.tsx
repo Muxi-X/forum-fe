@@ -122,7 +122,7 @@ const SipScoreNew: React.FC = () => {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [cover, setCover] = useState('');
-  const [tags, setTags] = useState('');
+  const [tags, setTags] = useState<string[]>([]);
   const [customTag, setCustomTag] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
@@ -133,14 +133,12 @@ const SipScoreNew: React.FC = () => {
     }
     setSubmitting(true);
     try {
+      const nextTags = tags.slice(0, MAX_TAG_COUNT);
       const res = await mobileApi.sipScore.create({
         name,
         description,
         cover_img: cover,
-        tags: tags
-          .split(/[,\s，]+/)
-          .filter(Boolean)
-          .slice(0, MAX_TAG_COUNT),
+        tags: nextTags,
         domain: 'normal',
         category: DEFAULT_TABLE.apiCategory,
       });
@@ -150,10 +148,6 @@ const SipScoreNew: React.FC = () => {
       }
       const sipScoreId = Number(res.data.id || 0);
       if (sipScoreId) {
-        const nextTags = tags
-          .split(/[,\s，]+/)
-          .filter(Boolean)
-          .slice(0, MAX_TAG_COUNT);
         emitSipScorePatch({
           id: sipScoreId,
           created: true,
@@ -182,14 +176,12 @@ const SipScoreNew: React.FC = () => {
     }
   };
 
-  const tagList = tags.split(/[,\s，]+/).filter(Boolean);
+  const tagList = tags;
   const presetTags = ['校园生活', '学习资料', '美食', '课程', '宿舍', '工具'];
   const visibleTags = Array.from(new Set([...presetTags, ...tagList]));
 
   const updateTags = (nextTags: string[]) => {
-    setTags(
-      Array.from(new Set(nextTags)).filter(Boolean).slice(0, MAX_TAG_COUNT).join(' '),
-    );
+    setTags(Array.from(new Set(nextTags)).filter(Boolean).slice(0, MAX_TAG_COUNT));
   };
 
   const addCustomTag = () => {

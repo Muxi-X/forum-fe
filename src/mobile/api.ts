@@ -268,7 +268,7 @@ export const mobileApi = {
         { query },
       ),
     createEntries: (body: Record<string, unknown>) =>
-      request<{ entry_ids?: number[] }>('/sip-score/entries', {
+      request<{ entry_ids?: number[]; ids?: number[] }>('/sip-score/entries', {
         method: 'POST',
         body,
       }),
