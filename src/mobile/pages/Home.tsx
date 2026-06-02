@@ -628,10 +628,12 @@ const Home: React.FC = () => {
           />
         )}
       </PullToRefresh>
-      <FloatingEdit type="button" onClick={() => nav(`/editor/article${Date.now()}`)}>
-        <img src={mastergoAssets.icons.addSmall} alt="" />
-      </FloatingEdit>
-      <BackToTopButton offset={isSearch || table ? 156 : 150} />
+      {!isSearch ? (
+        <FloatingEdit type="button" onClick={() => nav(`/editor/article${Date.now()}`)}>
+          <img src={mastergoAssets.icons.addSmall} alt="" />
+        </FloatingEdit>
+      ) : null}
+      <BackToTopButton offset={isSearch ? 118 : table ? 156 : 150} />
     </MobileShell>
   );
 };
