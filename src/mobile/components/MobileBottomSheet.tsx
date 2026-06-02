@@ -42,7 +42,7 @@ const Handle = styled.div`
 
 const Head = styled.div`
   display: grid;
-  grid-template-columns: 42px 1fr 42px;
+  grid-template-columns: 1fr;
   align-items: center;
   padding: 0 12px 10px;
   border-bottom: 1px solid ${mobilePalette.lineSoft};
@@ -51,11 +51,6 @@ const Head = styled.div`
     text-align: center;
     font-size: 16px;
     color: ${mobilePalette.ink};
-  }
-  button {
-    height: 38px;
-    background: transparent;
-    color: ${mobilePalette.muted};
   }
 `;
 
@@ -86,11 +81,7 @@ const MobileBottomSheet: React.FC<{
         <Handle />
         {title ? (
           <Head>
-            <span />
             <h2>{title}</h2>
-            <button type="button" onClick={onClose}>
-              关闭
-            </button>
           </Head>
         ) : null}
         <Body>{children}</Body>

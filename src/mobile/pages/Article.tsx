@@ -12,13 +12,7 @@ import MobileBottomSheet from '../components/MobileBottomSheet';
 import UploadField from '../components/UploadField';
 import MobileAvatar from '../components/MobileAvatar';
 import DesignIcon from '../components/DesignIcon';
-import {
-  mobileMotion,
-  mobilePalette,
-  mobileRadius,
-  PrimaryButton,
-  GhostButton,
-} from '../styles';
+import { mobileMotion, mobilePalette, mobileRadius, PrimaryButton } from '../styles';
 import { mobileApi, MobileComment, MobilePost } from '../api';
 import { TARGET_TYPE, TYPE_NAME, SORT_TYPE, mobileTableByCategory } from '../constants';
 import moment from 'utils/moment';
@@ -156,6 +150,9 @@ const Composer = styled.div`
   textarea {
     resize: none;
     border-radius: ${mobileRadius.lg};
+    padding: 10px 14px;
+    line-height: 20px;
+    display: block;
   }
   button {
     height: 40px;
@@ -167,9 +164,7 @@ const ReportForm = styled.div`
   display: grid;
   gap: 12px;
   .actions {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
+    display: block;
   }
 `;
 
@@ -447,7 +442,7 @@ const Article: React.FC = () => {
         {comments.length ? (
           <CommentList comments={comments} onReply={setReplyTo} />
         ) : (
-          <EmptyState title="还没有评论" text="写下第一条评论。" />
+          <EmptyState title="还没有评论" />
         )}
       </CommentSection>
       <Composer>
@@ -483,9 +478,6 @@ const Article: React.FC = () => {
           />
           <UploadField value={reportImg} onChange={setReportImg} />
           <div className="actions">
-            <GhostButton type="button" onClick={() => setReportOpen(false)}>
-              取消
-            </GhostButton>
             <PrimaryButton type="button" onClick={submitReport}>
               提交
             </PrimaryButton>

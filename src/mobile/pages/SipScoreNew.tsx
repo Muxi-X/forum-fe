@@ -61,6 +61,30 @@ const TagChip = styled.button<{ active?: boolean }>`
   color: ${(props) => (props.active ? '#fff' : '#1a202c')};
 `;
 
+const SelectedTagRow = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+`;
+
+const SelectedTag = styled.button`
+  min-height: 30px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 11px;
+  border-radius: ${mobileRadius.pill};
+  background: rgba(255, 198, 65, 0.18);
+  color: #9a6100;
+  font-size: 13px;
+  span {
+    color: rgba(154, 97, 0, 0.52);
+    font-size: 15px;
+    line-height: 1;
+  }
+`;
+
 const CustomTagForm = styled.form`
   display: flex;
   gap: 8px;
@@ -76,9 +100,12 @@ const CustomTagForm = styled.form`
   button {
     width: 58px;
     border-radius: ${mobileRadius.pill};
-    background: rgba(255, 198, 65, 0.2);
-    color: #c46c00;
+    background: linear-gradient(135deg, #ffc641, #fe9800);
+    color: #fff;
     font-weight: 800;
+    &:disabled {
+      opacity: 0.45;
+    }
   }
 `;
 
@@ -122,6 +149,10 @@ const SipScoreNew: React.FC = () => {
 
   const tagList = tags.split(/[,\s，]+/).filter(Boolean);
 
+  const updateTags = (nextTags: string[]) => {
+    setTags(Array.from(new Set(nextTags)).filter(Boolean).slice(0, 5).join(' '));
+  };
+
   const addCustomTag = () => {
     const next = customTag.replace(/^#/, '').trim();
     if (!next) return;
@@ -129,9 +160,13 @@ const SipScoreNew: React.FC = () => {
       message.warning('标签最多 12 个字');
       return;
     }
+    if (!tagList.includes(next) && tagList.length >= 5) {
+      message.warning('最多添加 5 个标签');
+      return;
+    }
     const merged = new Set(tagList);
     merged.add(next);
-    setTags(Array.from(merged).slice(0, 5).join(' '));
+    updateTags(Array.from(merged));
     setCustomTag('');
   };
 
@@ -166,10 +201,16 @@ const SipScoreNew: React.FC = () => {
                 type="button"
                 active={active}
                 onClick={() => {
-                  const next = new Set(tags.split(/[,\s，]+/).filter(Boolean));
-                  if (next.has(value)) next.delete(value);
-                  else next.add(value);
-                  setTags(Array.from(next).join(' '));
+                  const next = new Set(tagList);
+                  if (next.has(value)) {
+                    next.delete(value);
+                  } else if (tagList.length >= 5) {
+                    message.warning('最多添加 5 个标签');
+                    return;
+                  } else {
+                    next.add(value);
+                  }
+                  updateTags(Array.from(next));
                 }}
               >
                 {tag}
@@ -177,6 +218,20 @@ const SipScoreNew: React.FC = () => {
             );
           })}
         </TagRow>
+        {tagList.length ? (
+          <SelectedTagRow>
+            {tagList.map((tag) => (
+              <SelectedTag
+                key={tag}
+                type="button"
+                onClick={() => updateTags(tagList.filter((item) => item !== tag))}
+              >
+                #{tag}
+                <span aria-hidden>×</span>
+              </SelectedTag>
+            ))}
+          </SelectedTagRow>
+        ) : null}
         <CustomTagForm
           onSubmit={(event) => {
             event.preventDefault();
@@ -189,7 +244,9 @@ const SipScoreNew: React.FC = () => {
             placeholder="添加自定义标签"
             onChange={(event) => setCustomTag(event.target.value)}
           />
-          <button type="submit">添加</button>
+          <button type="button" disabled={!customTag.trim()} onClick={addCustomTag}>
+            添加
+          </button>
         </CustomTagForm>
         <FixedBar>
           <SubmitButton disabled={submitting} onClick={submit}>

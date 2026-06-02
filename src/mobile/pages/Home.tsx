@@ -246,26 +246,6 @@ const FeaturedCard = styled.button`
   }
 `;
 
-const TableActions = styled.div`
-  display: flex;
-  justify-content: flex-end;
-  padding: 0 16px 10px;
-  background: transparent;
-`;
-
-const InlinePublish = styled.button`
-  height: 34px;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 0 14px;
-  border-radius: ${mobileRadius.pill};
-  background: rgba(255, 198, 65, 0.2);
-  color: #c46c00;
-  font-size: 13px;
-  font-weight: 800;
-`;
-
 const SortButton = styled.button<{ active: boolean }>`
   height: 32px;
   min-width: 58px;
@@ -572,19 +552,6 @@ const Home: React.FC = () => {
                   items={activeTable.tags.map((tag) => ({ label: tag, value: tag }))}
                   onChange={(value) => setActiveTag(String(value))}
                 />
-                <TableActions>
-                  <InlinePublish
-                    type="button"
-                    onClick={() =>
-                      nav(`/editor/article${Date.now()}`, {
-                        state: { category: activeTable.apiCategory },
-                      })
-                    }
-                  >
-                    <span aria-hidden>+</span>
-                    发到这个茶桌
-                  </InlinePublish>
-                </TableActions>
               </TableTabsPanel>
             </>
           )}
@@ -628,7 +595,7 @@ const Home: React.FC = () => {
           />
         )}
       </PullToRefresh>
-      {!isSearch ? (
+      {!isSearch && !table ? (
         <FloatingEdit type="button" onClick={() => nav(`/editor/article${Date.now()}`)}>
           <img src={mastergoAssets.icons.addSmall} alt="" />
         </FloatingEdit>

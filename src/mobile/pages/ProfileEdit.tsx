@@ -13,81 +13,131 @@ import TeaCupHeroSvg from '../components/TeaCupHeroSvg';
 
 const Wrap = styled.div`
   min-height: calc(100vh - 60px);
-  padding: 28px 20px 112px;
-  background: linear-gradient(180deg, #ffe6b6 0%, #fff4d8 38%, #ffffff 100%);
+  padding: 18px 18px calc(118px + env(safe-area-inset-bottom));
+  background: linear-gradient(180deg, #fff8e6 0%, #f7f8fb 34%, #f7f8fb 100%);
   position: relative;
 
   .ant-input {
-    padding: 8px 0;
+    padding: 7px 0 0;
     border: 0 !important;
-    border-bottom: 1px solid rgba(127, 131, 138, 0.22) !important;
     border-radius: 0;
     background: transparent !important;
     box-shadow: none !important;
     color: #1a202c;
+    font-size: 16px;
+    line-height: 1.45;
   }
   .ant-input:focus {
-    border-bottom-color: rgba(127, 131, 138, 0.32) !important;
     box-shadow: none !important;
   }
 `;
 
+const FormCard = styled.section`
+  overflow: hidden;
+  border-radius: 28px;
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(60, 60, 67, 0.08);
+  box-shadow: 0 18px 42px rgba(16, 24, 40, 0.08);
+  backdrop-filter: blur(18px);
+`;
+
 const IdentityHero = styled.div`
   position: relative;
-  min-height: 126px;
-  display: grid;
-  grid-template-columns: 91px 1fr;
-  align-items: start;
-  gap: 18px;
-  margin-bottom: 12px;
+  min-height: 106px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 18px 18px 16px;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 198, 65, 0.28),
+    rgba(255, 250, 240, 0.82)
+  );
   h1 {
-    margin: 18px 0 0;
+    margin: 0;
     color: #1a202c;
-    font-size: 26px;
+    font-size: 24px;
     line-height: 1.2;
-    font-weight: 400;
+    font-weight: 800;
+  }
+  p {
+    margin: 7px 0 0;
+    color: ${mobilePalette.muted};
+    font-size: 13px;
+    line-height: 1.45;
   }
 `;
 
 const Cup = styled(TeaCupHeroSvg)`
-  width: 80px;
-  height: 86px;
+  width: 64px;
+  height: 64px;
+  flex: 0 0 64px;
   object-fit: contain;
 `;
 
 const AvatarField = styled.div`
   display: flex;
-  justify-content: flex-end;
-  margin: -18px 6px 26px;
+  align-items: center;
+  gap: 14px;
+  padding: 18px;
+  border-bottom: 1px solid rgba(60, 60, 67, 0.08);
+`;
+
+const AvatarCopy = styled.div`
+  min-width: 0;
+  h2 {
+    margin: 0 0 5px;
+    color: ${mobilePalette.ink};
+    font-size: 16px;
+    line-height: 1.3;
+    font-weight: 800;
+  }
+  p {
+    margin: 0;
+    color: ${mobilePalette.muted};
+    font-size: 12px;
+  }
 `;
 
 const AvatarButton = styled.button`
   position: relative;
-  width: 64px;
-  height: 64px;
+  width: 72px;
+  height: 72px;
+  flex: 0 0 72px;
   border-radius: 50%;
   background: #d7dce4;
   overflow: visible;
+  box-shadow: 0 10px 24px rgba(16, 24, 40, 0.08);
+  transition: transform 150ms ease;
+  &:active {
+    transform: scale(0.96);
+  }
   .badge {
     position: absolute;
-    right: 0;
-    bottom: 4px;
-    width: 16px;
-    height: 16px;
+    right: -1px;
+    bottom: 5px;
+    width: 20px;
+    height: 20px;
     display: grid;
     place-items: center;
     border-radius: 50%;
     background: #ffc641;
     color: #fff;
-    font-size: 12px;
+    font-size: 14px;
+    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.92);
   }
 `;
 
-const Label = styled.label`
-  display: block;
-  margin: 24px 0 8px;
-  color: #3d3d3d;
+const Field = styled.label`
+  display: grid;
+  gap: 3px;
+  padding: 16px 18px;
+  background: rgba(255, 255, 255, 0.72);
+  color: ${mobilePalette.muted};
   font-size: 12px;
+  & + & {
+    border-top: 1px solid rgba(60, 60, 67, 0.08);
+  }
 `;
 
 const FixedSubmit = styled(PrimaryButton)`
@@ -114,6 +164,10 @@ const AvatarSheet = styled.div`
     input {
       display: none;
     }
+  }
+  button:last-child,
+  label:last-child {
+    border-bottom: 0;
   }
 `;
 
@@ -151,29 +205,44 @@ const ProfileEdit: React.FC = () => {
   return (
     <MobileShell title="编辑资料" back tabs={false}>
       <Wrap>
-        <IdentityHero>
-          <Cup variant="small" />
-          <h1>认领身份卡~</h1>
-        </IdentityHero>
-        <AvatarField>
-          <AvatarButton type="button" onClick={() => setAvatarSheet(true)}>
-            <MobileAvatar url={form.avatar || form.avatar_url} size={64} />
-            <span className="badge">+</span>
-          </AvatarButton>
-        </AvatarField>
-        <Label>昵称</Label>
-        <Input
-          value={form.name}
-          maxLength={10}
-          onChange={(event) => setForm({ ...form, name: event.target.value })}
-        />
-        <Label>个人介绍</Label>
-        <Input.TextArea
-          value={form.signature}
-          rows={2}
-          maxLength={40}
-          onChange={(event) => setForm({ ...form, signature: event.target.value })}
-        />
+        <FormCard>
+          <IdentityHero>
+            <Cup variant="small" />
+            <div>
+              <h1>身份卡</h1>
+              <p>让大家一眼认出你。</p>
+            </div>
+          </IdentityHero>
+          <AvatarField>
+            <AvatarButton type="button" onClick={() => setAvatarSheet(true)}>
+              <MobileAvatar url={form.avatar || form.avatar_url} size={72} />
+              <span className="badge">+</span>
+            </AvatarButton>
+            <AvatarCopy>
+              <h2>头像</h2>
+              <p>点击更换</p>
+            </AvatarCopy>
+          </AvatarField>
+          <Field>
+            <span>昵称</span>
+            <Input
+              value={form.name}
+              maxLength={10}
+              placeholder="取一个好记的名字"
+              onChange={(event) => setForm({ ...form, name: event.target.value })}
+            />
+          </Field>
+          <Field>
+            <span>个人介绍</span>
+            <Input.TextArea
+              value={form.signature}
+              rows={3}
+              maxLength={40}
+              placeholder="简单介绍一下自己"
+              onChange={(event) => setForm({ ...form, signature: event.target.value })}
+            />
+          </Field>
+        </FormCard>
         <FixedSubmit onClick={submit}>确定</FixedSubmit>
         <MobileBottomSheet
           open={avatarSheet}
@@ -189,10 +258,6 @@ const ProfileEdit: React.FC = () => {
                 setAvatarSheet(false);
               }}
             />
-            <button type="button">相机拍摄</button>
-            <button type="button" onClick={() => setAvatarSheet(false)}>
-              取消
-            </button>
           </AvatarSheet>
         </MobileBottomSheet>
       </Wrap>

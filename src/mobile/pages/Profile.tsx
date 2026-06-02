@@ -33,104 +33,98 @@ const profileCache = new Map<number, ProfileCacheState>();
 
 const Hero = styled.section`
   position: relative;
-  min-height: 338px;
+  min-height: 332px;
   overflow: hidden;
-  background: #fff;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0) 54%, #f7f8fb 100%),
+    linear-gradient(135deg, #fff8e6 0%, #ffd879 52%, #fff2cc 100%);
   &::before {
     content: '';
     position: absolute;
-    left: 0;
-    right: 0;
-    top: -40px;
-    height: 336px;
-    background: url(${mastergoAssets.decorations.profileHeroCupBg}) center top /
-      calc(100% + 69px) auto no-repeat;
+    right: 18px;
+    top: 68px;
+    width: 144px;
+    height: 118px;
+    background: url(${mastergoAssets.decorations.teaCupLarge}) center / contain no-repeat;
+    opacity: 0.18;
+    transform: rotate(-3deg);
+  }
+  &::after {
+    content: '';
+    position: absolute;
+    left: -20px;
+    right: -20px;
+    bottom: -18px;
+    height: 112px;
+    background: linear-gradient(180deg, rgba(247, 248, 251, 0), #f7f8fb 74%);
   }
 `;
 
-const PageTitle = styled.div`
+const HeroActions = styled.div`
   position: absolute;
-  left: 20px;
-  right: 20px;
-  top: calc(22px + env(safe-area-inset-top));
+  right: 18px;
+  top: calc(18px + env(safe-area-inset-top));
   z-index: 4;
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-end;
   gap: 12px;
-  h1 {
-    margin: 0;
-    color: ${mobilePalette.ink};
-    font-size: 30px;
-    font-weight: 800;
-    line-height: 1.12;
-  }
-`;
-
-const PageTitleActions = styled.div`
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-`;
-
-const StatusHeader = styled.section`
-  padding: calc(22px + env(safe-area-inset-top)) 20px 16px;
-  background: linear-gradient(180deg, #fffaf0 0%, #f8f9fc 100%);
-  h1 {
-    margin: 0;
-    color: ${mobilePalette.ink};
-    font-size: 30px;
-    font-weight: 800;
-    line-height: 1.12;
-  }
 `;
 
 const TitleIconButton = styled.button`
-  width: 34px;
-  height: 34px;
+  position: relative;
+  width: 38px;
+  height: 38px;
   display: grid;
   place-items: center;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.72);
-  box-shadow: 0 8px 22px rgba(16, 24, 40, 0.06);
+  background: rgba(255, 255, 255, 0.7);
+  box-shadow: 0 10px 26px rgba(16, 24, 40, 0.08);
+  backdrop-filter: blur(14px);
   transition: transform ${mobileMotion.fast};
   &:active {
     transform: scale(0.96);
   }
-  img {
-    width: 24px;
-    height: 24px;
-  }
   .anticon {
     color: ${mobilePalette.inkSoft};
+  }
+  .dot {
+    position: absolute;
+    right: 8px;
+    top: 8px;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: ${mobilePalette.danger};
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.8);
   }
 `;
 
 const ProfilePanel = styled.div`
   position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  left: 16px;
+  right: 16px;
+  bottom: 18px;
   z-index: 2;
-  min-height: 216px;
-  padding: 74px 24px 20px;
+  min-height: 218px;
+  padding: 70px 18px 18px;
   isolation: isolate;
   &::before {
     content: '';
     position: absolute;
     inset: 0;
     z-index: -1;
-    background: rgba(255, 255, 255, 0.96);
-    border-top-left-radius: ${mobileRadius.xl};
-    border-top-right-radius: ${mobileRadius.xl};
-    clip-path: polygon(0 13%, 100% 0, 100% 100%, 0 100%);
+    background: rgba(255, 255, 255, 0.92);
+    border-radius: 28px;
+    border: 1px solid rgba(255, 255, 255, 0.72);
+    box-shadow: 0 18px 42px rgba(16, 24, 40, 0.1);
+    backdrop-filter: blur(18px);
   }
 `;
 
 const Avatar = styled(MobileAvatar)`
   position: absolute;
-  left: 28px;
-  top: -42px;
+  left: 20px;
+  top: -48px;
 `;
 
 const NameRow = styled.div`
@@ -144,7 +138,7 @@ const NameRow = styled.div`
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    font-size: 25px;
+    font-size: 24px;
     line-height: 1.1;
     font-weight: 800;
     color: #1a202c;
@@ -154,18 +148,26 @@ const NameRow = styled.div`
     font-size: 16px;
   }
   button {
-    width: 22px;
-    height: 22px;
+    width: 28px;
+    height: 28px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
     background: transparent;
+    transition: background ${mobileMotion.fast}, transform ${mobileMotion.fast};
     img {
       width: 15px;
       height: 15px;
+    }
+    &:active {
+      background: rgba(60, 60, 67, 0.08);
+      transform: scale(0.94);
     }
   }
 `;
 
 const Signature = styled.p`
-  margin: 10px 0 16px;
+  margin: 10px 0 18px;
   max-width: min(310px, calc(100vw - 64px));
   overflow: hidden;
   text-overflow: ellipsis;
@@ -178,16 +180,26 @@ const Signature = styled.p`
 `;
 
 const Counts = styled.div`
-  display: flex;
-  gap: 34px;
+  display: grid;
+  grid-template-columns: repeat(2, 68px);
+  gap: 14px;
   color: #7f838a;
-  font-size: 14px;
+  font-size: 12px;
+  text-align: center;
   strong {
     display: block;
-    margin-bottom: 4px;
+    margin-bottom: 5px;
     color: #3d3d3d;
-    font-size: 17px;
+    font-size: 18px;
     font-weight: 800;
+  }
+  span {
+    min-height: 48px;
+    display: grid;
+    align-content: center;
+    justify-items: center;
+    border-radius: 15px;
+    background: rgba(247, 248, 251, 0.9);
   }
 `;
 
@@ -213,24 +225,23 @@ const VisitorButton = styled.button<{ primary?: boolean }>`
 
 const Menu = styled(Section)`
   margin-top: 0;
-  padding: 12px 0 28px;
+  padding: 4px 14px 28px;
   background: ${mobilePalette.bg};
-  border-top: 1px solid rgba(60, 60, 67, 0.12);
+  border-top: 0;
   border-bottom: 0;
 `;
 
 const MenuItem = styled.button`
   width: 100%;
-  min-height: 66px;
+  min-height: 62px;
   display: grid;
   grid-template-columns: 46px minmax(0, 1fr) 32px;
   align-items: center;
-  width: calc(100% - 28px);
-  margin: 0 auto 10px;
+  margin: 0 0 10px;
   padding: 0 16px;
-  background: rgba(255, 255, 255, 0.96);
-  border-radius: 20px;
-  box-shadow: 0 10px 28px rgba(16, 24, 40, 0.05);
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 22px;
+  box-shadow: 0 10px 28px rgba(16, 24, 40, 0.045);
   border-bottom: 0;
   text-align: left;
   color: #3d3d3d;
@@ -249,9 +260,21 @@ const MenuItem = styled.button`
 `;
 
 const ExpandedPanel = styled.div`
-  margin: -4px 0 12px;
+  position: relative;
+  margin: -2px 0 14px;
+  padding-left: 54px;
   background: transparent;
   border-bottom: 0;
+  &::before {
+    content: '';
+    position: absolute;
+    left: 36px;
+    top: 8px;
+    bottom: 14px;
+    width: 2px;
+    border-radius: 999px;
+    background: rgba(255, 198, 65, 0.34);
+  }
 `;
 
 const ExpandedPosts = styled.div`
@@ -277,18 +300,18 @@ const MiniEmpty = styled.div`
 `;
 
 const CollectionGroupButton = styled.button`
-  width: calc(100% - 36px);
+  width: 100%;
   min-height: 48px;
   display: grid;
   grid-template-columns: 1fr 22px;
   align-items: center;
-  margin: 8px 18px;
+  margin: 8px 0;
   padding: 0 14px;
   text-align: left;
   border-radius: ${mobileRadius.md};
-  background: rgba(255, 255, 255, 0.96);
+  background: rgba(255, 255, 255, 0.78);
   color: #7f838a;
-  box-shadow: 0 8px 22px rgba(16, 24, 40, 0.06);
+  box-shadow: 0 8px 18px rgba(16, 24, 40, 0.045);
   transition: transform 0.18s ease, box-shadow 0.18s ease;
   &:active {
     transform: scale(0.99);
@@ -346,7 +369,7 @@ const RankingCard = styled.button`
 `;
 
 const ActionGroup = styled.div`
-  border-top: 1px solid rgba(60, 60, 67, 0.1);
+  margin-top: 12px;
 `;
 
 const profileListPath = (profileId: number | string, tab: string) =>
@@ -526,9 +549,6 @@ const Profile: React.FC = () => {
   if (loading && !profile) {
     return (
       <MobileShell title="我的" tabs showTopBar={false}>
-        <StatusHeader>
-          <h1>我的</h1>
-        </StatusHeader>
         <LoadingState text="正在读取身份卡..." />
       </MobileShell>
     );
@@ -537,9 +557,6 @@ const Profile: React.FC = () => {
   if (error && !profile) {
     return (
       <MobileShell title="我的" tabs showTopBar={false}>
-        <StatusHeader>
-          <h1>我的</h1>
-        </StatusHeader>
         <ErrorState text={error} onRetry={load} />
       </MobileShell>
     );
@@ -557,20 +574,21 @@ const Profile: React.FC = () => {
     >
       <PullToRefresh disabled={loading} onRefresh={refreshProfile}>
         <Hero>
-          <PageTitle>
-            <h1>{isMine ? '我的' : 'TA 的主页'}</h1>
-            <PageTitleActions>
-              {isMine ? (
-                <TitleIconButton type="button" onClick={() => nav('/notice')}>
-                  <img src={mastergoAssets.icons.notificationBellUnread} alt="" />
-                </TitleIconButton>
-              ) : (
-                <TitleIconButton type="button">
-                  <DesignIcon name="more" size={23} />
-                </TitleIconButton>
-              )}
-            </PageTitleActions>
-          </PageTitle>
+          <HeroActions>
+            {isMine ? (
+              <TitleIconButton
+                type="button"
+                onClick={() => nav('/notice')}
+                aria-label="消息"
+              >
+                <DesignIcon name="bell" size={23} />
+              </TitleIconButton>
+            ) : (
+              <TitleIconButton type="button" aria-label="更多">
+                <DesignIcon name="more" size={23} />
+              </TitleIconButton>
+            )}
+          </HeroActions>
           <ProfilePanel>
             <Avatar url={profile.avatar || profile.avatar_url} size={100} bordered />
             <NameRow>

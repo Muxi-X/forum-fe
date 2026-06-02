@@ -3,6 +3,7 @@ import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom';
 import { mastergoAssets } from '../assets/mastergo';
 import { mobilePalette, mobileRadius } from '../styles';
+import DesignIcon from './DesignIcon';
 
 const Bar = styled.header<{ borderless?: boolean }>`
   position: sticky;
@@ -65,13 +66,7 @@ type RightAction = 'notice' | 'edit' | 'add';
 
 const RightIcon = ({ action }: { action?: RightAction }) => {
   if (action === 'notice') {
-    return (
-      <img
-        src={mastergoAssets.icons.notificationBellUnread}
-        alt=""
-        style={{ width: 26, height: 26 }}
-      />
-    );
+    return <DesignIcon name="bell" size={23} />;
   }
   if (action === 'add') {
     return (

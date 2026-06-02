@@ -16,6 +16,7 @@ type IconName =
   | 'image'
   | 'close'
   | 'warning'
+  | 'bell'
   | 'chevronDown'
   | 'chevronUp'
   | 'chevronRight'
@@ -231,6 +232,25 @@ const DesignIcon: React.FC<{
           strokeWidth="1.45"
         />
         <path {...strokeProps} d="m15.2 15.2 4.1 4.1" stroke={ink} strokeWidth="1.45" />
+      </Svg>
+    );
+  }
+
+  if (name === 'bell') {
+    return (
+      <Svg width={size} height={size} viewBox="0 0 24 24" aria-hidden>
+        <path
+          {...strokeProps}
+          d="M7.2 10.1c0-3 1.9-5.1 4.8-5.1s4.8 2.1 4.8 5.1v3.2l1.5 2.2H5.7l1.5-2.2z"
+          stroke={ink}
+          strokeWidth="1.45"
+        />
+        <path
+          {...strokeProps}
+          d="M10.1 18a2 2 0 0 0 3.8 0"
+          stroke={ink}
+          strokeWidth="1.45"
+        />
       </Svg>
     );
   }

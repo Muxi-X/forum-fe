@@ -14,7 +14,7 @@ import moment from 'utils/moment';
 const Wrap = styled.div`
   min-height: calc(100vh - 52px);
   background: linear-gradient(180deg, #fffaf0 0%, #f7f8fb 34%, #f7f8fb 100%);
-  padding: 14px 16px 156px;
+  padding: 14px 16px calc(184px + env(safe-area-inset-bottom));
 `;
 
 const TitleInput = styled.input`
@@ -91,6 +91,7 @@ const EditorCard = styled.section`
 const SectionBlock = styled.section`
   margin-top: 14px;
   padding: 14px 16px;
+  margin-bottom: 22px;
   border-radius: 22px;
   background: rgba(255, 255, 255, 0.82);
   border: 1px solid rgba(60, 60, 67, 0.08);

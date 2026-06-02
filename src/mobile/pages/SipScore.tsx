@@ -303,6 +303,27 @@ const getScoreText = (entry: Record<string, any>) => {
   return ((Number(entry.score_avg) || 0) / 100).toFixed(1);
 };
 
+const filterSipScoresLocally = (
+  list: SipScoreWithEntries[],
+  keyword: string,
+): SipScoreWithEntries[] => {
+  const normalized = keyword.trim().toLowerCase();
+  if (!normalized) return list;
+  return list.filter((item) => {
+    const sip = item.sip_score || {};
+    const haystack = [
+      sip.name,
+      sip.description,
+      ...(sip.tags || []),
+      ...(item.entries || []).flatMap((entry) => [entry.name, entry.description]),
+    ]
+      .filter(Boolean)
+      .join(' ')
+      .toLowerCase();
+    return haystack.includes(normalized);
+  });
+};
+
 type SipScoreCacheState = {
   items: SipScoreWithEntries[];
   sort: number;
@@ -338,7 +359,16 @@ const SipScore: React.FC = () => {
         message.error(res.message || '榜单加载失败');
         return;
       }
-      const nextItems = res.data.sip_scores || [];
+      let nextItems = res.data.sip_scores || [];
+      if (keyword && !nextItems.length) {
+        const fallback = await mobileApi.sipScore.list({
+          sort_type: sort,
+          page_size: 50,
+        });
+        if (fallback.code === 0) {
+          nextItems = filterSipScoresLocally(fallback.data.sip_scores || [], keyword);
+        }
+      }
       setItems(nextItems);
       sipScoreCache.items = nextItems;
       sipScoreCache.sort = sort;
