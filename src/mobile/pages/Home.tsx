@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import styled from 'styled-components';
+import styled, { keyframes } from 'styled-components';
 import { useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { message } from 'antd';
 import MobileShell from '../components/MobileShell';
@@ -15,6 +15,12 @@ import { DEFAULT_TABLE, MOBILE_TABLES, mobileTableByRoute } from '../constants';
 import { mobileApi, MobilePost } from '../api';
 import { mastergoAssets } from '../assets/mastergo';
 import { mobileMotion, mobilePalette, mobileRadius } from '../styles';
+import {
+  applyPostStatPatch,
+  applyStoredPostStatPatches,
+  MOBILE_POST_STAT_EVENT,
+  MobilePostStatPatch,
+} from '../postEvents';
 
 const BRAND_LOGO = 'https://ossforum.muxixyz.com/logo1.png';
 
@@ -24,7 +30,7 @@ const HomeSurface = styled.div`
 
 const Hero = styled.section`
   position: relative;
-  min-height: 304px;
+  min-height: 274px;
   overflow: hidden;
   padding: calc(22px + env(safe-area-inset-top)) 20px 0;
   background: linear-gradient(180deg, #fffaf0 0%, #f8f9fc 100%);
@@ -89,9 +95,9 @@ const HeaderBackButton = styled.button`
 const TableGrid = styled.section`
   position: relative;
   z-index: 2;
-  padding: 22px 0 18px;
+  padding: 18px 0 4px;
   h3 {
-    margin: 0 0 13px;
+    margin: 0 0 10px;
     font-size: 20px;
     font-weight: 700;
     color: #1a202c;
@@ -106,8 +112,8 @@ const TableGrid = styled.section`
 
 const TableButton = styled.button`
   min-width: 0;
-  min-height: 98px;
-  padding: 12px 5px 10px;
+  min-height: 88px;
+  padding: 10px 5px 8px;
   text-align: center;
   background: rgba(255, 255, 255, 0.76);
   border: 0;
@@ -120,8 +126,8 @@ const TableButton = styled.button`
   }
   .table-avatar {
     position: relative;
-    width: 48px;
-    height: 48px;
+    width: 44px;
+    height: 44px;
     display: grid;
     place-items: center;
     margin: 0 auto;
@@ -144,7 +150,7 @@ const TableButton = styled.button`
     transform: rotate(-22deg);
   }
   h4 {
-    margin: 9px 0 0;
+    margin: 8px 0 0;
     font-size: 12px;
     line-height: 1.35;
     font-weight: 800;
@@ -163,7 +169,7 @@ const TableButton = styled.button`
 
 const PostList = styled.div`
   display: block;
-  padding: 14px 0 10px;
+  padding: 4px 0 10px;
   background: ${mobilePalette.bg};
 `;
 
@@ -223,9 +229,9 @@ const SortRow = styled.div`
 
 const TableTabsPanel = styled.div`
   margin: 0;
-  padding: 0 0 10px;
-  background: linear-gradient(180deg, #fffdf8 0%, ${mobilePalette.bg} 100%);
-  border-top: 1px solid rgba(60, 60, 67, 0.06);
+  padding: 12px 14px 14px;
+  background: ${mobilePalette.bg};
+  border-top: 1px solid rgba(60, 60, 67, 0.05);
   & > div {
     margin-top: 0;
     margin-bottom: 0;
@@ -234,8 +240,22 @@ const TableTabsPanel = styled.div`
 
 const TableFilterPanel = styled.div`
   display: grid;
-  gap: 10px;
-  padding: 14px 0 4px;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.86);
+  box-shadow: 0 10px 28px rgba(16, 24, 40, 0.05);
+  .segment-wrap {
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .segment-wrap::-webkit-scrollbar {
+    display: none;
+  }
+  .segment-wrap > div {
+    max-width: none;
+    margin: 0;
+  }
 `;
 
 const FeaturedCard = styled.button`
@@ -305,11 +325,43 @@ const FloatingEdit = styled.button`
 const LoadMoreStatus = styled.div`
   min-height: 42px;
   padding: 6px 20px 26px;
-  display: grid;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
   place-items: center;
   color: ${mobilePalette.muted};
   font-size: 12px;
   background: ${mobilePalette.bg};
+`;
+
+const teaPulse = keyframes`
+  0%, 100% {
+    transform: translateY(0) scale(0.92);
+    opacity: 0.42;
+  }
+  50% {
+    transform: translateY(-3px) scale(1);
+    opacity: 1;
+  }
+`;
+
+const LoadingDots = styled.span`
+  display: inline-flex;
+  gap: 4px;
+  span {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: ${mobilePalette.orange};
+    animation: ${teaPulse} 920ms ease-in-out infinite;
+  }
+  span:nth-child(2) {
+    animation-delay: 110ms;
+  }
+  span:nth-child(3) {
+    animation-delay: 220ms;
+  }
 `;
 
 const tableVisuals: Record<string, { glyph: string; gradient: string }> = {
@@ -391,7 +443,7 @@ const Home: React.FC = () => {
         if (append) message.error(res.message || '加载失败');
         return;
       }
-      const next = res.data.posts || [];
+      const next = applyStoredPostStatPatches(res.data.posts || []);
       setPosts((current) => {
         const merged = append ? [...current, ...next] : next;
         homeListCache.set(requestKey, {
@@ -415,7 +467,9 @@ const Home: React.FC = () => {
   useEffect(() => {
     const cached = homeListCache.get(cacheKey);
     if (cached) {
-      setPosts(cached.posts);
+      const cachedPosts = applyStoredPostStatPatches(cached.posts);
+      cached.posts = cachedPosts;
+      setPosts(cachedPosts);
       setPage(cached.page);
       setLoaded(cached.loaded);
       setHasMore(cached.hasMore);
@@ -428,6 +482,22 @@ const Home: React.FC = () => {
     setHasMore(true);
     fetchPosts(0, false, cacheKey);
   }, [cacheKey]);
+
+  useEffect(() => {
+    const handlePostPatch = (event: Event) => {
+      const patch = (event as CustomEvent<MobilePostStatPatch>).detail;
+      if (!patch?.id) return;
+      setPosts((current) => {
+        const nextPosts = current.map((post) => applyPostStatPatch(post, patch));
+        homeListCache.forEach((cache) => {
+          cache.posts = cache.posts.map((post) => applyPostStatPatch(post, patch));
+        });
+        return nextPosts;
+      });
+    };
+    window.addEventListener(MOBILE_POST_STAT_EVENT, handlePostPatch);
+    return () => window.removeEventListener(MOBILE_POST_STAT_EVENT, handlePostPatch);
+  }, []);
 
   useEffect(() => {
     const node = loadMoreRef.current;
@@ -541,11 +611,13 @@ const Home: React.FC = () => {
                       onSearch={(value) => nav(value ? `/search?query=${value}` : '/')}
                     />
                   </SearchWrap>
-                  <SegmentTabs
-                    value={activeTag}
-                    items={activeTable.tags.map((tag) => ({ label: tag, value: tag }))}
-                    onChange={(value) => setActiveTag(String(value))}
-                  />
+                  <div className="segment-wrap">
+                    <SegmentTabs
+                      value={activeTag}
+                      items={activeTable.tags.map((tag) => ({ label: tag, value: tag }))}
+                      onChange={(value) => setActiveTag(String(value))}
+                    />
+                  </div>
                 </TableFilterPanel>
               </TableTabsPanel>
             </>
@@ -570,7 +642,20 @@ const Home: React.FC = () => {
               ))}
             </PostList>
             <LoadMoreStatus ref={loadMoreRef}>
-              {loading ? '正在加载...' : hasMore ? '' : '已经到底了'}
+              {loading ? (
+                <>
+                  <LoadingDots aria-hidden>
+                    <span />
+                    <span />
+                    <span />
+                  </LoadingDots>
+                  正在加载
+                </>
+              ) : hasMore ? (
+                ''
+              ) : (
+                '已经到底了'
+              )}
             </LoadMoreStatus>
           </>
         ) : error ? (

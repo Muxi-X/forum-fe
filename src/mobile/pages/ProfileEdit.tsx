@@ -199,7 +199,10 @@ const ProfileEdit: React.FC = () => {
     message.success('修改成功');
     const targetId =
       form.id || userProfile.id || Number(localStorage.getItem('userId')) || '';
-    nav(`/user/${targetId}`, { state: { profileToast: '修改成功' } });
+    nav(`/user/${targetId}`, {
+      replace: true,
+      state: { refreshProfile: true },
+    });
   };
 
   return (

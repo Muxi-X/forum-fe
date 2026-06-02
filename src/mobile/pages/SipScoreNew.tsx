@@ -4,12 +4,14 @@ import { Input, message } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import MobileShell from '../components/MobileShell';
 import UploadField from '../components/UploadField';
-import { mobilePalette, PrimaryButton, mobileRadius } from '../styles';
+import { FloatingSubmitBar, mobilePalette, PrimaryButton, mobileRadius } from '../styles';
 import { DEFAULT_TABLE } from '../constants';
 import { mobileApi } from '../api';
 
+const MAX_TAG_COUNT = 4;
+
 const Wrap = styled.div`
-  padding: 16px 18px 118px;
+  padding: 14px 16px calc(22px + env(safe-area-inset-bottom));
   background: linear-gradient(180deg, #fffaf0 0%, #f7f8fb 36%, #f7f8fb 100%);
   min-height: calc(100vh - 52px);
 
@@ -21,25 +23,50 @@ const Wrap = styled.div`
   }
 `;
 
-const Label = styled.label`
-  display: block;
-  margin: 22px 0 10px;
-  color: #1a202c;
-  font-weight: 700;
-`;
-
-const FixedBar = styled.div`
-  position: fixed;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  max-width: 520px;
-  margin: 0 auto;
-  padding: 12px 20px calc(12px + env(safe-area-inset-bottom));
-  background: rgba(255, 255, 255, 0.92);
-  border-top: 1px solid ${mobilePalette.lineSoft};
+const FormCard = styled.section`
+  padding: 16px;
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.74);
+  box-shadow: 0 16px 36px rgba(16, 24, 40, 0.06);
   backdrop-filter: blur(18px);
 `;
+
+const SectionBlock = styled.section`
+  margin-top: 12px;
+  padding: 14px 16px;
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.86);
+  border: 1px solid rgba(60, 60, 67, 0.08);
+  box-shadow: 0 12px 30px rgba(16, 24, 40, 0.045);
+`;
+
+const SectionHead = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+  strong {
+    color: ${mobilePalette.ink};
+  }
+  span {
+    color: ${mobilePalette.muted};
+    font-size: 12px;
+  }
+`;
+
+const Label = styled.label`
+  display: block;
+  margin: 16px 0 9px;
+  color: #1a202c;
+  font-weight: 700;
+  &:first-child {
+    margin-top: 0;
+  }
+`;
+
+const FixedBar = styled(FloatingSubmitBar)``;
 
 const SubmitButton = styled(PrimaryButton)`
   width: 100%;
@@ -56,33 +83,13 @@ const TagChip = styled.button<{ active?: boolean }>`
   min-width: 82px;
   padding: 0 16px;
   border-radius: 999px;
-  border: 1px solid ${(props) => (props.active ? '#feaa00' : 'rgba(60, 60, 67, 0.1)')};
-  background: ${(props) => (props.active ? '#feaa00' : 'rgba(255, 255, 255, 0.86)')};
-  color: ${(props) => (props.active ? '#fff' : '#1a202c')};
-`;
-
-const SelectedTagRow = styled.div`
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 12px;
-`;
-
-const SelectedTag = styled.button`
-  min-height: 30px;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 0 11px;
-  border-radius: ${mobileRadius.pill};
-  background: rgba(255, 198, 65, 0.18);
-  color: #9a6100;
+  border: 1px solid
+    ${(props) => (props.active ? 'rgba(254, 152, 0, 0.28)' : 'rgba(60, 60, 67, 0.08)')};
+  background: ${(props) =>
+    props.active ? 'rgba(255, 198, 65, 0.24)' : 'rgba(255, 255, 255, 0.78)'};
+  color: ${(props) => (props.active ? '#a15a00' : mobilePalette.inkSoft)};
   font-size: 13px;
-  span {
-    color: rgba(154, 97, 0, 0.52);
-    font-size: 15px;
-    line-height: 1;
-  }
+  font-weight: 700;
 `;
 
 const CustomTagForm = styled.form`
@@ -132,7 +139,7 @@ const SipScoreNew: React.FC = () => {
         tags: tags
           .split(/[,\s，]+/)
           .filter(Boolean)
-          .slice(0, 5),
+          .slice(0, MAX_TAG_COUNT),
         domain: 'normal',
         category: DEFAULT_TABLE.apiCategory,
       });
@@ -148,9 +155,13 @@ const SipScoreNew: React.FC = () => {
   };
 
   const tagList = tags.split(/[,\s，]+/).filter(Boolean);
+  const presetTags = ['校园生活', '学习资料', '美食', '课程', '宿舍', '工具'];
+  const visibleTags = Array.from(new Set([...presetTags, ...tagList]));
 
   const updateTags = (nextTags: string[]) => {
-    setTags(Array.from(new Set(nextTags)).filter(Boolean).slice(0, 5).join(' '));
+    setTags(
+      Array.from(new Set(nextTags)).filter(Boolean).slice(0, MAX_TAG_COUNT).join(' '),
+    );
   };
 
   const addCustomTag = () => {
@@ -160,8 +171,8 @@ const SipScoreNew: React.FC = () => {
       message.warning('标签最多 12 个字');
       return;
     }
-    if (!tagList.includes(next) && tagList.length >= 5) {
-      message.warning('最多添加 5 个标签');
+    if (!tagList.includes(next) && tagList.length >= MAX_TAG_COUNT) {
+      message.warning(`最多添加 ${MAX_TAG_COUNT} 个标签`);
       return;
     }
     const merged = new Set(tagList);
@@ -173,81 +184,79 @@ const SipScoreNew: React.FC = () => {
   return (
     <MobileShell title="创建榜单" back tabs={false}>
       <Wrap>
-        <Label>榜单名称</Label>
-        <Input
-          value={name}
-          maxLength={30}
-          placeholder="例如：大一新生好物榜"
-          onChange={(event) => setName(event.target.value)}
-        />
-        <Label>榜单简介</Label>
-        <Input.TextArea
-          value={description}
-          rows={5}
-          maxLength={300}
-          placeholder="简单介绍一下你的榜单吧"
-          onChange={(event) => setDescription(event.target.value)}
-        />
-        <Label>上传封面图</Label>
-        <UploadField value={cover} onChange={setCover} />
-        <Label>#标签</Label>
-        <TagRow>
-          {['校园生活', '学习资料', '美食', '课程', '宿舍', '工具'].map((tag) => {
-            const value = tag.replace(/^#/, '');
-            const active = tagList.includes(value);
-            return (
-              <TagChip
-                key={tag}
-                type="button"
-                active={active}
-                onClick={() => {
-                  const next = new Set(tagList);
-                  if (next.has(value)) {
-                    next.delete(value);
-                  } else if (tagList.length >= 5) {
-                    message.warning('最多添加 5 个标签');
-                    return;
-                  } else {
-                    next.add(value);
-                  }
-                  updateTags(Array.from(next));
-                }}
-              >
-                {tag}
-              </TagChip>
-            );
-          })}
-        </TagRow>
-        {tagList.length ? (
-          <SelectedTagRow>
-            {tagList.map((tag) => (
-              <SelectedTag
-                key={tag}
-                type="button"
-                onClick={() => updateTags(tagList.filter((item) => item !== tag))}
-              >
-                #{tag}
-                <span aria-hidden>×</span>
-              </SelectedTag>
-            ))}
-          </SelectedTagRow>
-        ) : null}
-        <CustomTagForm
-          onSubmit={(event) => {
-            event.preventDefault();
-            addCustomTag();
-          }}
-        >
-          <input
-            value={customTag}
-            maxLength={12}
-            placeholder="添加自定义标签"
-            onChange={(event) => setCustomTag(event.target.value)}
+        <FormCard>
+          <Label>榜单名称</Label>
+          <Input
+            value={name}
+            maxLength={30}
+            placeholder="例如：大一新生好物榜"
+            onChange={(event) => setName(event.target.value)}
           />
-          <button type="button" disabled={!customTag.trim()} onClick={addCustomTag}>
-            添加
-          </button>
-        </CustomTagForm>
+          <Label>榜单简介</Label>
+          <Input.TextArea
+            value={description}
+            rows={5}
+            maxLength={300}
+            placeholder="简单介绍一下你的榜单吧"
+            onChange={(event) => setDescription(event.target.value)}
+          />
+          <Label>上传封面图</Label>
+          <UploadField value={cover} onChange={setCover} />
+        </FormCard>
+        <SectionBlock>
+          <SectionHead>
+            <strong>标签</strong>
+            <span>
+              {tagList.length
+                ? `${tagList.length}/${MAX_TAG_COUNT}`
+                : `可选 · 0/${MAX_TAG_COUNT}`}
+            </span>
+          </SectionHead>
+          <TagRow>
+            {visibleTags.map((tag) => {
+              const value = tag.replace(/^#/, '');
+              const active = tagList.includes(value);
+              return (
+                <TagChip
+                  key={tag}
+                  type="button"
+                  active={active}
+                  onClick={() => {
+                    const next = new Set(tagList);
+                    if (next.has(value)) {
+                      next.delete(value);
+                    } else if (tagList.length >= MAX_TAG_COUNT) {
+                      message.warning(`最多添加 ${MAX_TAG_COUNT} 个标签`);
+                      return;
+                    } else {
+                      next.add(value);
+                    }
+                    updateTags(Array.from(next));
+                  }}
+                >
+                  #{value}
+                  {active ? ' ×' : ''}
+                </TagChip>
+              );
+            })}
+          </TagRow>
+          <CustomTagForm
+            onSubmit={(event) => {
+              event.preventDefault();
+              addCustomTag();
+            }}
+          >
+            <input
+              value={customTag}
+              maxLength={12}
+              placeholder="添加自定义标签"
+              onChange={(event) => setCustomTag(event.target.value)}
+            />
+            <button type="button" disabled={!customTag.trim()} onClick={addCustomTag}>
+              添加
+            </button>
+          </CustomTagForm>
+        </SectionBlock>
         <FixedBar>
           <SubmitButton disabled={submitting} onClick={submit}>
             {submitting ? '发布中...' : '发布榜单'}

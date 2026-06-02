@@ -10,6 +10,7 @@ import Layout, { Content, ContentWrapper } from 'pages/_layout';
 import Loading from 'components/Loading';
 import GlobalNotificationListener from 'components/Notice';
 import { useDeviceType } from 'hooks/useDeviceType';
+import { hasAuthToken, isLoginRoute } from 'utils/auth';
 
 const Routes = () => {
   return (
@@ -64,7 +65,7 @@ const App = () => {
   });
 
   useEffect(() => {
-    if (location.pathname.includes('login')) {
+    if (isLoginRoute(location.pathname) || !hasAuthToken()) {
       return;
     } else {
       getUser({});

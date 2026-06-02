@@ -20,6 +20,13 @@ import DesignIcon from '../components/DesignIcon';
 import { mobileMotion, mobilePalette, mobileRadius, Section } from '../styles';
 import { mobileApi, MobilePost, MobileUser, SipScoreWithEntries } from '../api';
 import { mastergoAssets } from '../assets/mastergo';
+import { clearAuthStorage } from '../../utils/auth';
+import {
+  applyPostStatPatch,
+  applyStoredPostStatPatches,
+  MOBILE_POST_STAT_EVENT,
+  MobilePostStatPatch,
+} from '../postEvents';
 
 type ProfileCacheState = {
   profile: MobileUser;
@@ -33,7 +40,7 @@ const profileCache = new Map<number, ProfileCacheState>();
 
 const Hero = styled.section`
   position: relative;
-  min-height: 332px;
+  min-height: 318px;
   overflow: hidden;
   background: linear-gradient(180deg, rgba(255, 255, 255, 0) 54%, #f7f8fb 100%),
     linear-gradient(135deg, #fff8e6 0%, #ffd879 52%, #fff2cc 100%);
@@ -54,7 +61,7 @@ const Hero = styled.section`
     left: -20px;
     right: -20px;
     bottom: -18px;
-    height: 112px;
+    height: 92px;
     background: linear-gradient(180deg, rgba(247, 248, 251, 0), #f7f8fb 74%);
   }
 `;
@@ -103,10 +110,10 @@ const ProfilePanel = styled.div`
   position: absolute;
   left: 16px;
   right: 16px;
-  bottom: 18px;
+  bottom: 12px;
   z-index: 2;
-  min-height: 218px;
-  padding: 70px 18px 18px;
+  min-height: 206px;
+  padding: 64px 18px 16px;
   isolation: isolate;
   &::before {
     content: '';
@@ -124,7 +131,7 @@ const ProfilePanel = styled.div`
 const Avatar = styled(MobileAvatar)`
   position: absolute;
   left: 20px;
-  top: -48px;
+  top: -46px;
 `;
 
 const NameRow = styled.div`
@@ -201,6 +208,20 @@ const Counts = styled.div`
     border-radius: 15px;
     background: rgba(247, 248, 251, 0.9);
   }
+  button {
+    min-height: 48px;
+    display: grid;
+    align-content: center;
+    justify-items: center;
+    border-radius: 15px;
+    background: rgba(247, 248, 251, 0.9);
+    color: inherit;
+    transition: transform ${mobileMotion.fast}, background ${mobileMotion.fast};
+    &:active {
+      transform: scale(0.96);
+      background: #fff;
+    }
+  }
 `;
 
 const ActionBar = styled.div`
@@ -225,7 +246,7 @@ const VisitorButton = styled.button<{ primary?: boolean }>`
 
 const Menu = styled(Section)`
   margin-top: 0;
-  padding: 4px 14px 28px;
+  padding: 0 14px 8px;
   background: ${mobilePalette.bg};
   border-top: 0;
   border-bottom: 0;
@@ -233,11 +254,11 @@ const Menu = styled(Section)`
 
 const MenuItem = styled.button`
   width: 100%;
-  min-height: 62px;
+  min-height: 58px;
   display: grid;
   grid-template-columns: 46px minmax(0, 1fr) 32px;
   align-items: center;
-  margin: 0 0 10px;
+  margin: 0 0 8px;
   padding: 0 16px;
   background: rgba(255, 255, 255, 0.9);
   border-radius: 22px;
@@ -261,16 +282,16 @@ const MenuItem = styled.button`
 
 const ExpandedPanel = styled.div`
   position: relative;
-  margin: -2px 0 14px;
-  padding-left: 54px;
+  margin: -2px 0 6px;
+  padding-left: 44px;
   background: transparent;
   border-bottom: 0;
   &::before {
     content: '';
     position: absolute;
-    left: 36px;
+    left: 25px;
     top: 8px;
-    bottom: 14px;
+    bottom: 8px;
     width: 2px;
     border-radius: 999px;
     background: rgba(255, 198, 65, 0.34);
@@ -278,13 +299,13 @@ const ExpandedPanel = styled.div`
 `;
 
 const ExpandedPosts = styled.div`
-  min-height: 118px;
-  padding: 0 0 8px;
+  min-height: 0;
+  padding: 0 0 2px;
 `;
 
 const ViewAll = styled.button`
   display: block;
-  margin: 14px auto 18px;
+  margin: 10px auto 12px;
   background: transparent;
   color: #ffc641;
   font-size: 13px;
@@ -292,7 +313,7 @@ const ViewAll = styled.button`
 `;
 
 const MiniEmpty = styled.div`
-  min-height: 112px;
+  min-height: 52px;
   display: grid;
   place-items: center;
   color: #a0a5ad;
@@ -301,11 +322,11 @@ const MiniEmpty = styled.div`
 
 const CollectionGroupButton = styled.button`
   width: 100%;
-  min-height: 48px;
+  min-height: 44px;
   display: grid;
   grid-template-columns: 1fr 22px;
   align-items: center;
-  margin: 8px 0;
+  margin: 6px 0;
   padding: 0 14px;
   text-align: left;
   border-radius: ${mobileRadius.md};
@@ -318,7 +339,7 @@ const CollectionGroupButton = styled.button`
     box-shadow: 0 5px 14px rgba(16, 24, 40, 0.05);
   }
   & + & {
-    margin-top: 12px;
+    margin-top: 8px;
   }
 `;
 
@@ -369,7 +390,7 @@ const RankingCard = styled.button`
 `;
 
 const ActionGroup = styled.div`
-  margin-top: 12px;
+  margin-top: 8px;
 `;
 
 const profileListPath = (profileId: number | string, tab: string) =>
@@ -394,7 +415,7 @@ const Profile: React.FC = () => {
     posts: false,
     rankings: false,
   });
-  const [toast, setToast] = useState<string>((state as any)?.profileToast || '');
+  const [toast, setToast] = useState<string>('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const isMine = Boolean(
@@ -411,8 +432,12 @@ const Profile: React.FC = () => {
         : undefined;
     if (cached) {
       setProfile(cached.profile);
-      setPosts(cached.posts);
-      setCollectedPosts(cached.collectedPosts);
+      const cachedPosts = applyStoredPostStatPatches(cached.posts);
+      const cachedCollectedPosts = applyStoredPostStatPatches(cached.collectedPosts);
+      cached.posts = cachedPosts;
+      cached.collectedPosts = cachedCollectedPosts;
+      setPosts(cachedPosts);
+      setCollectedPosts(cachedCollectedPosts);
       setCollectedRankings(cached.collectedRankings);
       setCurrentUserId(cached.currentUserId);
       setLoading(false);
@@ -473,13 +498,26 @@ const Profile: React.FC = () => {
       mobileApi.collection.list(effectiveId, { limit: 3, page: 0 }),
       mobileApi.sipScore.collected(effectiveId, { limit: 3, page: 0 }),
     ]);
+    const nextPosts =
+      postsRes.status === 'fulfilled' && postsRes.value.code === 0
+        ? applyStoredPostStatPatches(postsRes.value.data.posts || [])
+        : [];
+    const nextCollectedPosts =
+      collectedPostsRes.status === 'fulfilled' && collectedPostsRes.value.code === 0
+        ? applyStoredPostStatPatches(collectedPostsRes.value.data.posts || [])
+        : [];
+    const nextCollectedRankings =
+      collectedRankingsRes.status === 'fulfilled' && collectedRankingsRes.value.code === 0
+        ? collectedRankingsRes.value.data.sip_scores || []
+        : [];
+
     if (postsRes.status === 'fulfilled' && postsRes.value.code === 0) {
-      setPosts(postsRes.value.data.posts || []);
+      setPosts(nextPosts);
     } else {
       setPosts([]);
     }
     if (collectedPostsRes.status === 'fulfilled' && collectedPostsRes.value.code === 0) {
-      setCollectedPosts(collectedPostsRes.value.data.posts || []);
+      setCollectedPosts(nextCollectedPosts);
     } else {
       setCollectedPosts([]);
     }
@@ -487,33 +525,47 @@ const Profile: React.FC = () => {
       collectedRankingsRes.status === 'fulfilled' &&
       collectedRankingsRes.value.code === 0
     ) {
-      setCollectedRankings(collectedRankingsRes.value.data.sip_scores || []);
+      setCollectedRankings(nextCollectedRankings);
     } else {
       setCollectedRankings([]);
     }
     profileCache.set(Number(effectiveId), {
       profile: effectiveProfile,
-      posts:
-        postsRes.status === 'fulfilled' && postsRes.value.code === 0
-          ? postsRes.value.data.posts || []
-          : [],
-      collectedPosts:
-        collectedPostsRes.status === 'fulfilled' && collectedPostsRes.value.code === 0
-          ? collectedPostsRes.value.data.posts || []
-          : [],
-      collectedRankings:
-        collectedRankingsRes.status === 'fulfilled' &&
-        collectedRankingsRes.value.code === 0
-          ? collectedRankingsRes.value.data.sip_scores || []
-          : [],
+      posts: nextPosts,
+      collectedPosts: nextCollectedPosts,
+      collectedRankings: nextCollectedRankings,
       currentUserId: resolvedCurrentUserId,
     });
     setLoading(false);
   };
 
   useEffect(() => {
+    if ((state as any)?.refreshProfile) {
+      refreshProfile();
+      nav(`/user/${userId || currentUserId || ''}`, { replace: true, state: null });
+      return;
+    }
     load();
-  }, [userId, currentUserId]);
+  }, [userId, currentUserId, (state as any)?.refreshProfile]);
+
+  useEffect(() => {
+    const handlePostPatch = (event: Event) => {
+      const patch = (event as CustomEvent<MobilePostStatPatch>).detail;
+      if (!patch?.id) return;
+      setPosts((current) => current.map((post) => applyPostStatPatch(post, patch)));
+      setCollectedPosts((current) =>
+        current.map((post) => applyPostStatPatch(post, patch)),
+      );
+      profileCache.forEach((cache) => {
+        cache.posts = cache.posts.map((post) => applyPostStatPatch(post, patch));
+        cache.collectedPosts = cache.collectedPosts.map((post) =>
+          applyPostStatPatch(post, patch),
+        );
+      });
+    };
+    window.addEventListener(MOBILE_POST_STAT_EVENT, handlePostPatch);
+    return () => window.removeEventListener(MOBILE_POST_STAT_EVENT, handlePostPatch);
+  }, []);
 
   useEffect(() => {
     if (!toast) return;
@@ -536,7 +588,7 @@ const Profile: React.FC = () => {
   };
 
   const logout = () => {
-    localStorage.removeItem('token');
+    clearAuthStorage();
     nav('/login');
   };
 
@@ -601,12 +653,20 @@ const Profile: React.FC = () => {
             </NameRow>
             <Signature>{profile.signature || '还没有填写简介'}</Signature>
             <Counts>
-              <span>
+              <button
+                type="button"
+                onClick={() => message.info('关注列表暂未开放')}
+                aria-label="查看关注列表"
+              >
                 <strong>{profile.following_count || 0}</strong>关注
-              </span>
-              <span>
+              </button>
+              <button
+                type="button"
+                onClick={() => message.info('粉丝列表暂未开放')}
+                aria-label="查看粉丝列表"
+              >
                 <strong>{profile.follower_count || 0}</strong>粉丝
-              </span>
+              </button>
             </Counts>
             {!isMine ? (
               <ActionBar>
@@ -639,7 +699,11 @@ const Profile: React.FC = () => {
             <ExpandedPanel>
               <ExpandedPosts id="profile-posts">
                 {posts.length ? (
-                  posts.slice(0, 1).map((post) => <PostCard key={post.id} post={post} />)
+                  posts
+                    .slice(0, 1)
+                    .map((post) => (
+                      <PostCard key={post.id} post={post} variant="compactOwn" />
+                    ))
                 ) : (
                   <MiniEmpty>{isMine ? '还没有发过帖子' : 'Ta 还没有发过帖子'}</MiniEmpty>
                 )}

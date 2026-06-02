@@ -12,6 +12,12 @@ import MobileImage from '../components/MobileImage';
 import DesignIcon from '../components/DesignIcon';
 import { CardSurface, mobilePalette, mobileRadius } from '../styles';
 import { mobileApi, MobilePost, SipScoreWithEntries } from '../api';
+import {
+  applyPostStatPatch,
+  applyStoredPostStatPatches,
+  MOBILE_POST_STAT_EVENT,
+  MobilePostStatPatch,
+} from '../postEvents';
 
 const List = styled.div`
   display: grid;
@@ -106,7 +112,9 @@ const Collection: React.FC = () => {
           return;
         }
         if (tab === 'published' || tab === 'post') {
-          setPosts(('posts' in res.data ? res.data.posts : []) || []);
+          setPosts(
+            applyStoredPostStatPatches(('posts' in res.data ? res.data.posts : []) || []),
+          );
         } else {
           setRankings(('sip_scores' in res.data ? res.data.sip_scores : []) || []);
         }
@@ -116,6 +124,16 @@ const Collection: React.FC = () => {
       })
       .finally(() => setLoading(false));
   }, [tab, userId]);
+
+  useEffect(() => {
+    const handlePostPatch = (event: Event) => {
+      const patch = (event as CustomEvent<MobilePostStatPatch>).detail;
+      if (!patch?.id) return;
+      setPosts((current) => current.map((post) => applyPostStatPatch(post, patch)));
+    };
+    window.addEventListener(MOBILE_POST_STAT_EVENT, handlePostPatch);
+    return () => window.removeEventListener(MOBILE_POST_STAT_EVENT, handlePostPatch);
+  }, []);
 
   return (
     <MobileShell title={tab === 'published' ? '发布的帖子' : '收藏'} back tabs={false}>

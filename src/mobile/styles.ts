@@ -61,9 +61,10 @@ export const MobilePage = styled.div`
   }
 `;
 
-export const ScrollBody = styled.main<{ withTabs?: boolean }>`
-  min-height: 100dvh;
-  ${(props) => (props.withTabs ? safeBottom : '')}
+export const ScrollBody = styled.main<{ $withTabs?: boolean; $hasTopBar?: boolean }>`
+  min-height: ${(props) =>
+    props.$hasTopBar ? 'calc(100dvh - 56px - env(safe-area-inset-top))' : '100dvh'};
+  ${(props) => (props.$withTabs ? safeBottom : '')}
 `;
 
 export const Section = styled.section`
@@ -98,6 +99,20 @@ export const PrimaryButton = styled.button`
     opacity: 0.55;
     cursor: not-allowed;
     box-shadow: none;
+  }
+`;
+
+export const FloatingSubmitBar = styled.div`
+  position: sticky;
+  bottom: calc(14px + env(safe-area-inset-bottom));
+  z-index: 45;
+  width: min(420px, 100%);
+  margin: 18px auto 0;
+  pointer-events: none;
+  button {
+    width: 100%;
+    height: 50px;
+    pointer-events: auto;
   }
 `;
 

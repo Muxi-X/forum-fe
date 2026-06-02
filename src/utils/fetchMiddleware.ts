@@ -1,16 +1,24 @@
+import { clearAuthStorage, getAuthToken, isLoginRoute } from './auth';
+
+const handleAuthError = (res: any) => {
+  if (res?.code !== 20005 || isLoginRoute(window.location.pathname)) return;
+  clearAuthStorage();
+  window.location.replace('/login');
+};
+
 const Request = (url: string, options: any = {}) => {
   url = `/api/v1${url}`;
   const isFile = options.body instanceof FormData;
-  const authToken =
-    localStorage.getItem('token') ||
-    (import.meta.env.DEV ? import.meta.env.VITE_DEV_AUTH_TOKEN || '2' : '');
+  const authToken = getAuthToken();
   options.headers = isFile
     ? {}
     : {
         Accept: 'application/json',
         'Content-Type': 'application/json',
       };
-  options.headers.Authorization = authToken;
+  if (authToken) {
+    options.headers.Authorization = authToken;
+  }
 
   if (options.body) {
     options.body = isFile ? options.body : JSON.stringify(options.body);
@@ -19,10 +27,12 @@ const Request = (url: string, options: any = {}) => {
     .then((response) => {
       if (response.ok) {
         return response.json().then((res) => {
+          handleAuthError(res);
           return res;
         });
       } else {
         return response.json().then((res) => {
+          handleAuthError(res);
           return new Promise((_, reject) => {
             reject(res);
           });

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom';
 import { message } from 'antd';
@@ -8,6 +8,7 @@ import { TARGET_TYPE, TYPE_NAME, mobileTableByCategory } from '../constants';
 import moment from 'utils/moment';
 import MobileAvatar from './MobileAvatar';
 import DesignIcon from './DesignIcon';
+import { emitPostStatPatch } from '../postEvents';
 
 const stripHtml = (value?: string) =>
   (value || '')
@@ -15,7 +16,7 @@ const stripHtml = (value?: string) =>
     .replace(/\s+/g, ' ')
     .trim();
 
-const Card = styled.article`
+const Card = styled.article<{ $pressed: boolean; $compact?: boolean }>`
   width: calc(100% - 28px);
   margin: 0 auto 12px;
   padding: 15px 15px 13px;
@@ -23,11 +24,24 @@ const Card = styled.article`
   border-radius: 22px;
   background: rgba(255, 255, 255, 0.96);
   box-shadow: 0 10px 28px rgba(16, 24, 40, 0.06);
+  cursor: pointer;
+  transform: ${(props) => (props.$pressed ? 'scale(0.985)' : 'scale(1)')};
   transition: transform ${mobileMotion.fast}, box-shadow ${mobileMotion.fast};
-  &:active {
-    transform: scale(0.985);
-    box-shadow: 0 6px 18px rgba(16, 24, 40, 0.05);
-  }
+  box-shadow: ${(props) =>
+    props.$pressed
+      ? '0 6px 18px rgba(16, 24, 40, 0.05)'
+      : '0 10px 28px rgba(16, 24, 40, 0.06)'};
+  ${(props) =>
+    props.$compact
+      ? `
+    width: 100%;
+    margin-bottom: 8px;
+    padding: 14px;
+    h2 {
+      margin-top: 0;
+    }
+  `
+      : ''}
 `;
 
 const Meta = styled.div`
@@ -88,8 +102,24 @@ const Summary = styled.p`
   -webkit-line-clamp: 3;
 `;
 
+const CompactMeta = styled.div`
+  margin: 0 0 8px;
+  color: ${mobilePalette.muted};
+  font-size: 12px;
+  .dot {
+    margin: 0 5px;
+    color: rgba(127, 131, 138, 0.48);
+  }
+  .table {
+    color: #c46c00;
+    font-weight: 700;
+  }
+`;
+
 const Footer = styled.div`
-  display: grid;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
   gap: 10px;
   margin-top: 12px;
   color: #7f838a;
@@ -97,9 +127,10 @@ const Footer = styled.div`
 `;
 
 const Stats = styled.div`
+  flex: 0 0 auto;
   display: flex;
   justify-content: flex-end;
-  gap: 12px;
+  gap: 10px;
   button,
   span {
     display: inline-flex;
@@ -111,12 +142,20 @@ const Stats = styled.div`
     color: inherit;
     transition: transform ${mobileMotion.fast}, color ${mobileMotion.fast};
   }
+  span {
+    cursor: default;
+  }
   button:active {
     transform: scale(0.94);
   }
 `;
 
+const isStatsTarget = (target: EventTarget | null) =>
+  target instanceof Element && Boolean(target.closest('[data-post-stat]'));
+
 const Tags = styled.div`
+  flex: 1 1 auto;
+  min-width: 0;
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
@@ -136,21 +175,41 @@ const Tags = styled.div`
   }
 `;
 
+const resolvePostId = (post: MobilePost) =>
+  Number(
+    post.id ||
+      (post as any).post_id ||
+      (post as any).article_id ||
+      (post as any).target_id ||
+      0,
+  ) || 0;
+
 const getSummary = (post: MobilePost) =>
   post.summary ||
   stripHtml(post.content) ||
   stripHtml(post.compiled_content) ||
   '暂无摘要';
 
-const PostCard: React.FC<{ post: MobilePost }> = ({ post }) => {
+const PostCard: React.FC<{ post: MobilePost; variant?: 'default' | 'compactOwn' }> = ({
+  post,
+  variant = 'default',
+}) => {
   const nav = useNavigate();
+  const [pressed, setPressed] = useState(false);
   const [liked, setLiked] = useState(Boolean(post.is_liked));
   const [collected, setCollected] = useState(Boolean(post.is_collection));
   const [likeCount, setLikeCount] = useState(post.like_num || 0);
   const [collectionCount, setCollectionCount] = useState(post.collection_num || 0);
   const table = mobileTableByCategory(post.category);
-  const postId =
-    Number(post.id || (post as any).post_id || (post as any).article_id || 0) || 0;
+  const postId = resolvePostId(post);
+  const compactOwn = variant === 'compactOwn';
+
+  useEffect(() => {
+    setLiked(Boolean(post.is_liked));
+    setCollected(Boolean(post.is_collection));
+    setLikeCount(post.like_num || 0);
+    setCollectionCount(post.collection_num || 0);
+  }, [post.is_liked, post.is_collection, post.like_num, post.collection_num]);
   const openPost = () => {
     if (!postId) {
       message.warning('这个帖子暂时无法打开');
@@ -159,54 +218,119 @@ const PostCard: React.FC<{ post: MobilePost }> = ({ post }) => {
     nav(`/article/${postId}`);
   };
 
+  const handleOpenPost = (event: React.MouseEvent<HTMLElement>) => {
+    if (isStatsTarget(event.target)) return;
+    openPost();
+  };
+
   const toggleLike = async (event: React.MouseEvent) => {
     event.stopPropagation();
     if (!postId) return;
+    if (!localStorage.getItem('token')) {
+      nav('/login');
+      return;
+    }
     const nextLiked = !liked;
+    const nextCount = Math.max(0, likeCount + (nextLiked ? 1 : -1));
     setLiked(nextLiked);
-    setLikeCount((count) => Math.max(0, count + (nextLiked ? 1 : -1)));
+    setLikeCount(nextCount);
+    emitPostStatPatch({ id: postId, is_liked: nextLiked, like_num: nextCount });
     const res = await mobileApi.like(postId, TYPE_NAME.post);
     if (res.code !== 0) {
       message.error(res.message || '操作失败');
       setLiked(!nextLiked);
-      setLikeCount((count) => Math.max(0, count + (nextLiked ? -1 : 1)));
+      const revertedCount = Math.max(0, nextCount + (nextLiked ? -1 : 1));
+      setLikeCount(revertedCount);
+      emitPostStatPatch({
+        id: postId,
+        is_liked: !nextLiked,
+        like_num: revertedCount,
+      });
     }
   };
 
   const toggleCollect = async (event: React.MouseEvent) => {
     event.stopPropagation();
     if (!postId) return;
+    if (!localStorage.getItem('token')) {
+      nav('/login');
+      return;
+    }
     const nextCollected = !collected;
+    const nextCount = Math.max(0, collectionCount + (nextCollected ? 1 : -1));
     setCollected(nextCollected);
-    setCollectionCount((count) => Math.max(0, count + (nextCollected ? 1 : -1)));
+    setCollectionCount(nextCount);
+    emitPostStatPatch({
+      id: postId,
+      is_collection: nextCollected,
+      collection_num: nextCount,
+    });
     const res = await mobileApi.collection.toggle(postId, TARGET_TYPE.post);
     if (res.code !== 0) {
       message.error(res.message || '操作失败');
       setCollected(!nextCollected);
-      setCollectionCount((count) => Math.max(0, count + (nextCollected ? -1 : 1)));
+      const revertedCount = Math.max(0, nextCount + (nextCollected ? -1 : 1));
+      setCollectionCount(revertedCount);
+      emitPostStatPatch({
+        id: postId,
+        is_collection: !nextCollected,
+        collection_num: revertedCount,
+      });
     }
   };
 
-  const openComments = (event: React.MouseEvent) => {
-    event.stopPropagation();
-    if (!postId) return;
-    nav(`/article/${postId}#mobile-comments`);
+  const handlePointerDown = (event: React.PointerEvent<HTMLElement>) => {
+    if (isStatsTarget(event.target)) return;
+    setPressed(true);
+  };
+
+  const resetPressed = () => {
+    setPressed(false);
   };
 
   return (
-    <Card onClick={openPost}>
-      <Meta>
-        <MobileAvatar url={post.creator_avatar} size={36} />
-        <span>
-          <span className="author">{post.creator_name || '茶友'}</span>
-          <span className="time">
+    <Card
+      $pressed={pressed}
+      $compact={compactOwn}
+      role="button"
+      tabIndex={0}
+      onClick={handleOpenPost}
+      onPointerDown={handlePointerDown}
+      onPointerUp={resetPressed}
+      onPointerCancel={resetPressed}
+      onPointerLeave={resetPressed}
+      onKeyDown={(event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          openPost();
+        }
+      }}
+    >
+      {compactOwn ? (
+        <>
+          <Title>{post.title || '未命名帖子'}</Title>
+          <CompactMeta>
             {post.time ? moment(post.time).fromNow() : ''}
-            <span className="dot">·</span>
+            {post.time ? <span className="dot">·</span> : null}
             <span className="table">{table.name}</span>
-          </span>
-        </span>
-      </Meta>
-      <Title>{post.title || '未命名帖子'}</Title>
+          </CompactMeta>
+        </>
+      ) : (
+        <>
+          <Meta>
+            <MobileAvatar url={post.creator_avatar} size={36} />
+            <span>
+              <span className="author">{post.creator_name || '茶友'}</span>
+              <span className="time">
+                {post.time ? moment(post.time).fromNow() : ''}
+                <span className="dot">·</span>
+                <span className="table">{table.name}</span>
+              </span>
+            </span>
+          </Meta>
+          <Title>{post.title || '未命名帖子'}</Title>
+        </>
+      )}
       <Summary>{getSummary(post)}</Summary>
       <Footer>
         <Tags>
@@ -217,6 +341,7 @@ const PostCard: React.FC<{ post: MobilePost }> = ({ post }) => {
         <Stats>
           <button
             type="button"
+            data-post-stat
             onClick={toggleLike}
             aria-label={liked ? '取消点赞' : '点赞'}
           >
@@ -227,12 +352,13 @@ const PostCard: React.FC<{ post: MobilePost }> = ({ post }) => {
             />
             {likeCount}
           </button>
-          <button type="button" onClick={openComments} aria-label="查看评论">
+          <span data-post-stat aria-label="评论数">
             <DesignIcon name="comment" size={14} />
             {post.comment_num || 0}
-          </button>
+          </span>
           <button
             type="button"
+            data-post-stat
             onClick={toggleCollect}
             aria-label={collected ? '取消收藏' : '收藏'}
           >

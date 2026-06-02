@@ -11,6 +11,7 @@ import ResultPage from './Result';
 import media from 'styles/media';
 import useChat from 'store/useChat';
 import { useDeviceType } from 'hooks/useDeviceType';
+import { hasAuthToken, isLoginRoute } from 'utils/auth';
 
 export const ContentWrapper = styled.main`
   display: flex;
@@ -41,7 +42,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { setShowHeader } = useShowHeader();
 
   const isSpecialPage = () => {
-    const isLogin = pathname === '/login';
+    const isLogin = isLoginRoute(pathname);
     const isPost = pathname.includes('/editor');
     return isLogin || isPost;
   };
@@ -49,6 +50,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { setSelectedId } = useChat();
   const { showHeader } = useShowHeader();
   const isPhone = useDeviceType() === 'phone';
+  const shouldRedirectToLogin = !isLoginRoute(pathname) && !hasAuthToken();
 
   const webSocketInit = () => {
     const token = localStorage.getItem('token') as string;
@@ -67,7 +69,11 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   };
 
   useEffect(() => {
-    if (!ws) {
+    if (shouldRedirectToLogin) {
+      window.location.replace('/login');
+      return;
+    }
+    if (!ws && !isLoginRoute(pathname) && hasAuthToken()) {
       webSocketInit();
     }
     if (isSpecialPage()) {
@@ -76,6 +82,9 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
       setShowHeader(true);
     }
   }, [pathname]);
+  if (shouldRedirectToLogin) {
+    return null;
+  }
   if (isPhone) {
     return <ErrorBoundary fallbackRender={ErrorInfo}>{children}</ErrorBoundary>;
   }

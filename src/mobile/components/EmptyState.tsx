@@ -2,11 +2,11 @@ import React from 'react';
 import styled from 'styled-components';
 import { GhostButton, mobilePalette, mobileRadius } from '../styles';
 
-const Box = styled.div`
-  min-height: 180px;
+const Box = styled.div<{ $minHeight?: number; $compact?: boolean }>`
+  min-height: ${(props) => props.$minHeight || (props.$compact ? 96 : 180)}px;
   display: grid;
   place-items: center;
-  padding: 36px 20px;
+  padding: ${(props) => (props.$compact ? '22px 16px' : '36px 20px')};
   text-align: center;
   color: ${mobilePalette.muted};
 `;
@@ -42,8 +42,10 @@ const EmptyState: React.FC<{
   text?: string;
   actionText?: string;
   onAction?: () => void;
-}> = ({ title = '暂时没有内容', text, actionText, onAction }) => (
-  <Box>
+  minHeight?: number;
+  compact?: boolean;
+}> = ({ title = '暂时没有内容', text, actionText, onAction, minHeight, compact }) => (
+  <Box $minHeight={minHeight} $compact={compact}>
     <Inner>
       <span className="mark">茶</span>
       <h3>{title}</h3>

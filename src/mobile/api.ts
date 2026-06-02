@@ -61,6 +61,9 @@ export type MobilePost = {
   is_liked?: boolean;
   is_collection?: boolean;
   tags?: string[];
+  img_url?: string;
+  image_url?: string;
+  images?: string[];
 };
 
 export type MobileComment = {
@@ -79,6 +82,8 @@ export type MobileComment = {
   be_replied_user_name?: string;
   father_content?: string;
   img_url?: string;
+  image_url?: string;
+  images?: string[];
   target_id?: number;
   target_type?: string;
   sub_num?: number;

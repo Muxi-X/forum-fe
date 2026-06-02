@@ -14,7 +14,6 @@ const spin = keyframes`
 `;
 
 const Root = styled.div`
-  min-height: inherit;
   overscroll-behavior-y: contain;
 `;
 

@@ -15,6 +15,7 @@ import DesignIcon from '../components/DesignIcon';
 import { mobileMotion, mobilePalette, mobileRadius, PrimaryButton } from '../styles';
 import { mobileApi, MobileComment, MobilePost } from '../api';
 import { TARGET_TYPE, TYPE_NAME, SORT_TYPE, mobileTableByCategory } from '../constants';
+import { emitPostStatPatch } from '../postEvents';
 import moment from 'utils/moment';
 
 const ArticleWrap = styled.article`
@@ -60,9 +61,23 @@ const Content = styled.div`
   }
 `;
 
+const ImageGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(112px, 1fr));
+  gap: 8px;
+  margin-top: 16px;
+  img {
+    width: 100%;
+    aspect-ratio: 1;
+    object-fit: cover;
+    border-radius: 14px;
+    background: #f4f5f7;
+  }
+`;
+
 const ActionRow = styled.div`
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 8px;
   margin: 10px 14px 0;
   padding: 8px;
@@ -90,11 +105,22 @@ const ActionButton = styled.button<{ active?: boolean }>`
 
 const CommentSection = styled.section`
   margin-top: 12px;
+  padding-bottom: calc(92px + env(safe-area-inset-bottom));
   background: transparent;
   h2 {
-    margin: 0;
-    padding: 16px 20px;
+    margin: 0 14px 10px;
+    padding: 14px 4px 2px;
     font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 8px;
+    span {
+      color: ${mobilePalette.muted};
+      font-size: 12px;
+      font-weight: 600;
+      transform: translateY(1px);
+    }
   }
 `;
 
@@ -120,15 +146,36 @@ const CommentText = styled.p`
   line-height: 1.6;
 `;
 
+const ReplyButton = styled.button<{ active?: boolean }>`
+  margin-left: auto;
+  min-height: 26px;
+  padding: 0 9px;
+  border-radius: ${mobileRadius.pill};
+  background: ${(props) => (props.active ? 'rgba(255, 198, 65, 0.2)' : 'transparent')};
+  color: ${(props) => (props.active ? mobilePalette.orange : mobilePalette.muted)};
+  font-size: 12px;
+`;
+
 const SubComments = styled.div`
   margin: 10px 0 0 36px;
-  padding: 8px 10px;
-  border-radius: 8px;
+  padding: 9px 10px;
+  border-radius: 12px;
   background: #f6f7f9;
   color: #596170;
   font-size: 13px;
   p {
-    margin: 4px 0;
+    margin: 0;
+    line-height: 1.55;
+    & + p {
+      margin-top: 7px;
+      padding-top: 7px;
+      border-top: 1px solid rgba(60, 60, 67, 0.08);
+    }
+  }
+  .time {
+    margin-left: 5px;
+    color: ${mobilePalette.mutedSoft};
+    font-size: 11px;
   }
 `;
 
@@ -141,22 +188,49 @@ const Composer = styled.div`
   bottom: 0;
   z-index: 40;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 68px;
+  grid-template-columns: minmax(0, 1fr) 62px;
   gap: 8px;
-  padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
+  padding: 9px 12px calc(9px + env(safe-area-inset-bottom));
   background: rgba(255, 255, 255, 0.9);
   border-top: 1px solid rgba(60, 60, 67, 0.08);
   backdrop-filter: blur(18px);
+  @supports (bottom: env(keyboard-inset-height)) {
+    bottom: env(keyboard-inset-height);
+  }
   textarea {
     resize: none;
     border-radius: ${mobileRadius.lg};
-    padding: 10px 14px;
+    min-height: 40px;
+    max-height: 104px;
+    padding: 9px 14px;
     line-height: 20px;
     display: block;
+    overflow-y: auto;
   }
   button {
     height: 40px;
     align-self: end;
+    padding: 0 12px;
+  }
+`;
+
+const ReplyHint = styled.div`
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 26px;
+  padding: 0 4px;
+  color: ${mobilePalette.muted};
+  font-size: 12px;
+  button {
+    width: auto;
+    height: 24px;
+    margin-left: auto;
+    padding: 0 8px;
+    border-radius: ${mobileRadius.pill};
+    background: rgba(60, 60, 67, 0.06);
+    color: ${mobilePalette.muted};
   }
 `;
 
@@ -164,7 +238,11 @@ const ReportForm = styled.div`
   display: grid;
   gap: 12px;
   .actions {
-    display: block;
+    display: flex;
+    justify-content: center;
+  }
+  .actions button {
+    min-width: 132px;
   }
 `;
 
@@ -172,10 +250,20 @@ const md = new MarkdownIt({ html: true, linkify: true, typographer: true });
 
 const getTime = (comment: MobileComment) => comment.create_time || comment.time || '';
 
+const getPostImages = (post: MobilePost) => {
+  const values = [
+    post.img_url,
+    post.image_url,
+    ...(Array.isArray(post.images) ? post.images : []),
+  ];
+  return Array.from(new Set(values.filter(Boolean))) as string[];
+};
+
 const CommentList: React.FC<{
   comments: MobileComment[];
   onReply: (comment: MobileComment) => void;
-}> = ({ comments, onReply }) => (
+  replyingId?: number;
+}> = ({ comments, onReply, replyingId }) => (
   <>
     {comments.map((comment) => (
       <CommentItem key={comment.id}>
@@ -183,17 +271,13 @@ const CommentList: React.FC<{
           <MobileAvatar url={comment.creator_avatar} size={28} />
           <strong>{comment.creator_name || '茶友'}</strong>
           <span>{getTime(comment) ? moment(getTime(comment)).fromNow() : ''}</span>
-          <button
+          <ReplyButton
             type="button"
             onClick={() => onReply(comment)}
-            style={{
-              marginLeft: 'auto',
-              background: 'transparent',
-              color: mobilePalette.muted,
-            }}
+            active={Boolean(replyingId && replyingId === comment.id)}
           >
-            回复
-          </button>
+            {replyingId && replyingId === comment.id ? '正在回复' : '回复'}
+          </ReplyButton>
         </CommentHead>
         <CommentText>{comment.content}</CommentText>
         {comment.img_url ? (
@@ -213,7 +297,17 @@ const CommentList: React.FC<{
           <SubComments>
             {comment.sub_comments.map((sub) => (
               <p key={sub.id}>
-                <strong>{sub.creator_name}：</strong>
+                <strong>{sub.creator_name || '茶友'}</strong>
+                {sub.be_replied_user_name ? (
+                  <>
+                    {' '}
+                    回复 <strong>{sub.be_replied_user_name}</strong>
+                  </>
+                ) : null}
+                <span className="time">
+                  {getTime(sub) ? moment(getTime(sub)).fromNow() : ''}
+                </span>
+                <br />
                 {sub.content}
               </p>
             ))}
@@ -282,6 +376,7 @@ const Article: React.FC = () => {
   }, [postId]);
 
   const table = mobileTableByCategory(post?.category);
+  const postImages = post ? getPostImages(post) : [];
 
   const toggleLike = async () => {
     if (!post?.id) return;
@@ -289,10 +384,16 @@ const Article: React.FC = () => {
       nav('/login');
       return;
     }
-    setPost({
+    const nextPost = {
       ...post,
       is_liked: !post.is_liked,
       like_num: (post.like_num || 0) + (post.is_liked ? -1 : 1),
+    };
+    setPost(nextPost);
+    emitPostStatPatch({
+      id: post.id,
+      is_liked: nextPost.is_liked,
+      like_num: nextPost.like_num,
     });
     const res = await mobileApi.like(post.id, TYPE_NAME.post);
     if (res.code !== 0) {
@@ -307,10 +408,16 @@ const Article: React.FC = () => {
       nav('/login');
       return;
     }
-    setPost({
+    const nextPost = {
       ...post,
       is_collection: !post.is_collection,
       collection_num: (post.collection_num || 0) + (post.is_collection ? -1 : 1),
+    };
+    setPost(nextPost);
+    emitPostStatPatch({
+      id: post.id,
+      is_collection: nextPost.is_collection,
+      collection_num: nextPost.collection_num,
     });
     const res = await mobileApi.collection.toggle(post.id, TARGET_TYPE.post);
     if (res.code !== 0) {
@@ -349,8 +456,10 @@ const Article: React.FC = () => {
       }
       setContent('');
       setReplyTo(null);
-      loadComments();
-      setPost({ ...post, comment_num: (post.comment_num || 0) + 1 });
+      await loadComments();
+      const nextCommentNum = (post.comment_num || 0) + 1;
+      setPost({ ...post, comment_num: nextCommentNum });
+      emitPostStatPatch({ id: post.id, comment_num: nextCommentNum });
     } finally {
       setSubmitting(false);
     }
@@ -408,6 +517,13 @@ const Article: React.FC = () => {
           <span>{post.time ? moment(post.time).fromNow() : ''}</span>
         </Author>
         <Content dangerouslySetInnerHTML={{ __html: html }} />
+        {postImages.length ? (
+          <ImageGrid>
+            {postImages.map((url) => (
+              <img key={url} src={url} alt="" />
+            ))}
+          </ImageGrid>
+        ) : null}
       </ArticleWrap>
       <ActionRow>
         <ActionButton active={post.is_liked} onClick={toggleLike}>
@@ -426,28 +542,43 @@ const Article: React.FC = () => {
           />
           {post.collection_num || 0}
         </ActionButton>
-        <ActionButton
-          onClick={() => document.getElementById('mobile-comments')?.scrollIntoView()}
-        >
-          <DesignIcon name="comment" size={18} />
-          {post.comment_num || 0}
-        </ActionButton>
         <ActionButton onClick={() => setReportOpen(true)}>
           <DesignIcon name="warning" size={18} />
           投诉
         </ActionButton>
       </ActionRow>
       <CommentSection id="mobile-comments">
-        <h2>{comments.length ? `评论 ${comments.length}` : '评论'}</h2>
+        <h2>
+          评论
+          <span>{comments.length || post.comment_num || 0}</span>
+        </h2>
         {comments.length ? (
-          <CommentList comments={comments} onReply={setReplyTo} />
+          <CommentList
+            comments={comments}
+            onReply={setReplyTo}
+            replyingId={replyTo?.id}
+          />
         ) : (
-          <EmptyState title="还没有评论" />
+          <EmptyState title="还没有评论" minHeight={120} compact />
         )}
       </CommentSection>
       <Composer>
+        {replyTo ? (
+          <ReplyHint>
+            正在回复 {replyTo.creator_name || '茶友'}
+            <button
+              type="button"
+              onClick={() => {
+                setReplyTo(null);
+                setContent('');
+              }}
+            >
+              取消
+            </button>
+          </ReplyHint>
+        ) : null}
         <Input.TextArea
-          rows={1}
+          autoSize={{ minRows: 1, maxRows: 4 }}
           value={content}
           placeholder={replyTo ? `回复 ${replyTo.creator_name || '茶友'}` : '写评论...'}
           onChange={(event) => setContent(event.target.value)}

@@ -45,7 +45,9 @@ const MobileShell: React.FC<{
           borderless={borderlessTopBar}
         />
       ) : null}
-      <ScrollBody withTabs={tabs}>{children}</ScrollBody>
+      <ScrollBody $withTabs={tabs} $hasTopBar={showTopBar}>
+        {children}
+      </ScrollBody>
       {tabs ? <MobileBottomTabs /> : null}
     </Page>
   );

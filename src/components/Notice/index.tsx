@@ -1,6 +1,8 @@
 import React, { useEffect, useRef } from 'react';
+import { useLocation } from 'react-router-dom';
 import useNotification, { Notification } from 'store/useNotification';
 import useRequest from 'hooks/useRequest';
+import { hasAuthToken, isLoginRoute } from 'utils/auth';
 
 type RawNotification = {
   id?: string;
@@ -47,10 +49,12 @@ const parseNotification = (message: unknown, index: number): Notification | null
 const GlobalNotificationListener: React.FC = () => {
   const { addNotifications, resetNotifications } = useNotification();
   const pollingRef = useRef<NodeJS.Timeout | null>(null);
+  const { pathname } = useLocation();
 
   const { run: getNotifications } = useRequest(
     API.user.getUserPrivateMessageList.request,
     {
+      manual: true,
       onSuccess: (res) => {
         if (res.data.messages) {
           const newNotifications: Notification[] = res.data.messages
@@ -69,6 +73,11 @@ const GlobalNotificationListener: React.FC = () => {
   );
 
   useEffect(() => {
+    if (isLoginRoute(pathname) || !hasAuthToken()) {
+      resetNotifications();
+      return;
+    }
+
     // 立即获取一次
     getNotifications({}, {});
 
@@ -83,7 +92,7 @@ const GlobalNotificationListener: React.FC = () => {
         pollingRef.current = null;
       }
     };
-  }, [getNotifications]);
+  }, [getNotifications, pathname]);
 
   return null;
 };

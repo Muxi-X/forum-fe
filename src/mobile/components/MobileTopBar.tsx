@@ -47,8 +47,7 @@ const IconButton = styled.button`
   font-size: 18px;
   transition: transform 150ms ease, background 150ms ease;
   &:active {
-    transform: scale(0.96);
-    background: rgba(60, 60, 67, 0.06);
+    background: transparent;
   }
   img {
     display: block;
@@ -64,6 +63,12 @@ const BackPill = styled.span`
   border-radius: ${mobileRadius.pill};
   background: rgba(255, 255, 255, 0.72);
   box-shadow: 0 6px 18px rgba(16, 24, 40, 0.06);
+  transition: transform 150ms ease, background 150ms ease, box-shadow 150ms ease;
+  ${IconButton}:active & {
+    transform: scale(0.94);
+    background: rgba(255, 255, 255, 0.94);
+    box-shadow: 0 8px 18px rgba(16, 24, 40, 0.08);
+  }
 `;
 
 type RightAction = 'notice' | 'edit' | 'add';

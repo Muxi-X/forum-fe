@@ -4,23 +4,30 @@ import { Input, message } from 'antd';
 import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import MobileShell from '../components/MobileShell';
 import UploadField from '../components/UploadField';
-import { mobilePalette, PrimaryButton, mobileRadius } from '../styles';
+import {
+  FloatingSubmitBar,
+  mobileMotion,
+  mobilePalette,
+  mobileRadius,
+  PrimaryButton,
+} from '../styles';
 import { DEFAULT_TABLE, MOBILE_TABLES } from '../constants';
 import { mobileApi } from '../api';
-import { mastergoAssets } from '../assets/mastergo';
 import Drafts, { Draft } from 'utils/db_drafts';
 import moment from 'utils/moment';
+
+const MAX_TAG_COUNT = 4;
 
 const Wrap = styled.div`
   min-height: calc(100vh - 52px);
   background: linear-gradient(180deg, #fffaf0 0%, #f7f8fb 34%, #f7f8fb 100%);
-  padding: 14px 16px calc(184px + env(safe-area-inset-bottom));
+  padding: 12px 16px calc(22px + env(safe-area-inset-bottom));
 `;
 
 const TitleInput = styled.input`
   width: 100%;
-  min-height: 58px;
-  margin-top: 10px;
+  min-height: 50px;
+  margin-top: 8px;
   background: transparent;
   color: ${mobilePalette.ink};
   font-size: 22px;
@@ -41,8 +48,8 @@ const FieldLabel = styled.label`
 
 const ContentInput = styled(Input.TextArea)`
   &.ant-input {
-    min-height: 228px;
-    padding: 18px 0 0;
+    min-height: 112px;
+    padding: 14px 0 0;
     border: 0;
     border-radius: 0;
     box-shadow: none;
@@ -69,18 +76,37 @@ const Tags = styled.div`
 
 const Tag = styled.button<{ active: boolean }>`
   min-height: 34px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   padding: 0 13px;
   border-radius: 999px;
   background: ${(props) =>
     props.active ? 'rgba(255, 198, 65, 0.24)' : 'rgba(255, 255, 255, 0.78)'};
   border: 1px solid
     ${(props) => (props.active ? 'rgba(254, 152, 0, 0.28)' : mobilePalette.lineSoft)};
-  color: ${(props) => (props.active ? '#a15a00' : mobilePalette.muted)};
+  color: ${(props) => (props.active ? '#a15a00' : mobilePalette.inkSoft)};
   font-size: 13px;
+  font-weight: 700;
+  transition: transform ${mobileMotion.fast}, background ${mobileMotion.fast};
+  .remove {
+    display: ${(props) => (props.active ? 'inline-grid' : 'none')};
+    place-items: center;
+    width: 15px;
+    height: 15px;
+    border-radius: 50%;
+    background: rgba(161, 90, 0, 0.12);
+    color: rgba(161, 90, 0, 0.72);
+    font-size: 13px;
+    line-height: 1;
+  }
+  &:active {
+    transform: scale(0.96);
+  }
 `;
 
 const EditorCard = styled.section`
-  padding: 18px 16px 18px;
+  padding: 16px;
   border-radius: 24px;
   background: rgba(255, 255, 255, 0.92);
   border: 1px solid rgba(255, 255, 255, 0.72);
@@ -89,12 +115,13 @@ const EditorCard = styled.section`
 `;
 
 const SectionBlock = styled.section`
-  margin-top: 14px;
+  margin-top: 12px;
   padding: 14px 16px;
-  margin-bottom: 22px;
+  margin-bottom: 4px;
   border-radius: 22px;
   background: rgba(255, 255, 255, 0.82);
   border: 1px solid rgba(60, 60, 67, 0.08);
+  box-shadow: 0 12px 30px rgba(16, 24, 40, 0.045);
 `;
 
 const SectionHead = styled.div`
@@ -111,22 +138,22 @@ const SectionHead = styled.div`
 
 const TableChips = styled.div`
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
   padding-bottom: 2px;
 `;
 
 const TableChip = styled.button<{ active: boolean }>`
   min-width: 0;
-  height: 40px;
-  padding: 0 12px;
-  border-radius: 18px;
+  height: 36px;
+  padding: 0 8px;
+  border-radius: 16px;
   background: ${(props) =>
     props.active ? 'linear-gradient(135deg, #ffc641, #fe9800)' : 'rgba(255,255,255,0.9)'};
   border: 1px solid
     ${(props) => (props.active ? 'transparent' : 'rgba(254, 152, 0, 0.2)')};
   color: ${(props) => (props.active ? '#fff' : '#b36200')};
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 800;
   white-space: nowrap;
   overflow: hidden;
@@ -135,14 +162,14 @@ const TableChip = styled.button<{ active: boolean }>`
 `;
 
 const Helper = styled.p`
-  margin: 10px 0 0;
+  margin: 8px 0 0;
   color: ${mobilePalette.muted};
   font-size: 12px;
   line-height: 1.5;
 `;
 
 const ImageUploadWrap = styled.div`
-  margin-top: 14px;
+  margin-top: 12px;
   width: 88px;
   label {
     width: 88px;
@@ -159,44 +186,29 @@ const CustomTagRow = styled.form`
   input {
     flex: 1;
     min-width: 0;
-    height: 36px;
+    height: 38px;
     padding: 0 14px;
     border: 1px solid rgba(60, 60, 67, 0.14);
     border-radius: 999px;
     background: rgba(255, 255, 255, 0.86);
   }
   button {
-    flex: 0 0 38px;
-    width: 38px;
-    height: 36px;
+    flex: 0 0 58px;
+    width: 58px;
+    height: 38px;
     border-radius: 999px;
-    background: rgba(255, 248, 225, 0.9);
-    color: #fe9800;
-    border: 1px solid rgba(255, 198, 65, 0.9);
-    img {
-      width: 14px;
-      height: 14px;
+    background: linear-gradient(135deg, #ffc641, #fe9800);
+    color: #fff;
+    border: 0;
+    font-size: 13px;
+    font-weight: 800;
+    &:disabled {
+      opacity: 0.45;
     }
   }
 `;
 
-const Bar = styled.div`
-  position: fixed;
-  left: 0;
-  right: 0;
-  max-width: 520px;
-  margin: 0 auto;
-  bottom: 0;
-  z-index: 20;
-  padding: 12px 20px calc(14px + env(safe-area-inset-bottom));
-  background: rgba(255, 255, 255, 0.82);
-  border-top: 1px solid rgba(60, 60, 67, 0.08);
-  backdrop-filter: blur(20px);
-  button {
-    width: 100%;
-    height: 50px;
-  }
-`;
+const Bar = styled(FloatingSubmitBar)``;
 
 const Editor: React.FC = () => {
   const nav = useNavigate();
@@ -267,6 +279,13 @@ const Editor: React.FC = () => {
         .trim()
     ).slice(0, 100);
 
+  const contentWithImage = () => {
+    const trimmed = content.trimEnd();
+    if (!image) return content;
+    if (content.includes(image)) return content;
+    return `${trimmed}\n\n![](${image})`;
+  };
+
   const submit = async () => {
     if (!title.trim()) {
       message.warning('请填写标题');
@@ -281,9 +300,10 @@ const Editor: React.FC = () => {
       return;
     }
     setSubmitting(true);
+    const finalContent = contentWithImage();
     const body = {
       title,
-      content,
+      content: finalContent,
       compiled_content: '',
       content_type: 'md',
       domain: 'normal',
@@ -314,8 +334,8 @@ const Editor: React.FC = () => {
       setTags(tags.filter((item) => item !== tag));
       return;
     }
-    if (tags.length >= 4) {
-      message.warning('最多选择 4 个标签');
+    if (tags.length >= MAX_TAG_COUNT) {
+      message.warning(`最多选择 ${MAX_TAG_COUNT} 个标签`);
       return;
     }
     setTags([...tags, tag]);
@@ -377,7 +397,11 @@ const Editor: React.FC = () => {
         <SectionBlock>
           <SectionHead>
             <FieldLabel>标签</FieldLabel>
-            <span>最多 4 个</span>
+            <span>
+              {tags.length
+                ? `${tags.length}/${MAX_TAG_COUNT}`
+                : `可选 · 0/${MAX_TAG_COUNT}`}
+            </span>
           </SectionHead>
           <Tags>
             {[...new Set([...candidateTags, ...tags])].map((tag) => (
@@ -388,6 +412,9 @@ const Editor: React.FC = () => {
                 onClick={() => toggleTag(tag)}
               >
                 #{tag}
+                <span className="remove" aria-hidden>
+                  ×
+                </span>
               </Tag>
             ))}
           </Tags>
@@ -403,8 +430,8 @@ const Editor: React.FC = () => {
               placeholder="添加自定义标签"
               onChange={(event) => setCustomTag(event.target.value)}
             />
-            <button type="submit" aria-label="添加标签">
-              <img src={mastergoAssets.icons.addSmall} alt="" />
+            <button type="submit" disabled={!customTag.trim()}>
+              添加
             </button>
           </CustomTagRow>
         </SectionBlock>

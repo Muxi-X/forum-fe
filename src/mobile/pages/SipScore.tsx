@@ -20,7 +20,7 @@ const PREVIEW_ENTRY_LIMIT = 2;
 const BRAND_LOGO = 'https://ossforum.muxixyz.com/logo1.png';
 
 const Header = styled.section`
-  padding: calc(22px + env(safe-area-inset-top)) 20px 16px;
+  padding: calc(22px + env(safe-area-inset-top)) 20px 4px;
   background: linear-gradient(180deg, #fffaf0 0%, #f8f9fc 100%);
 `;
 
@@ -29,7 +29,7 @@ const HeaderTop = styled.div`
   align-items: center;
   justify-content: space-between;
   gap: 14px;
-  margin-bottom: 16px;
+  margin-bottom: 14px;
   h1 {
     display: flex;
     align-items: center;
@@ -50,7 +50,7 @@ const HeaderTop = styled.div`
 
 const SearchStack = styled.div`
   display: grid;
-  gap: 12px;
+  gap: 8px;
 `;
 
 const SortRow = styled.div`
@@ -84,8 +84,8 @@ const SortButton = styled.button<{ active: boolean }>`
 
 const List = styled.div`
   display: grid;
-  gap: 14px;
-  padding: 14px 16px 30px;
+  gap: 12px;
+  padding: 6px 16px 30px;
   background: ${mobilePalette.bg};
 `;
 
@@ -304,6 +304,11 @@ const getCollectCount = (item: SipScoreWithEntries) => {
   return Number(sip.collect_count || sip.collection_count || sip.collections_count || 0);
 };
 
+const getSipScoreId = (item: SipScoreWithEntries) => {
+  const sip = (item.sip_score || {}) as Record<string, any>;
+  return Number(sip.id || sip.sip_score_id || sip.score_id || sip.ranking_id || 0) || 0;
+};
+
 const getParticipantCount = (entry: Record<string, any>) =>
   Number(entry.participant_num || entry.participant_count || 0);
 
@@ -418,11 +423,23 @@ const SipScore: React.FC = () => {
           <List>
             {items.map((item) => {
               const sip = item.sip_score || {};
+              const sipId = getSipScoreId(item);
               const entries = (item.entries || []).slice(0, PREVIEW_ENTRY_LIMIT);
               const entryCount = getEntryCount(item);
               const collectCount = getCollectCount(item);
               return (
-                <Card key={sip.id} onClick={() => sip.id && nav(`/sip-score/${sip.id}`)}>
+                <Card
+                  key={sipId || sip.name}
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => sipId && nav(`/sip-score/${sipId}`)}
+                  onKeyDown={(event) => {
+                    if ((event.key === 'Enter' || event.key === ' ') && sipId) {
+                      event.preventDefault();
+                      nav(`/sip-score/${sipId}`);
+                    }
+                  }}
+                >
                   <RankingTitle>
                     <TitleText>
                       <h2>
