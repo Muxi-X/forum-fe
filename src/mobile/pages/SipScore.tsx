@@ -8,6 +8,7 @@ import EmptyState from '../components/EmptyState';
 import LoadingState from '../components/LoadingState';
 import ErrorState from '../components/ErrorState';
 import MobileImage from '../components/MobileImage';
+import PullToRefresh from '../components/PullToRefresh';
 import { mobileMotion, mobilePalette, mobileRadius, CardSurface } from '../styles';
 import { SORT_TYPE } from '../constants';
 import { mobileApi, SipScoreWithEntries } from '../api';
@@ -33,31 +34,6 @@ const HeaderTop = styled.div`
     font-size: 30px;
     font-weight: 800;
     line-height: 1.12;
-  }
-`;
-
-const HeaderActions = styled.div`
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  flex: 0 0 auto;
-`;
-
-const RefreshButton = styled.button`
-  height: 36px;
-  padding: 0 13px;
-  border-radius: ${mobileRadius.pill};
-  background: rgba(255, 255, 255, 0.72);
-  color: ${mobilePalette.orange};
-  font-size: 13px;
-  font-weight: 700;
-  box-shadow: 0 8px 22px rgba(16, 24, 40, 0.06);
-  transition: transform ${mobileMotion.fast}, opacity ${mobileMotion.fast};
-  &:active {
-    transform: scale(0.96);
-  }
-  &:disabled {
-    opacity: 0.54;
   }
 `;
 
@@ -391,121 +367,118 @@ const SipScore: React.FC = () => {
 
   return (
     <MobileShell title="茶评" showTopBar={false}>
-      <Header>
-        <HeaderTop>
-          <h1>茶评</h1>
-          <HeaderActions>
-            <RefreshButton type="button" disabled={loading} onClick={load}>
-              刷新
-            </RefreshButton>
+      <PullToRefresh disabled={loading} onRefresh={load}>
+        <Header>
+          <HeaderTop>
+            <h1>茶评</h1>
             <CreateButton type="button" onClick={() => nav('/sip-score/new')}>
               <img src={mastergoAssets.icons.addSmall} alt="" />
               建榜
             </CreateButton>
-          </HeaderActions>
-        </HeaderTop>
-        <SearchStack>
-          <SearchBar
-            defaultValue={keyword}
-            placeholder="搜索榜单"
-            onSearch={setKeyword}
+          </HeaderTop>
+          <SearchStack>
+            <SearchBar
+              defaultValue={keyword}
+              placeholder="搜索榜单"
+              onSearch={setKeyword}
+            />
+            <SortRow aria-label="榜单排序">
+              {[
+                { label: '最新', value: SORT_TYPE.newest },
+                { label: '热门', value: SORT_TYPE.hottest },
+              ].map((item) => (
+                <SortButton
+                  key={item.value}
+                  type="button"
+                  active={sort === item.value}
+                  aria-pressed={sort === item.value}
+                  onClick={() => setSort(item.value)}
+                >
+                  {item.label}
+                </SortButton>
+              ))}
+            </SortRow>
+          </SearchStack>
+        </Header>
+        {items.length ? (
+          <List>
+            {items.map((item) => {
+              const sip = item.sip_score || {};
+              const entries = (item.entries || []).slice(0, PREVIEW_ENTRY_LIMIT);
+              const entryCount = getEntryCount(item);
+              const collectCount = getCollectCount(item);
+              return (
+                <Card key={sip.id} onClick={() => sip.id && nav(`/sip-score/${sip.id}`)}>
+                  <RankingTitle>
+                    <TitleText>
+                      <h2>
+                        <span>{sip.name || '未命名榜单'}</span>
+                        <img src={mastergoAssets.icons.collectionSmallSquare} alt="" />
+                      </h2>
+                      <p>
+                        {entryCount ? `${entryCount} 个对象` : '等待评分对象'}
+                        {collectCount ? ` · ${collectCount} 人收藏` : ''}
+                      </p>
+                    </TitleText>
+                    <MoreLink>
+                      详情
+                      <DesignIcon name="chevronRight" size={15} />
+                    </MoreLink>
+                  </RankingTitle>
+                  {entries.length ? (
+                    <Entries>
+                      {entries.map((entry) => (
+                        <EntryRow key={entry.id || entry.name}>
+                          <Cover>
+                            <MobileImage
+                              src={entry.cover_img || sip.cover_img}
+                              fallbackText="茶评"
+                              radius={14}
+                            />
+                          </Cover>
+                          <Info>
+                            <h2>{entry.name || '未命名项目'}</h2>
+                            <Stats>
+                              <ScoreDot>
+                                <DesignIcon name="star" size={13} color="#ffb300" />
+                                {getScoreText(entry)}
+                              </ScoreDot>
+                              <DividerDot />
+                              <span>{getParticipantCount(entry)} 人参与</span>
+                            </Stats>
+                            <EntryPreview>
+                              {entry.description || sip.description || '暂无简介'}
+                            </EntryPreview>
+                          </Info>
+                        </EntryRow>
+                      ))}
+                    </Entries>
+                  ) : (
+                    <EmptyPreview>
+                      <h3>还没有评分对象</h3>
+                      <p>{sip.description || '进入榜单添加第一个对象。'}</p>
+                    </EmptyPreview>
+                  )}
+                  {entryCount > entries.length ? (
+                    <CardFooter>查看全部 {entryCount} 个对象</CardFooter>
+                  ) : null}
+                </Card>
+              );
+            })}
+          </List>
+        ) : error ? (
+          <ErrorState text={error} onRetry={load} />
+        ) : loading || !loaded ? (
+          <LoadingState text="正在读取茶评榜..." />
+        ) : (
+          <EmptyState
+            title={keyword ? '没有找到相关榜单' : '还没有榜单'}
+            text={keyword ? '换个关键词看看。' : '创建一个榜单，让大家一起评分。'}
+            actionText="创建榜单"
+            onAction={() => nav('/sip-score/new')}
           />
-          <SortRow aria-label="榜单排序">
-            {[
-              { label: '最新', value: SORT_TYPE.newest },
-              { label: '热门', value: SORT_TYPE.hottest },
-            ].map((item) => (
-              <SortButton
-                key={item.value}
-                type="button"
-                active={sort === item.value}
-                aria-pressed={sort === item.value}
-                onClick={() => setSort(item.value)}
-              >
-                {item.label}
-              </SortButton>
-            ))}
-          </SortRow>
-        </SearchStack>
-      </Header>
-      {items.length ? (
-        <List>
-          {items.map((item) => {
-            const sip = item.sip_score || {};
-            const entries = (item.entries || []).slice(0, PREVIEW_ENTRY_LIMIT);
-            const entryCount = getEntryCount(item);
-            const collectCount = getCollectCount(item);
-            return (
-              <Card key={sip.id} onClick={() => sip.id && nav(`/sip-score/${sip.id}`)}>
-                <RankingTitle>
-                  <TitleText>
-                    <h2>
-                      <span>{sip.name || '未命名榜单'}</span>
-                      <img src={mastergoAssets.icons.collectionSmallSquare} alt="" />
-                    </h2>
-                    <p>
-                      {entryCount ? `${entryCount} 个对象` : '等待评分对象'}
-                      {collectCount ? ` · ${collectCount} 人收藏` : ''}
-                    </p>
-                  </TitleText>
-                  <MoreLink>
-                    详情
-                    <DesignIcon name="chevronRight" size={15} />
-                  </MoreLink>
-                </RankingTitle>
-                {entries.length ? (
-                  <Entries>
-                    {entries.map((entry) => (
-                      <EntryRow key={entry.id || entry.name}>
-                        <Cover>
-                          <MobileImage
-                            src={entry.cover_img || sip.cover_img}
-                            fallbackText="茶评"
-                            radius={14}
-                          />
-                        </Cover>
-                        <Info>
-                          <h2>{entry.name || '未命名项目'}</h2>
-                          <Stats>
-                            <ScoreDot>
-                              <DesignIcon name="star" size={13} color="#ffb300" />
-                              {getScoreText(entry)}
-                            </ScoreDot>
-                            <DividerDot />
-                            <span>{getParticipantCount(entry)} 人参与</span>
-                          </Stats>
-                          <EntryPreview>
-                            {entry.description || sip.description || '暂无简介'}
-                          </EntryPreview>
-                        </Info>
-                      </EntryRow>
-                    ))}
-                  </Entries>
-                ) : (
-                  <EmptyPreview>
-                    <h3>还没有评分对象</h3>
-                    <p>{sip.description || '进入榜单添加第一个对象。'}</p>
-                  </EmptyPreview>
-                )}
-                {entryCount > entries.length ? (
-                  <CardFooter>查看全部 {entryCount} 个对象</CardFooter>
-                ) : null}
-              </Card>
-            );
-          })}
-        </List>
-      ) : error ? (
-        <ErrorState text={error} onRetry={load} />
-      ) : loading || !loaded ? (
-        <LoadingState text="正在读取茶评榜..." />
-      ) : (
-        <EmptyState
-          title={keyword ? '没有找到相关榜单' : '还没有榜单'}
-          text={keyword ? '换个关键词看看。' : '创建一个榜单，让大家一起评分。'}
-          actionText="创建榜单"
-          onAction={() => nav('/sip-score/new')}
-        />
-      )}
+        )}
+      </PullToRefresh>
     </MobileShell>
   );
 };

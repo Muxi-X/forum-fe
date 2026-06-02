@@ -9,6 +9,7 @@ import PostCard from '../components/PostCard';
 import EmptyState from '../components/EmptyState';
 import LoadingState from '../components/LoadingState';
 import ErrorState from '../components/ErrorState';
+import PullToRefresh from '../components/PullToRefresh';
 import { DEFAULT_TABLE, MOBILE_TABLES, mobileTableByRoute } from '../constants';
 import { mobileApi, MobilePost } from '../api';
 import DesignIcon from '../components/DesignIcon';
@@ -39,10 +40,6 @@ const SearchWrap = styled.div`
 const HomeTitle = styled.div`
   position: relative;
   z-index: 2;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
   margin: 0 0 16px;
   h1 {
     margin: 0;
@@ -50,25 +47,6 @@ const HomeTitle = styled.div`
     font-size: 30px;
     font-weight: 800;
     line-height: 1.12;
-  }
-`;
-
-const RefreshButton = styled.button`
-  flex: 0 0 auto;
-  height: 34px;
-  padding: 0 14px;
-  border-radius: ${mobileRadius.pill};
-  background: rgba(255, 255, 255, 0.72);
-  color: ${mobilePalette.orange};
-  font-size: 13px;
-  font-weight: 700;
-  box-shadow: 0 8px 22px rgba(16, 24, 40, 0.06);
-  transition: transform ${mobileMotion.fast}, opacity ${mobileMotion.fast};
-  &:active {
-    transform: scale(0.96);
-  }
-  &:disabled {
-    opacity: 0.54;
   }
 `;
 
@@ -476,143 +454,144 @@ const Home: React.FC = () => {
       onRight={table ? undefined : () => nav('/notice')}
       showTopBar={!!table}
     >
-      <HomeSurface>
-        {!table && !isSearch ? (
-          <>
-            <Hero>
-              <HomeTitle>
-                <h1>木犀茶馆</h1>
-                <RefreshButton type="button" disabled={loading} onClick={refreshPosts}>
-                  刷新
-                </RefreshButton>
-              </HomeTitle>
-              <SearchWrap>
-                <SearchBar
-                  defaultValue={query}
-                  placeholder="搜索茶馆"
-                  onSearch={(value) => nav(value ? `/search?query=${value}` : '/')}
-                />
-              </SearchWrap>
-              <TableGrid>
-                <h3>茶桌</h3>
-                <div className="grid">
-                  {MOBILE_TABLES.map((item) => (
-                    <TableButton key={item.key} onClick={() => nav(`/${item.route}`)}>
-                      <span
-                        className="table-avatar"
-                        style={{ background: tableVisuals[item.key].gradient }}
-                      >
-                        {tableVisuals[item.key].glyph}
-                      </span>
-                      <h4>{item.name}</h4>
-                      <p>{item.intro}</p>
-                    </TableButton>
-                  ))}
-                </div>
-              </TableGrid>
-            </Hero>
-          </>
-        ) : isSearch ? (
-          <SearchPageHeader>
-            <SearchBar
-              defaultValue={query}
-              placeholder="搜索茶馆"
-              onSearch={(value) => nav(value ? `/search?query=${value}` : '/search')}
-            />
-          </SearchPageHeader>
-        ) : (
-          <>
-            <DetailTopControls>
-              <button className="ghost" type="button" onClick={() => nav(-1)}>
-                <img
-                  src={mastergoAssets.icons.chevronLeftOrange}
-                  alt=""
-                  style={{ width: 7, height: 13 }}
-                />
-              </button>
+      <PullToRefresh disabled={loading} onRefresh={refreshPosts}>
+        <HomeSurface>
+          {!table && !isSearch ? (
+            <>
+              <Hero>
+                <HomeTitle>
+                  <h1>木犀茶馆</h1>
+                </HomeTitle>
+                <SearchWrap>
+                  <SearchBar
+                    defaultValue={query}
+                    placeholder="搜索茶馆"
+                    onSearch={(value) => nav(value ? `/search?query=${value}` : '/')}
+                  />
+                </SearchWrap>
+                <TableGrid>
+                  <h3>茶桌</h3>
+                  <div className="grid">
+                    {MOBILE_TABLES.map((item) => (
+                      <TableButton key={item.key} onClick={() => nav(`/${item.route}`)}>
+                        <span
+                          className="table-avatar"
+                          style={{ background: tableVisuals[item.key].gradient }}
+                        >
+                          {tableVisuals[item.key].glyph}
+                        </span>
+                        <h4>{item.name}</h4>
+                        <p>{item.intro}</p>
+                      </TableButton>
+                    ))}
+                  </div>
+                </TableGrid>
+              </Hero>
+            </>
+          ) : isSearch ? (
+            <SearchPageHeader>
               <SearchBar
                 defaultValue={query}
-                placeholder="搜索茶桌"
-                onSearch={(value) => nav(value ? `/search?query=${value}` : '/')}
+                placeholder="搜索茶馆"
+                onSearch={(value) => nav(value ? `/search?query=${value}` : '/search')}
               />
-              <button className="ghost" type="button">
-                <DesignIcon name="more" size={22} />
-              </button>
-            </DetailTopControls>
-            <DetailHero>
-              <TableIntro>
-                <span
-                  className="cover"
-                  style={{ background: tableVisuals[activeTable.key].gradient }}
-                >
-                  {tableVisuals[activeTable.key].glyph}
-                </span>
-                <div>
-                  <h2>{activeTable.name}</h2>
-                  <span className="meta">官方分区</span>
-                </div>
-              </TableIntro>
-              <TableDesc>{activeTable.intro}</TableDesc>
-            </DetailHero>
-            <TableTabsPanel>
-              <SegmentTabs
-                value={activeTag}
-                items={activeTable.tags.map((tag) => ({ label: tag, value: tag }))}
-                onChange={(value) => setActiveTag(String(value))}
-              />
-              <TableActions>
-                <InlinePublish
-                  type="button"
-                  onClick={() =>
-                    nav(`/editor/article${Date.now()}`, {
-                      state: { category: activeTable.apiCategory },
-                    })
-                  }
-                >
-                  <span aria-hidden>+</span>
-                  发到这个茶桌
-                </InlinePublish>
-              </TableActions>
-            </TableTabsPanel>
-          </>
-        )}
-      </HomeSurface>
+            </SearchPageHeader>
+          ) : (
+            <>
+              <DetailTopControls>
+                <button className="ghost" type="button" onClick={() => nav(-1)}>
+                  <img
+                    src={mastergoAssets.icons.chevronLeftOrange}
+                    alt=""
+                    style={{ width: 7, height: 13 }}
+                  />
+                </button>
+                <SearchBar
+                  defaultValue={query}
+                  placeholder="搜索茶桌"
+                  onSearch={(value) => nav(value ? `/search?query=${value}` : '/')}
+                />
+                <button className="ghost" type="button">
+                  <DesignIcon name="more" size={22} />
+                </button>
+              </DetailTopControls>
+              <DetailHero>
+                <TableIntro>
+                  <span
+                    className="cover"
+                    style={{ background: tableVisuals[activeTable.key].gradient }}
+                  >
+                    {tableVisuals[activeTable.key].glyph}
+                  </span>
+                  <div>
+                    <h2>{activeTable.name}</h2>
+                    <span className="meta">官方分区</span>
+                  </div>
+                </TableIntro>
+                <TableDesc>{activeTable.intro}</TableDesc>
+              </DetailHero>
+              <TableTabsPanel>
+                <SegmentTabs
+                  value={activeTag}
+                  items={activeTable.tags.map((tag) => ({ label: tag, value: tag }))}
+                  onChange={(value) => setActiveTag(String(value))}
+                />
+                <TableActions>
+                  <InlinePublish
+                    type="button"
+                    onClick={() =>
+                      nav(`/editor/article${Date.now()}`, {
+                        state: { category: activeTable.apiCategory },
+                      })
+                    }
+                  >
+                    <span aria-hidden>+</span>
+                    发到这个茶桌
+                  </InlinePublish>
+                </TableActions>
+              </TableTabsPanel>
+            </>
+          )}
+        </HomeSurface>
 
-      {isSearch || table ? (
-        <SortRow>
-          <SortButton active={sort === 'newest'} onClick={() => setSort('newest')}>
-            最新
-          </SortButton>
-          <SortButton active={sort === 'hottest'} onClick={() => setSort('hottest')}>
-            热门
-          </SortButton>
-        </SortRow>
-      ) : null}
-      {posts.length ? (
-        <>
-          <PostList>
-            {posts.map((post) => (
-              <PostCard key={post.id} post={post} />
-            ))}
-          </PostList>
-          <LoadMoreStatus ref={loadMoreRef}>
-            {loading ? '正在加载...' : hasMore ? '' : '已经到底了'}
-          </LoadMoreStatus>
-        </>
-      ) : error ? (
-        <ErrorState text={error} onRetry={() => fetchPosts(0, false)} />
-      ) : loading || !loaded ? (
-        <LoadingState text="正在沏茶..." />
-      ) : (
-        <EmptyState
-          title={query ? '没有找到相关帖子' : '还没有帖子'}
-          text={
-            query ? '换个关键词再试试，或回到首页看看新的茶桌。' : '成为第一个开聊的人。'
-          }
-          actionText={query ? '回到首页' : '发布帖子'}
-          onAction={() => nav(query ? '/' : `/editor/article${Date.now()}`)}
-        />
-      )}
+        {isSearch || table ? (
+          <SortRow>
+            <SortButton active={sort === 'newest'} onClick={() => setSort('newest')}>
+              最新
+            </SortButton>
+            <SortButton active={sort === 'hottest'} onClick={() => setSort('hottest')}>
+              热门
+            </SortButton>
+          </SortRow>
+        ) : null}
+        {posts.length ? (
+          <>
+            <PostList>
+              {posts.map((post) => (
+                <PostCard key={post.id} post={post} />
+              ))}
+            </PostList>
+            <LoadMoreStatus ref={loadMoreRef}>
+              {loading ? '正在加载...' : hasMore ? '' : '已经到底了'}
+            </LoadMoreStatus>
+          </>
+        ) : error ? (
+          <ErrorState text={error} onRetry={() => fetchPosts(0, false)} />
+        ) : loading || !loaded ? (
+          <LoadingState text="正在沏茶..." />
+        ) : (
+          <EmptyState
+            title={query ? '没有找到相关帖子' : '还没有帖子'}
+            text={
+              query
+                ? '换个关键词再试试，或回到首页看看新的茶桌。'
+                : '成为第一个开聊的人。'
+            }
+            actionText={query ? '回到首页' : '发布帖子'}
+            onAction={() => nav(query ? '/' : `/editor/article${Date.now()}`)}
+          />
+        )}
+      </PullToRefresh>
       <FloatingEdit type="button" onClick={() => nav(`/editor/article${Date.now()}`)}>
         <img src={mastergoAssets.icons.addSmall} alt="" />
       </FloatingEdit>

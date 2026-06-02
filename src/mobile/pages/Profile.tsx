@@ -14,6 +14,7 @@ import LoadingState from '../components/LoadingState';
 import ErrorState from '../components/ErrorState';
 import MobileToast from '../components/MobileToast';
 import MobileAvatar from '../components/MobileAvatar';
+import PullToRefresh from '../components/PullToRefresh';
 import DesignIcon from '../components/DesignIcon';
 import { mobileMotion, mobilePalette, mobileRadius, Section } from '../styles';
 import { mobileApi, MobilePost, MobileUser, SipScoreWithEntries } from '../api';
@@ -69,24 +70,6 @@ const PageTitleActions = styled.div`
   display: inline-flex;
   align-items: center;
   gap: 8px;
-`;
-
-const RefreshButton = styled.button`
-  height: 34px;
-  padding: 0 14px;
-  border-radius: ${mobileRadius.pill};
-  background: rgba(255, 255, 255, 0.72);
-  color: ${mobilePalette.orange};
-  font-size: 13px;
-  font-weight: 700;
-  box-shadow: 0 8px 22px rgba(16, 24, 40, 0.06);
-  transition: transform ${mobileMotion.fast}, opacity ${mobileMotion.fast};
-  &:active {
-    transform: scale(0.96);
-  }
-  &:disabled {
-    opacity: 0.54;
-  }
 `;
 
 const StatusHeader = styled.section`
@@ -571,222 +554,225 @@ const Profile: React.FC = () => {
       borderlessTopBar
       showTopBar={false}
     >
-      <Hero>
-        <PageTitle>
-          <h1>{isMine ? '我的' : 'TA 的主页'}</h1>
-          <PageTitleActions>
-            <RefreshButton type="button" disabled={loading} onClick={refreshProfile}>
-              刷新
-            </RefreshButton>
-            {isMine ? (
-              <TitleIconButton type="button" onClick={() => nav('/notice')}>
-                <img src={mastergoAssets.icons.notificationBellUnread} alt="" />
-              </TitleIconButton>
-            ) : (
-              <TitleIconButton type="button">
-                <DesignIcon name="more" size={23} />
-              </TitleIconButton>
-            )}
-          </PageTitleActions>
-        </PageTitle>
-        <ProfilePanel>
-          <Avatar url={profile.avatar || profile.avatar_url} size={100} bordered />
-          <NameRow>
-            <h1>{profile.name || '茶友'}</h1>
-            {isMine ? (
-              <button type="button" onClick={() => nav(`/user/${profileId}/seting`)}>
-                <img src={mastergoAssets.icons.editPencilGray} alt="编辑" />
-              </button>
-            ) : null}
-          </NameRow>
-          <Signature>{profile.signature || '还没有填写简介'}</Signature>
-          <Counts>
-            <span>
-              <strong>{profile.following_count || 0}</strong>关注
-            </span>
-            <span>
-              <strong>{profile.follower_count || 0}</strong>粉丝
-            </span>
-          </Counts>
-          {!isMine ? (
-            <ActionBar>
-              <VisitorButton onClick={() => nav(`/user/chat?target_id=${profileId}`)}>
-                私信
-              </VisitorButton>
-              <VisitorButton primary onClick={follow}>
-                {profile.is_following ? '已关注' : '+ 关注'}
-              </VisitorButton>
-            </ActionBar>
-          ) : null}
-        </ProfilePanel>
-      </Hero>
-      <Menu>
-        <MenuItem
-          onClick={() =>
-            setExpanded((current) => ({
-              posts: !current.posts,
-              collections: false,
-            }))
-          }
-        >
-          <DesignIcon name="post" size={23} />
-          <span>{isMine ? '我发过的帖子' : '发过的帖子'}</span>
-          <span className="chevron">
-            <DesignIcon name={expanded.posts ? 'chevronUp' : 'chevronDown'} size={22} />
-          </span>
-        </MenuItem>
-        {expanded.posts ? (
-          <ExpandedPanel>
-            <ExpandedPosts id="profile-posts">
-              {posts.length ? (
-                posts.slice(0, 1).map((post) => <PostCard key={post.id} post={post} />)
+      <PullToRefresh disabled={loading} onRefresh={refreshProfile}>
+        <Hero>
+          <PageTitle>
+            <h1>{isMine ? '我的' : 'TA 的主页'}</h1>
+            <PageTitleActions>
+              {isMine ? (
+                <TitleIconButton type="button" onClick={() => nav('/notice')}>
+                  <img src={mastergoAssets.icons.notificationBellUnread} alt="" />
+                </TitleIconButton>
               ) : (
-                <MiniEmpty>{isMine ? '还没有发过帖子' : 'Ta 还没有发过帖子'}</MiniEmpty>
+                <TitleIconButton type="button">
+                  <DesignIcon name="more" size={23} />
+                </TitleIconButton>
               )}
-              {posts.length > 1 ? (
-                <ViewAllButton
-                  type="button"
-                  onClick={() => nav(profileListPath(profileId, 'published'))}
-                >
-                  <span>查看全部帖子</span>
-                  <DesignIcon name="chevronRight" size={18} />
-                </ViewAllButton>
+            </PageTitleActions>
+          </PageTitle>
+          <ProfilePanel>
+            <Avatar url={profile.avatar || profile.avatar_url} size={100} bordered />
+            <NameRow>
+              <h1>{profile.name || '茶友'}</h1>
+              {isMine ? (
+                <button type="button" onClick={() => nav(`/user/${profileId}/seting`)}>
+                  <img src={mastergoAssets.icons.editPencilGray} alt="编辑" />
+                </button>
               ) : null}
-            </ExpandedPosts>
-          </ExpandedPanel>
-        ) : null}
-        <MenuItem
-          onClick={() =>
-            setExpanded((current) => {
-              const nextCollections = !current.collections;
-              if (!nextCollections) {
-                setCollectionExpanded({ posts: false, rankings: false });
-              }
-              return {
-                posts: false,
-                collections: nextCollections,
-              };
-            })
-          }
-        >
-          <DesignIcon name="star" size={24} />
-          <span>{isMine ? '我的收藏' : '公开收藏'}</span>
-          <span className="chevron">
-            <DesignIcon
-              name={expanded.collections ? 'chevronUp' : 'chevronDown'}
-              size={22}
-            />
-          </span>
-        </MenuItem>
-        {expanded.collections ? (
-          <ExpandedPanel>
-            <CollectionGroupButton
-              type="button"
-              onClick={() =>
-                setCollectionExpanded((current) => ({
-                  ...current,
-                  posts: !current.posts,
-                }))
-              }
-            >
-              <span>帖子收藏</span>
-              <DesignIcon
-                name={collectionExpanded.posts ? 'chevronUp' : 'chevronDown'}
-                size={18}
-              />
-            </CollectionGroupButton>
-            {collectionExpanded.posts ? (
-              <ExpandedPosts>
-                {collectedPosts.length ? (
-                  collectedPosts
-                    .slice(0, 1)
-                    .map((post) => <PostCard key={post.id} post={post} />)
+            </NameRow>
+            <Signature>{profile.signature || '还没有填写简介'}</Signature>
+            <Counts>
+              <span>
+                <strong>{profile.following_count || 0}</strong>关注
+              </span>
+              <span>
+                <strong>{profile.follower_count || 0}</strong>粉丝
+              </span>
+            </Counts>
+            {!isMine ? (
+              <ActionBar>
+                <VisitorButton onClick={() => nav(`/user/chat?target_id=${profileId}`)}>
+                  私信
+                </VisitorButton>
+                <VisitorButton primary onClick={follow}>
+                  {profile.is_following ? '已关注' : '+ 关注'}
+                </VisitorButton>
+              </ActionBar>
+            ) : null}
+          </ProfilePanel>
+        </Hero>
+        <Menu>
+          <MenuItem
+            onClick={() =>
+              setExpanded((current) => ({
+                posts: !current.posts,
+                collections: false,
+              }))
+            }
+          >
+            <DesignIcon name="post" size={23} />
+            <span>{isMine ? '我发过的帖子' : '发过的帖子'}</span>
+            <span className="chevron">
+              <DesignIcon name={expanded.posts ? 'chevronUp' : 'chevronDown'} size={22} />
+            </span>
+          </MenuItem>
+          {expanded.posts ? (
+            <ExpandedPanel>
+              <ExpandedPosts id="profile-posts">
+                {posts.length ? (
+                  posts.slice(0, 1).map((post) => <PostCard key={post.id} post={post} />)
                 ) : (
-                  <MiniEmpty>{isMine ? '还没有收藏帖子' : 'Ta 还没有收藏帖子'}</MiniEmpty>
+                  <MiniEmpty>{isMine ? '还没有发过帖子' : 'Ta 还没有发过帖子'}</MiniEmpty>
                 )}
-                {collectedPosts.length > 1 ? (
+                {posts.length > 1 ? (
                   <ViewAllButton
                     type="button"
-                    onClick={() => nav(profileListPath(profileId, 'post'))}
+                    onClick={() => nav(profileListPath(profileId, 'published'))}
                   >
-                    <span>查看全部收藏帖子</span>
+                    <span>查看全部帖子</span>
                     <DesignIcon name="chevronRight" size={18} />
                   </ViewAllButton>
                 ) : null}
               </ExpandedPosts>
-            ) : null}
-            <CollectionGroupButton
-              type="button"
-              onClick={() =>
-                setCollectionExpanded((current) => ({
-                  ...current,
-                  rankings: !current.rankings,
-                }))
-              }
-            >
-              <span>榜单收藏</span>
+            </ExpandedPanel>
+          ) : null}
+          <MenuItem
+            onClick={() =>
+              setExpanded((current) => {
+                const nextCollections = !current.collections;
+                if (!nextCollections) {
+                  setCollectionExpanded({ posts: false, rankings: false });
+                }
+                return {
+                  posts: false,
+                  collections: nextCollections,
+                };
+              })
+            }
+          >
+            <DesignIcon name="star" size={24} />
+            <span>{isMine ? '我的收藏' : '公开收藏'}</span>
+            <span className="chevron">
               <DesignIcon
-                name={collectionExpanded.rankings ? 'chevronUp' : 'chevronDown'}
-                size={18}
+                name={expanded.collections ? 'chevronUp' : 'chevronDown'}
+                size={22}
               />
-            </CollectionGroupButton>
-            {collectionExpanded.rankings ? (
-              <ExpandedPosts>
-                {collectedRankings.length ? (
-                  collectedRankings.slice(0, 1).map((item) => {
-                    const ranking = item.sip_score || {};
-                    return (
-                      <RankingCard
-                        key={ranking.id || ranking.name}
-                        type="button"
-                        onClick={() => ranking.id && nav(`/sip-score/${ranking.id}`)}
-                      >
-                        <span
-                          className="cover"
-                          style={
-                            ranking.cover_img
-                              ? { backgroundImage: `url(${ranking.cover_img})` }
-                              : undefined
-                          }
-                        />
-                        <span>
-                          <h3>{ranking.name || '未命名榜单'}</h3>
-                          <p>{ranking.description || '暂无简介'}</p>
-                        </span>
-                      </RankingCard>
-                    );
-                  })
-                ) : (
-                  <MiniEmpty>{isMine ? '还没有收藏榜单' : 'Ta 还没有收藏榜单'}</MiniEmpty>
-                )}
-                {collectedRankings.length > 1 ? (
-                  <ViewAllButton
-                    type="button"
-                    onClick={() => nav(profileListPath(profileId, 'sipScore'))}
-                  >
-                    <span>查看全部收藏榜单</span>
-                    <DesignIcon name="chevronRight" size={18} />
-                  </ViewAllButton>
-                ) : null}
-              </ExpandedPosts>
-            ) : null}
-          </ExpandedPanel>
-        ) : null}
-        {isMine ? (
-          <ActionGroup>
-            <MenuItem onClick={() => nav('/feedback')}>
-              <DesignIcon name="feedback" size={24} />
-              <span>反馈与建议</span>
-              <span />
-            </MenuItem>
-            <MenuItem onClick={logout}>
-              <DesignIcon name="power" size={24} />
-              <span>退出登录</span>
-              <span />
-            </MenuItem>
-          </ActionGroup>
-        ) : null}
-      </Menu>
+            </span>
+          </MenuItem>
+          {expanded.collections ? (
+            <ExpandedPanel>
+              <CollectionGroupButton
+                type="button"
+                onClick={() =>
+                  setCollectionExpanded((current) => ({
+                    ...current,
+                    posts: !current.posts,
+                  }))
+                }
+              >
+                <span>帖子收藏</span>
+                <DesignIcon
+                  name={collectionExpanded.posts ? 'chevronUp' : 'chevronDown'}
+                  size={18}
+                />
+              </CollectionGroupButton>
+              {collectionExpanded.posts ? (
+                <ExpandedPosts>
+                  {collectedPosts.length ? (
+                    collectedPosts
+                      .slice(0, 1)
+                      .map((post) => <PostCard key={post.id} post={post} />)
+                  ) : (
+                    <MiniEmpty>
+                      {isMine ? '还没有收藏帖子' : 'Ta 还没有收藏帖子'}
+                    </MiniEmpty>
+                  )}
+                  {collectedPosts.length > 1 ? (
+                    <ViewAllButton
+                      type="button"
+                      onClick={() => nav(profileListPath(profileId, 'post'))}
+                    >
+                      <span>查看全部收藏帖子</span>
+                      <DesignIcon name="chevronRight" size={18} />
+                    </ViewAllButton>
+                  ) : null}
+                </ExpandedPosts>
+              ) : null}
+              <CollectionGroupButton
+                type="button"
+                onClick={() =>
+                  setCollectionExpanded((current) => ({
+                    ...current,
+                    rankings: !current.rankings,
+                  }))
+                }
+              >
+                <span>榜单收藏</span>
+                <DesignIcon
+                  name={collectionExpanded.rankings ? 'chevronUp' : 'chevronDown'}
+                  size={18}
+                />
+              </CollectionGroupButton>
+              {collectionExpanded.rankings ? (
+                <ExpandedPosts>
+                  {collectedRankings.length ? (
+                    collectedRankings.slice(0, 1).map((item) => {
+                      const ranking = item.sip_score || {};
+                      return (
+                        <RankingCard
+                          key={ranking.id || ranking.name}
+                          type="button"
+                          onClick={() => ranking.id && nav(`/sip-score/${ranking.id}`)}
+                        >
+                          <span
+                            className="cover"
+                            style={
+                              ranking.cover_img
+                                ? { backgroundImage: `url(${ranking.cover_img})` }
+                                : undefined
+                            }
+                          />
+                          <span>
+                            <h3>{ranking.name || '未命名榜单'}</h3>
+                            <p>{ranking.description || '暂无简介'}</p>
+                          </span>
+                        </RankingCard>
+                      );
+                    })
+                  ) : (
+                    <MiniEmpty>
+                      {isMine ? '还没有收藏榜单' : 'Ta 还没有收藏榜单'}
+                    </MiniEmpty>
+                  )}
+                  {collectedRankings.length > 1 ? (
+                    <ViewAllButton
+                      type="button"
+                      onClick={() => nav(profileListPath(profileId, 'sipScore'))}
+                    >
+                      <span>查看全部收藏榜单</span>
+                      <DesignIcon name="chevronRight" size={18} />
+                    </ViewAllButton>
+                  ) : null}
+                </ExpandedPosts>
+              ) : null}
+            </ExpandedPanel>
+          ) : null}
+          {isMine ? (
+            <ActionGroup>
+              <MenuItem onClick={() => nav('/feedback')}>
+                <DesignIcon name="feedback" size={24} />
+                <span>反馈与建议</span>
+                <span />
+              </MenuItem>
+              <MenuItem onClick={logout}>
+                <DesignIcon name="power" size={24} />
+                <span>退出登录</span>
+                <span />
+              </MenuItem>
+            </ActionGroup>
+          ) : null}
+        </Menu>
+      </PullToRefresh>
       <MobileToast text={toast} onClose={() => setToast('')} />
     </MobileShell>
   );
