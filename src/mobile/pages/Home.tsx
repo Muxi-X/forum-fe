@@ -10,6 +10,7 @@ import EmptyState from '../components/EmptyState';
 import LoadingState from '../components/LoadingState';
 import ErrorState from '../components/ErrorState';
 import PullToRefresh from '../components/PullToRefresh';
+import BackToTopButton from '../components/BackToTopButton';
 import { DEFAULT_TABLE, MOBILE_TABLES, mobileTableByRoute } from '../constants';
 import { mobileApi, MobilePost } from '../api';
 import DesignIcon from '../components/DesignIcon';
@@ -52,8 +53,27 @@ const HomeTitle = styled.div`
 
 const SearchPageHeader = styled.section`
   position: relative;
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr);
+  gap: 10px;
+  align-items: center;
   padding: calc(18px + env(safe-area-inset-top)) 16px 16px;
   background: linear-gradient(180deg, #fff9ed, #fff);
+`;
+
+const HeaderBackButton = styled.button`
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.84);
+  box-shadow: 0 8px 22px rgba(16, 24, 40, 0.06);
+  transition: transform ${mobileMotion.fast}, background ${mobileMotion.fast};
+  &:active {
+    transform: scale(0.95);
+    background: #fff;
+  }
 `;
 
 const TableGrid = styled.section`
@@ -446,6 +466,11 @@ const Home: React.FC = () => {
     await fetchPosts(0, false, cacheKey);
   };
 
+  const goBackFromSearch = () => {
+    if (window.history.length > 1) nav(-1);
+    else nav('/');
+  };
+
   return (
     <MobileShell
       title={table ? activeTable.name : '木犀茶馆'}
@@ -490,6 +515,17 @@ const Home: React.FC = () => {
             </>
           ) : isSearch ? (
             <SearchPageHeader>
+              <HeaderBackButton
+                type="button"
+                aria-label="返回"
+                onClick={goBackFromSearch}
+              >
+                <img
+                  src={mastergoAssets.icons.backButtonDark}
+                  alt=""
+                  style={{ width: 9, height: 16 }}
+                />
+              </HeaderBackButton>
               <SearchBar
                 defaultValue={query}
                 placeholder="搜索茶馆"
@@ -595,6 +631,7 @@ const Home: React.FC = () => {
       <FloatingEdit type="button" onClick={() => nav(`/editor/article${Date.now()}`)}>
         <img src={mastergoAssets.icons.addSmall} alt="" />
       </FloatingEdit>
+      <BackToTopButton offset={isSearch || table ? 156 : 150} />
     </MobileShell>
   );
 };

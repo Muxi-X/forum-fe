@@ -15,6 +15,7 @@ import ErrorState from '../components/ErrorState';
 import MobileToast from '../components/MobileToast';
 import MobileAvatar from '../components/MobileAvatar';
 import PullToRefresh from '../components/PullToRefresh';
+import BackToTopButton from '../components/BackToTopButton';
 import DesignIcon from '../components/DesignIcon';
 import { mobileMotion, mobilePalette, mobileRadius, Section } from '../styles';
 import { mobileApi, MobilePost, MobileUser, SipScoreWithEntries } from '../api';
@@ -773,6 +774,7 @@ const Profile: React.FC = () => {
           ) : null}
         </Menu>
       </PullToRefresh>
+      <BackToTopButton offset={128} />
       <MobileToast text={toast} onClose={() => setToast('')} />
     </MobileShell>
   );

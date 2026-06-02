@@ -9,6 +9,7 @@ import LoadingState from '../components/LoadingState';
 import ErrorState from '../components/ErrorState';
 import MobileImage from '../components/MobileImage';
 import PullToRefresh from '../components/PullToRefresh';
+import BackToTopButton from '../components/BackToTopButton';
 import { mobileMotion, mobilePalette, mobileRadius, CardSurface } from '../styles';
 import { SORT_TYPE } from '../constants';
 import { mobileApi, SipScoreWithEntries } from '../api';
@@ -479,6 +480,7 @@ const SipScore: React.FC = () => {
           />
         )}
       </PullToRefresh>
+      <BackToTopButton offset={128} />
     </MobileShell>
   );
 };
