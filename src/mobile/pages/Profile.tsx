@@ -24,8 +24,19 @@ import { clearAuthStorage } from '../../utils/auth';
 import {
   applyPostStatPatch,
   applyStoredPostStatPatches,
+  applyStoredSipScorePatches,
+  getMobilePostId,
+  getPostRevision,
+  getSipScoreRevision,
+  MOBILE_POST_COLLECTION_EVENT,
+  MOBILE_POST_CREATED_EVENT,
   MOBILE_POST_STAT_EVENT,
+  MOBILE_SIP_SCORE_COLLECTION_EVENT,
+  MOBILE_SIP_SCORE_EVENT,
   MobilePostStatPatch,
+  removeUncollectedPosts,
+  removeUncollectedSipScores,
+  SipScorePatch,
 } from '../postEvents';
 
 type ProfileCacheState = {
@@ -34,6 +45,8 @@ type ProfileCacheState = {
   collectedPosts: MobilePost[];
   collectedRankings: SipScoreWithEntries[];
   currentUserId: number;
+  postRevision: number;
+  sipScoreRevision: number;
 };
 
 const profileCache = new Map<number, ProfileCacheState>();
@@ -430,15 +443,25 @@ const Profile: React.FC = () => {
       !options?.force && targetBeforeResolve
         ? profileCache.get(targetBeforeResolve)
         : undefined;
-    if (cached) {
+    if (
+      cached &&
+      cached.postRevision === getPostRevision() &&
+      cached.sipScoreRevision === getSipScoreRevision()
+    ) {
       setProfile(cached.profile);
       const cachedPosts = applyStoredPostStatPatches(cached.posts);
-      const cachedCollectedPosts = applyStoredPostStatPatches(cached.collectedPosts);
+      const cachedCollectedPosts = removeUncollectedPosts(
+        applyStoredPostStatPatches(cached.collectedPosts),
+      );
+      const cachedCollectedRankings = removeUncollectedSipScores(
+        applyStoredSipScorePatches(cached.collectedRankings),
+      );
       cached.posts = cachedPosts;
       cached.collectedPosts = cachedCollectedPosts;
+      cached.collectedRankings = cachedCollectedRankings;
       setPosts(cachedPosts);
       setCollectedPosts(cachedCollectedPosts);
-      setCollectedRankings(cached.collectedRankings);
+      setCollectedRankings(cachedCollectedRankings);
       setCurrentUserId(cached.currentUserId);
       setLoading(false);
       return;
@@ -504,11 +527,28 @@ const Profile: React.FC = () => {
         : [];
     const nextCollectedPosts =
       collectedPostsRes.status === 'fulfilled' && collectedPostsRes.value.code === 0
-        ? applyStoredPostStatPatches(collectedPostsRes.value.data.posts || [])
+        ? removeUncollectedPosts(
+            applyStoredPostStatPatches(
+              (collectedPostsRes.value.data.posts || []).map((post) => ({
+                ...post,
+                is_collection: true,
+              })),
+            ),
+          )
         : [];
     const nextCollectedRankings =
       collectedRankingsRes.status === 'fulfilled' && collectedRankingsRes.value.code === 0
-        ? collectedRankingsRes.value.data.sip_scores || []
+        ? removeUncollectedSipScores(
+            applyStoredSipScorePatches(
+              (collectedRankingsRes.value.data.sip_scores || []).map((item) => ({
+                ...item,
+                sip_score: {
+                  ...(item.sip_score || {}),
+                  is_collected: true,
+                },
+              })),
+            ),
+          )
         : [];
 
     if (postsRes.status === 'fulfilled' && postsRes.value.code === 0) {
@@ -535,6 +575,8 @@ const Profile: React.FC = () => {
       collectedPosts: nextCollectedPosts,
       collectedRankings: nextCollectedRankings,
       currentUserId: resolvedCurrentUserId,
+      postRevision: getPostRevision(),
+      sipScoreRevision: getSipScoreRevision(),
     });
     setLoading(false);
   };
@@ -552,19 +594,77 @@ const Profile: React.FC = () => {
     const handlePostPatch = (event: Event) => {
       const patch = (event as CustomEvent<MobilePostStatPatch>).detail;
       if (!patch?.id) return;
-      setPosts((current) => current.map((post) => applyPostStatPatch(post, patch)));
+      setPosts((current) => {
+        const exists = current.some((post) => getMobilePostId(post) === Number(patch.id));
+        const patched = current.map((post) => applyPostStatPatch(post, patch));
+        return patch.created && patch.post && !exists
+          ? applyStoredPostStatPatches([
+              { ...patch.post, is_collection: false },
+              ...patched,
+            ])
+          : patched;
+      });
       setCollectedPosts((current) =>
-        current.map((post) => applyPostStatPatch(post, patch)),
+        patch.is_collection === false || patch.removed_from_collection
+          ? current.filter((post) => getMobilePostId(post) !== Number(patch.id))
+          : current.map((post) => applyPostStatPatch(post, patch)),
       );
       profileCache.forEach((cache) => {
-        cache.posts = cache.posts.map((post) => applyPostStatPatch(post, patch));
-        cache.collectedPosts = cache.collectedPosts.map((post) =>
-          applyPostStatPatch(post, patch),
+        const exists = cache.posts.some(
+          (post) => getMobilePostId(post) === Number(patch.id),
         );
+        const patchedPosts = cache.posts.map((post) => applyPostStatPatch(post, patch));
+        cache.posts =
+          patch.created && patch.post && !exists
+            ? applyStoredPostStatPatches([
+                { ...patch.post, is_collection: false },
+                ...patchedPosts,
+              ])
+            : patchedPosts;
+        cache.collectedPosts =
+          patch.is_collection === false || patch.removed_from_collection
+            ? cache.collectedPosts.filter(
+                (post) => getMobilePostId(post) !== Number(patch.id),
+              )
+            : cache.collectedPosts.map((post) => applyPostStatPatch(post, patch));
+        cache.postRevision = getPostRevision();
       });
     };
     window.addEventListener(MOBILE_POST_STAT_EVENT, handlePostPatch);
-    return () => window.removeEventListener(MOBILE_POST_STAT_EVENT, handlePostPatch);
+    window.addEventListener(MOBILE_POST_COLLECTION_EVENT, handlePostPatch);
+    window.addEventListener(MOBILE_POST_CREATED_EVENT, handlePostPatch);
+    return () => {
+      window.removeEventListener(MOBILE_POST_STAT_EVENT, handlePostPatch);
+      window.removeEventListener(MOBILE_POST_COLLECTION_EVENT, handlePostPatch);
+      window.removeEventListener(MOBILE_POST_CREATED_EVENT, handlePostPatch);
+    };
+  }, []);
+
+  useEffect(() => {
+    const handleSipScorePatch = (event: Event) => {
+      const patch = (event as CustomEvent<SipScorePatch>).detail;
+      if (!patch?.id) return;
+      setCollectedRankings((current) =>
+        patch.is_collected === false || patch.removed_from_collection
+          ? current.filter((item) => Number(item.sip_score?.id) !== Number(patch.id))
+          : applyStoredSipScorePatches(current),
+      );
+      profileCache.forEach((cache) => {
+        cache.collectedRankings =
+          patch.is_collected === false || patch.removed_from_collection
+            ? cache.collectedRankings.filter(
+                (item) => Number(item.sip_score?.id) !== Number(patch.id),
+              )
+            : applyStoredSipScorePatches(cache.collectedRankings);
+        cache.sipScoreRevision = getSipScoreRevision();
+      });
+    };
+    window.addEventListener(MOBILE_SIP_SCORE_EVENT, handleSipScorePatch);
+    window.addEventListener(MOBILE_SIP_SCORE_COLLECTION_EVENT, handleSipScorePatch);
+    return () => {
+      window.removeEventListener(MOBILE_SIP_SCORE_EVENT, handleSipScorePatch);
+      window.removeEventListener(MOBILE_SIP_SCORE_COLLECTION_EVENT, handleSipScorePatch);
+    };
   }, []);
 
   useEffect(() => {

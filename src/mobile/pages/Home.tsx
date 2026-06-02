@@ -18,6 +18,9 @@ import { mobileMotion, mobilePalette, mobileRadius } from '../styles';
 import {
   applyPostStatPatch,
   applyStoredPostStatPatches,
+  getMobilePostId,
+  getPostRevision,
+  MOBILE_POST_CREATED_EVENT,
   MOBILE_POST_STAT_EVENT,
   MobilePostStatPatch,
 } from '../postEvents';
@@ -380,6 +383,7 @@ type HomeListCacheState = {
   page: number;
   hasMore: boolean;
   loaded: boolean;
+  revision: number;
 };
 
 const homeListCache = new Map<string, HomeListCacheState>();
@@ -451,6 +455,7 @@ const Home: React.FC = () => {
           page: nextPage,
           hasMore: next.length >= PAGE_SIZE,
           loaded: true,
+          revision: getPostRevision(),
         });
         return merged;
       });
@@ -466,7 +471,7 @@ const Home: React.FC = () => {
 
   useEffect(() => {
     const cached = homeListCache.get(cacheKey);
-    if (cached) {
+    if (cached && cached.revision === getPostRevision()) {
       const cachedPosts = applyStoredPostStatPatches(cached.posts);
       cached.posts = cachedPosts;
       setPosts(cachedPosts);
@@ -488,15 +493,34 @@ const Home: React.FC = () => {
       const patch = (event as CustomEvent<MobilePostStatPatch>).detail;
       if (!patch?.id) return;
       setPosts((current) => {
-        const nextPosts = current.map((post) => applyPostStatPatch(post, patch));
+        const exists = current.some((post) => getMobilePostId(post) === Number(patch.id));
+        const patched = current.map((post) => applyPostStatPatch(post, patch));
+        const nextPosts =
+          patch.created && patch.post && !exists
+            ? applyStoredPostStatPatches([patch.post, ...patched])
+            : patched;
         homeListCache.forEach((cache) => {
-          cache.posts = cache.posts.map((post) => applyPostStatPatch(post, patch));
+          const cacheHasPost = cache.posts.some(
+            (post) => getMobilePostId(post) === Number(patch.id),
+          );
+          const patchedCachePosts = cache.posts.map((post) =>
+            applyPostStatPatch(post, patch),
+          );
+          cache.posts =
+            patch.created && patch.post && !cacheHasPost
+              ? applyStoredPostStatPatches([patch.post, ...patchedCachePosts])
+              : patchedCachePosts;
+          cache.revision = getPostRevision();
         });
         return nextPosts;
       });
     };
     window.addEventListener(MOBILE_POST_STAT_EVENT, handlePostPatch);
-    return () => window.removeEventListener(MOBILE_POST_STAT_EVENT, handlePostPatch);
+    window.addEventListener(MOBILE_POST_CREATED_EVENT, handlePostPatch);
+    return () => {
+      window.removeEventListener(MOBILE_POST_STAT_EVENT, handlePostPatch);
+      window.removeEventListener(MOBILE_POST_CREATED_EVENT, handlePostPatch);
+    };
   }, []);
 
   useEffect(() => {

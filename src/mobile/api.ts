@@ -118,7 +118,6 @@ export type SipScoreEntry = {
   description?: string;
   cover_img?: string;
   participant_num?: number;
-  participant_count?: number;
   comment_num?: number;
   score_total?: number;
   score_avg?: number;
@@ -134,10 +133,12 @@ export type SipScoreRating = {
   sip_score_id?: number;
   sip_score_entry_id?: number;
   creator?: { id?: number; name?: string; avatar?: string };
+  last_modified_by?: { id?: number; name?: string; avatar?: string };
   rating?: number;
   content?: string;
   comment_id?: number;
   like_num?: number;
+  is_liked?: boolean;
   img_url?: string;
   created_at?: string;
   updated_at?: string;
@@ -267,7 +268,10 @@ export const mobileApi = {
         { query },
       ),
     createEntries: (body: Record<string, unknown>) =>
-      request<{ ids?: number[] }>('/sip-score/entries', { method: 'POST', body }),
+      request<{ entry_ids?: number[] }>('/sip-score/entries', {
+        method: 'POST',
+        body,
+      }),
     entryDetail: (sipScoreId: number, entryId: number) =>
       request<{ entry?: SipScoreEntry; my_rating?: SipScoreRating }>(
         `/sip-score/entry/${sipScoreId}/${entryId}`,
@@ -275,6 +279,11 @@ export const mobileApi = {
     rateEntry: (body: Record<string, unknown>) =>
       request<Record<string, never>>('/sip-score/entry/rating', {
         method: 'POST',
+        body,
+      }),
+    updateRating: (body: Record<string, unknown>) =>
+      request<Record<string, never>>('/sip-score/entry/rating', {
+        method: 'PUT',
         body,
       }),
     ratings: (sipScoreId: number, entryId: number, query?: Record<string, QueryValue>) =>

@@ -15,7 +15,7 @@ import DesignIcon from '../components/DesignIcon';
 import { mobileMotion, mobilePalette, mobileRadius, PrimaryButton } from '../styles';
 import { mobileApi, MobileComment, MobilePost } from '../api';
 import { TARGET_TYPE, TYPE_NAME, SORT_TYPE, mobileTableByCategory } from '../constants';
-import { emitPostStatPatch } from '../postEvents';
+import { applyStoredPostStatPatches, emitPostStatPatch } from '../postEvents';
 import moment from 'utils/moment';
 
 const ArticleWrap = styled.article`
@@ -351,7 +351,7 @@ const Article: React.FC = () => {
         setError(res.message || '帖子加载失败');
         return;
       }
-      setPost(res.data);
+      setPost(applyStoredPostStatPatches([res.data])[0]);
     } catch (err) {
       setError(err instanceof Error ? err.message : '帖子加载失败');
     } finally {
@@ -398,7 +398,17 @@ const Article: React.FC = () => {
     const res = await mobileApi.like(post.id, TYPE_NAME.post);
     if (res.code !== 0) {
       message.error(res.message || '操作失败');
-      load();
+      const revertedPost = {
+        ...post,
+        is_liked: post.is_liked,
+        like_num: post.like_num,
+      };
+      setPost(revertedPost);
+      emitPostStatPatch({
+        id: post.id,
+        is_liked: post.is_liked,
+        like_num: post.like_num,
+      });
     }
   };
 
@@ -422,7 +432,12 @@ const Article: React.FC = () => {
     const res = await mobileApi.collection.toggle(post.id, TARGET_TYPE.post);
     if (res.code !== 0) {
       message.error(res.message || '操作失败');
-      load();
+      setPost(post);
+      emitPostStatPatch({
+        id: post.id,
+        is_collection: post.is_collection,
+        collection_num: post.collection_num,
+      });
     }
   };
 

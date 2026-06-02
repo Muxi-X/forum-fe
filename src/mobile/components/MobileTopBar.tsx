@@ -55,6 +55,11 @@ const IconButton = styled.button`
   }
 `;
 
+const RightSlot = styled.div`
+  width: 64px;
+  height: 56px;
+`;
+
 const BackPill = styled.span`
   width: 40px;
   height: 40px;
@@ -122,9 +127,13 @@ const MobileTopBar: React.FC<{
         ) : null}
       </IconButton>
       <Title>{title}</Title>
-      <IconButton type="button" onClick={onRight} aria-label="操作">
-        <RightIcon action={right} />
-      </IconButton>
+      {right || onRight ? (
+        <IconButton type="button" onClick={onRight} aria-label="操作">
+          <RightIcon action={right} />
+        </IconButton>
+      ) : (
+        <RightSlot aria-hidden="true" />
+      )}
     </Bar>
   );
 };

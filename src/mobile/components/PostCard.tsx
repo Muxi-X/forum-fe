@@ -8,7 +8,11 @@ import { TARGET_TYPE, TYPE_NAME, mobileTableByCategory } from '../constants';
 import moment from 'utils/moment';
 import MobileAvatar from './MobileAvatar';
 import DesignIcon from './DesignIcon';
-import { emitPostStatPatch } from '../postEvents';
+import {
+  emitPostStatPatch,
+  MOBILE_POST_STAT_EVENT,
+  MobilePostStatPatch,
+} from '../postEvents';
 
 const stripHtml = (value?: string) =>
   (value || '')
@@ -175,14 +179,7 @@ const Tags = styled.div`
   }
 `;
 
-const resolvePostId = (post: MobilePost) =>
-  Number(
-    post.id ||
-      (post as any).post_id ||
-      (post as any).article_id ||
-      (post as any).target_id ||
-      0,
-  ) || 0;
+const resolvePostId = (post: MobilePost) => Number(post.id || 0) || 0;
 
 const getSummary = (post: MobilePost) =>
   post.summary ||
@@ -210,6 +207,22 @@ const PostCard: React.FC<{ post: MobilePost; variant?: 'default' | 'compactOwn' 
     setLikeCount(post.like_num || 0);
     setCollectionCount(post.collection_num || 0);
   }, [post.is_liked, post.is_collection, post.like_num, post.collection_num]);
+
+  useEffect(() => {
+    if (!postId) return undefined;
+    const handlePatch = (event: Event) => {
+      const patch = (event as CustomEvent<MobilePostStatPatch>).detail;
+      if (!patch?.id || Number(patch.id) !== Number(postId)) return;
+      if (patch.is_liked !== undefined) setLiked(Boolean(patch.is_liked));
+      if (patch.like_num !== undefined) setLikeCount(patch.like_num || 0);
+      if (patch.is_collection !== undefined) setCollected(Boolean(patch.is_collection));
+      if (patch.collection_num !== undefined) {
+        setCollectionCount(patch.collection_num || 0);
+      }
+    };
+    window.addEventListener(MOBILE_POST_STAT_EVENT, handlePatch);
+    return () => window.removeEventListener(MOBILE_POST_STAT_EVENT, handlePatch);
+  }, [postId]);
   const openPost = () => {
     if (!postId) {
       message.warning('这个帖子暂时无法打开');

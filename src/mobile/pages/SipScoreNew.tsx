@@ -7,6 +7,7 @@ import UploadField from '../components/UploadField';
 import { FloatingSubmitBar, mobilePalette, PrimaryButton, mobileRadius } from '../styles';
 import { DEFAULT_TABLE } from '../constants';
 import { mobileApi } from '../api';
+import { emitSipScorePatch } from '../postEvents';
 
 const MAX_TAG_COUNT = 4;
 
@@ -146,6 +147,33 @@ const SipScoreNew: React.FC = () => {
       if (res.code !== 0) {
         message.error(res.message);
         return;
+      }
+      const sipScoreId = Number(res.data.id || 0);
+      if (sipScoreId) {
+        const nextTags = tags
+          .split(/[,\s，]+/)
+          .filter(Boolean)
+          .slice(0, MAX_TAG_COUNT);
+        emitSipScorePatch({
+          id: sipScoreId,
+          created: true,
+          withEntries: {
+            sip_score: {
+              id: sipScoreId,
+              name,
+              description,
+              cover_img: cover,
+              tags: nextTags,
+              domain: 'normal',
+              category: DEFAULT_TABLE.apiCategory,
+              entry_count: 0,
+              collect_count: 0,
+              participant_count: 0,
+              is_collected: false,
+            },
+            entries: [],
+          },
+        });
       }
       message.success('创建成功');
       nav(`/sip-score/${res.data.id}`);

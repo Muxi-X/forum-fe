@@ -13,6 +13,7 @@ import {
 } from '../styles';
 import { DEFAULT_TABLE, MOBILE_TABLES } from '../constants';
 import { mobileApi } from '../api';
+import { emitPostStatPatch } from '../postEvents';
 import Drafts, { Draft } from 'utils/db_drafts';
 import moment from 'utils/moment';
 
@@ -322,6 +323,31 @@ const Editor: React.FC = () => {
         return;
       }
       if (!isUpdate) Drafts.deleteDraft(draftKey);
+      const postId = isUpdate ? Number(id) : Number(res.data.id || 0);
+      if (postId) {
+        emitPostStatPatch({
+          id: postId,
+          post: {
+            id: postId,
+            title,
+            content: finalContent,
+            summary: generatedSummary(),
+            content_type: 'md',
+            category,
+            time: new Date().toISOString(),
+            tags,
+            img_url: image,
+            images: image ? [image] : [],
+            like_num: 0,
+            comment_num: 0,
+            collection_num: 0,
+            is_liked: false,
+            is_collection: false,
+          },
+          created: !isUpdate,
+          updated: isUpdate,
+        });
+      }
       message.success(isUpdate ? '更新成功' : '发布成功');
       nav(isUpdate ? `/article/${id}` : `/article/${res.data.id}`);
     } finally {

@@ -15,8 +15,16 @@ import { mobileApi, MobilePost, SipScoreWithEntries } from '../api';
 import {
   applyPostStatPatch,
   applyStoredPostStatPatches,
+  applyStoredSipScorePatches,
+  getMobilePostId,
+  MOBILE_POST_COLLECTION_EVENT,
   MOBILE_POST_STAT_EVENT,
   MobilePostStatPatch,
+  MOBILE_SIP_SCORE_COLLECTION_EVENT,
+  MOBILE_SIP_SCORE_EVENT,
+  removeUncollectedPosts,
+  removeUncollectedSipScores,
+  SipScorePatch,
 } from '../postEvents';
 
 const List = styled.div`
@@ -112,11 +120,28 @@ const Collection: React.FC = () => {
           return;
         }
         if (tab === 'published' || tab === 'post') {
-          setPosts(
-            applyStoredPostStatPatches(('posts' in res.data ? res.data.posts : []) || []),
+          const nextPosts = applyStoredPostStatPatches(
+            (('posts' in res.data ? res.data.posts : []) || []).map((post) =>
+              tab === 'post' ? { ...post, is_collection: true } : post,
+            ),
           );
+          setPosts(tab === 'post' ? removeUncollectedPosts(nextPosts) : nextPosts);
         } else {
-          setRankings(('sip_scores' in res.data ? res.data.sip_scores : []) || []);
+          setRankings(
+            removeUncollectedSipScores(
+              applyStoredSipScorePatches(
+                (('sip_scores' in res.data ? res.data.sip_scores : []) || []).map(
+                  (item) => ({
+                    ...item,
+                    sip_score: {
+                      ...(item.sip_score || {}),
+                      is_collected: true,
+                    },
+                  }),
+                ),
+              ),
+            ),
+          );
         }
       })
       .catch((err) => {
@@ -129,11 +154,38 @@ const Collection: React.FC = () => {
     const handlePostPatch = (event: Event) => {
       const patch = (event as CustomEvent<MobilePostStatPatch>).detail;
       if (!patch?.id) return;
-      setPosts((current) => current.map((post) => applyPostStatPatch(post, patch)));
+      setPosts((current) =>
+        tab === 'post' && (patch.is_collection === false || patch.removed_from_collection)
+          ? current.filter((post) => getMobilePostId(post) !== Number(patch.id))
+          : current.map((post) => applyPostStatPatch(post, patch)),
+      );
     };
     window.addEventListener(MOBILE_POST_STAT_EVENT, handlePostPatch);
-    return () => window.removeEventListener(MOBILE_POST_STAT_EVENT, handlePostPatch);
-  }, []);
+    window.addEventListener(MOBILE_POST_COLLECTION_EVENT, handlePostPatch);
+    return () => {
+      window.removeEventListener(MOBILE_POST_STAT_EVENT, handlePostPatch);
+      window.removeEventListener(MOBILE_POST_COLLECTION_EVENT, handlePostPatch);
+    };
+  }, [tab]);
+
+  useEffect(() => {
+    const handleSipScorePatch = (event: Event) => {
+      const patch = (event as CustomEvent<SipScorePatch>).detail;
+      if (!patch?.id) return;
+      setRankings((current) =>
+        tab === 'sipScore' &&
+        (patch.is_collected === false || patch.removed_from_collection)
+          ? current.filter((item) => Number(item.sip_score?.id) !== Number(patch.id))
+          : applyStoredSipScorePatches(current),
+      );
+    };
+    window.addEventListener(MOBILE_SIP_SCORE_EVENT, handleSipScorePatch);
+    window.addEventListener(MOBILE_SIP_SCORE_COLLECTION_EVENT, handleSipScorePatch);
+    return () => {
+      window.removeEventListener(MOBILE_SIP_SCORE_EVENT, handleSipScorePatch);
+      window.removeEventListener(MOBILE_SIP_SCORE_COLLECTION_EVENT, handleSipScorePatch);
+    };
+  }, [tab]);
 
   return (
     <MobileShell title={tab === 'published' ? '发布的帖子' : '收藏'} back tabs={false}>
