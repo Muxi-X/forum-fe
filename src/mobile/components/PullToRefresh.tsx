@@ -4,6 +4,8 @@ import { mobileMotion, mobilePalette, mobileRadius } from '../styles';
 
 const THRESHOLD = 48;
 const MAX_PULL = 72;
+const MIN_REFRESH_MS = 520;
+const REFRESH_TIMEOUT_MS = 8000;
 
 const spin = keyframes`
   to {
@@ -48,14 +50,23 @@ const Content = styled.div<{ pull: number; active: boolean }>`
   transition: transform ${mobileMotion.normal};
 `;
 
-const Spinner = styled.span<{ refreshing: boolean; pull: number }>`
+const SpinnerShell = styled.span<{ pull: number }>`
+  display: inline-grid;
+  place-items: center;
+  width: 15px;
+  height: 15px;
+  transform: rotate(${(props) => props.pull * 4}deg);
+`;
+
+const Spinner = styled.span<{ refreshing: boolean }>`
+  display: block;
   width: 15px;
   height: 15px;
   border-radius: 50%;
   border: 2px solid rgba(254, 152, 0, 0.18);
   border-top-color: ${mobilePalette.orange};
-  transform: rotate(${(props) => props.pull * 4}deg);
   animation: ${(props) => (props.refreshing ? spin : 'none')} 760ms linear infinite;
+  will-change: transform;
 `;
 
 const PullToRefresh: React.FC<{
@@ -92,7 +103,9 @@ const PullToRefresh: React.FC<{
     if (!canStart()) return;
     startYRef.current = event.clientY;
     pointerIdRef.current = event.pointerId;
-    event.currentTarget.setPointerCapture?.(event.pointerId);
+    if (event.currentTarget.setPointerCapture) {
+      event.currentTarget.setPointerCapture(event.pointerId);
+    }
   };
 
   const handlePointerMove = (event: React.PointerEvent) => {
@@ -112,6 +125,8 @@ const PullToRefresh: React.FC<{
 
   const handlePointerUp = async (event: React.PointerEvent) => {
     if (pointerIdRef.current !== event.pointerId) return;
+    const target = event.currentTarget;
+    const pointerId = event.pointerId;
     if (phase !== 'ready') {
       reset();
       return;
@@ -120,13 +135,20 @@ const PullToRefresh: React.FC<{
     setPhase('refreshing');
     try {
       await Promise.all([
-        onRefresh(),
+        Promise.race([
+          Promise.resolve(onRefresh()),
+          new Promise((resolve) => {
+            window.setTimeout(resolve, REFRESH_TIMEOUT_MS);
+          }),
+        ]),
         new Promise((resolve) => {
-          window.setTimeout(resolve, 520);
+          window.setTimeout(resolve, MIN_REFRESH_MS);
         }),
       ]);
     } finally {
-      event.currentTarget.releasePointerCapture?.(event.pointerId);
+      if (target.hasPointerCapture?.(pointerId) && target.releasePointerCapture) {
+        target.releasePointerCapture(pointerId);
+      }
       reset();
     }
   };
@@ -144,7 +166,9 @@ const PullToRefresh: React.FC<{
       <Indicator pull={pull} active={active} aria-live="polite" aria-hidden={!active}>
         {active ? (
           <>
-            <Spinner pull={pull} refreshing={refreshing} />
+            <SpinnerShell pull={pull}>
+              <Spinner refreshing={refreshing} />
+            </SpinnerShell>
             {label}
           </>
         ) : null}
