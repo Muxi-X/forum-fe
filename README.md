@@ -33,6 +33,16 @@
 
 # Git 规范
 
+## 开发部署建议
+
+- 个人分支：用于日常开发与提交。
+- `dev`：用于开发环境部署与联调，对应 `forum-dev.muxistudio.xyz`。
+- `main`：用于正式环境发布，对应 `forum.muxistudio.xyz`。
+
+流程：个人分支开发完成后合入 `dev`，测试通过后再由 `dev` 合入 `main`。
+
+原则：不在 `main` 直接开发，不将未完成代码合入 `dev`。
+
 ### 提交规范
 
 - 添加新功能 `git commit -m ":new: [feat]: $新功能`

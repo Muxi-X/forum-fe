@@ -186,7 +186,22 @@ const Notice: React.FC = () => {
       time: getChatTime(item, index),
       key: `chat_${item.id || index}`,
     })),
-  ].sort((a, b) => b.time - a.time);
+  ].sort((a, b) => {
+    const unreadA =
+      a.kind === 'chat'
+        ? Number(a.item.id ? chatUnread[a.item.id] || 0 : 0)
+        : a.item.read
+        ? 0
+        : 1;
+    const unreadB =
+      b.kind === 'chat'
+        ? Number(b.item.id ? chatUnread[b.item.id] || 0 : 0)
+        : b.item.read
+        ? 0
+        : 1;
+    if (unreadA !== unreadB) return unreadB - unreadA;
+    return b.time - a.time;
+  });
 
   const markNoticeRead = async (item: PrivateMessage) => {
     if (!item.id) {
