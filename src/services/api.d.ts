@@ -205,6 +205,9 @@ declare namespace defs {
     /** receiver_id */
     receiver_id?: number;
 
+    /** read */
+    read?: boolean;
+
     /** time */
     time?: string;
 
@@ -748,6 +751,25 @@ login the team-forum
       export type HooksParams = (() => Params) | Params;
 
       export type Response = ResponseTypeWarpper<Array<defs.chat_Message>>;
+
+      export const method: string;
+
+      export function request(params: Params, options?: any): Promise<Response>;
+    }
+
+    /**
+     * 标记与某用户的私信为已读
+     * /chat/read/{id}
+     */
+    export namespace patchReadById {
+      export class Params {
+        /** id */
+        id: number;
+      }
+
+      export type HooksParams = (() => Params) | Params;
+
+      export type Response = ResponseTypeWarpper<any>;
 
       export const method: string;
 

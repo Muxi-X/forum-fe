@@ -176,6 +176,7 @@ export type ChatUser = {
   avatar?: string;
   last_message_time?: string;
   last_message?: string;
+  unread_count?: number;
 };
 
 export const mobileApi = {
@@ -274,10 +275,14 @@ export const mobileApi = {
           receiver_id?: number;
           content?: string;
           time?: string;
+          type_name?: string;
+          read?: boolean;
         }>
       >(`/chat/history/${id}`, { query }),
     users: (query?: Record<string, QueryValue>) =>
       request<ChatUser[]>('/chat/userList', { query }),
+    markRead: (id: number) =>
+      request<Record<string, never>>(`/chat/read/${id}`, { method: 'PATCH' }),
   },
   feed: (userId: number, query?: Record<string, QueryValue>) =>
     request<{ list?: Array<Record<string, unknown>> }>(`/feed/list/${userId}`, { query }),

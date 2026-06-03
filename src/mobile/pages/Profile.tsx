@@ -924,7 +924,10 @@ const Profile: React.FC = () => {
       refreshNotificationStore()
         .then((notifications) => {
           if (!stopped) {
-            setProfileHasUnread(notifications.some((notice) => !notice.read));
+            setProfileHasUnread(
+              useNotification.getState().totalUnreadCount > 0 ||
+                notifications.some((notice) => !notice.read),
+            );
           }
         })
         .catch((err) => {

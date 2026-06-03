@@ -17,6 +17,12 @@ import {
   noticeTitle,
   toStoreNotifications,
 } from '../notificationSync';
+import {
+  chatListQuery,
+  markChatConversationRead,
+  refreshChatUnreadStore,
+  toChatUnreadMap,
+} from '../chatSync';
 
 const List = styled(Section)`
   margin-top: 0;
@@ -113,12 +119,13 @@ const Notice: React.FC = () => {
     markAllAsRead,
     markChatRead,
     markAllChatRead,
+    replaceChatUnread,
     chatUnread,
     totalUnreadCount,
   } = useNotification();
 
-  const loadNotifications = async () => {
-    setLoadingNotice(true);
+  const loadNotifications = async (options?: { silent?: boolean }) => {
+    if (!options?.silent) setLoadingNotice(true);
     setError('');
     try {
       const next = await fetchInteractionNotifications();
@@ -127,23 +134,36 @@ const Notice: React.FC = () => {
     } catch (err) {
       setError(err instanceof Error ? err.message : '通知加载失败');
     } finally {
-      setLoadingNotice(false);
+      if (!options?.silent) setLoadingNotice(false);
     }
   };
 
-  const loadChatUsers = async () => {
-    setLoadingChat(true);
+  const loadChatUsers = async (options?: { silent?: boolean }) => {
+    if (!options?.silent) setLoadingChat(true);
     mobileApi.chat
-      .users({ limit: 50, page: 0 })
+      .users(chatListQuery)
       .then((res) => {
-        if (res.code === 0) setChatUsers(res.data || []);
+        if (res.code === 0) {
+          const users = res.data || [];
+          setChatUsers(users);
+          replaceChatUnread(toChatUnreadMap(users));
+        }
       })
-      .finally(() => setLoadingChat(false));
+      .finally(() => {
+        if (!options?.silent) setLoadingChat(false);
+      });
   };
 
   useEffect(() => {
     loadNotifications();
     loadChatUsers();
+    const timer = window.setInterval(() => {
+      loadNotifications({ silent: true });
+      refreshChatUnreadStore()
+        .then(setChatUsers)
+        .catch((err) => console.error('刷新私信红点失败:', err));
+    }, 5000);
+    return () => window.clearInterval(timer);
   }, []);
 
   const filtered = notifications.filter((item) => {
@@ -190,6 +210,11 @@ const Notice: React.FC = () => {
     replaceNotifications(toStoreNotifications(next));
     markAllAsRead();
     markAllChatRead();
+    await Promise.allSettled(
+      chatUsers
+        .filter((user) => user.id && chatUnread[user.id])
+        .map((user) => mobileApi.chat.markRead(user.id as number)),
+    );
     const res = await mobileApi.user.markPrivateMessageRead();
     if (res.code !== 0) {
       message.warning('已本地标记，刷新后可能恢复');
@@ -209,6 +234,9 @@ const Notice: React.FC = () => {
   const openChat = (user: ChatUser) => {
     if (user.id) {
       markChatRead(user.id);
+      markChatConversationRead(user.id).catch((err) =>
+        console.error('标记私信已读失败:', err),
+      );
       nav(`/user/chat?target_id=${user.id}`);
     }
   };

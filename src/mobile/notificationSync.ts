@@ -1,5 +1,6 @@
 import useNotification, { Notification } from 'store/useNotification';
 import { mobileApi, PrivateMessage } from './api';
+import { refreshChatUnreadStore } from './chatSync';
 
 export const notificationPollIntervalMs = 5000;
 
@@ -45,7 +46,17 @@ export const fetchInteractionNotifications = async () => {
 };
 
 export const refreshNotificationStore = async () => {
-  const notifications = await fetchInteractionNotifications();
+  const [notificationResult, chatResult] = await Promise.allSettled([
+    fetchInteractionNotifications(),
+    refreshChatUnreadStore(),
+  ]);
+  if (chatResult.status === 'rejected') {
+    console.error('刷新私信红点失败:', chatResult.reason);
+  }
+  if (notificationResult.status === 'rejected') {
+    throw notificationResult.reason;
+  }
+  const notifications = notificationResult.value;
   useNotification.getState().replaceNotifications(toStoreNotifications(notifications));
   return notifications;
 };

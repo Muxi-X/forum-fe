@@ -13,6 +13,7 @@ import useChat from 'store/useChat';
 import useNotification from 'store/useNotification';
 import { useDeviceType } from 'hooks/useDeviceType';
 import { hasAuthToken, isLoginRoute } from 'utils/auth';
+import { markChatConversationRead } from 'mobile/chatSync';
 
 export const ContentWrapper = styled.main`
   display: flex;
@@ -49,7 +50,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   };
   const { setTip, setWS, ws } = useWS();
   const { setSelectedId } = useChat();
-  const { markChatUnread } = useNotification();
+  const { markChatUnread, markChatRead } = useNotification();
   const { showHeader } = useShowHeader();
   const isPhone = useDeviceType() === 'phone';
   const shouldRedirectToLogin = !isLoginRoute(pathname) && !hasAuthToken();
@@ -66,7 +67,12 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
             : 0;
         setTip(true);
         setSelectedId(data.sender_id);
-        if (activeChatTargetId !== data.sender_id) {
+        if (activeChatTargetId === data.sender_id) {
+          markChatRead(data.sender_id);
+          markChatConversationRead(data.sender_id).catch((err) =>
+            console.error('标记私信已读失败:', err),
+          );
+        } else {
           markChatUnread(data.sender_id);
         }
       }

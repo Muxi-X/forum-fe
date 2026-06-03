@@ -3,5 +3,6 @@
  */
 import * as getHistoryById from './getHistoryById';
 import * as getWs from './getWs';
+import * as patchReadById from './patchReadById';
 
-export { getHistoryById, getWs };
+export { getHistoryById, getWs, patchReadById };

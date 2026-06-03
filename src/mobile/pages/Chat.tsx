@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import styled from 'styled-components';
 import { Input, message } from 'antd';
 import { useLocation, useSearchParams } from 'react-router-dom';
@@ -11,6 +11,7 @@ import useWS from 'store/useWS';
 import useNotification from 'store/useNotification';
 import WS, { MsgResponse } from 'utils/WS';
 import moment from 'utils/moment';
+import { markChatConversationRead } from '../chatSync';
 
 const Wrap = styled.div`
   display: grid;
@@ -70,15 +71,31 @@ const Chat: React.FC = () => {
   const [searchParams] = useSearchParams();
   const targetId = Number(searchParams.get('target_id') || (state as any)?.id || 0);
   const { userProfile } = useProfile();
-  const { ws, setWS } = useWS();
+  const { ws } = useWS();
   const { markChatRead } = useNotification();
   const [target, setTarget] = useState<MobileUser | null>(null);
   const [records, setRecords] = useState<MsgResponse[]>([]);
   const [text, setText] = useState('');
   const [sending, setSending] = useState(false);
+  const socketRef = useRef<WS | null>(null);
 
   const myId = userProfile.id || Number(localStorage.getItem('userId')) || 0;
   const title = useMemo(() => target?.name || '私信', [target]);
+
+  const appendRecord = (record: MsgResponse) => {
+    setRecords((prev) => {
+      const key = `${record.sender_id}-${record.receiver_id}-${record.time}-${record.content}`;
+      if (
+        prev.some(
+          (item) =>
+            `${item.sender_id}-${item.receiver_id}-${item.time}-${item.content}` === key,
+        )
+      ) {
+        return prev;
+      }
+      return [...prev, record];
+    });
+  };
 
   useEffect(() => {
     if (!targetId) return;
@@ -89,25 +106,34 @@ const Chat: React.FC = () => {
       if (res.code === 0 && Array.isArray(res.data))
         setRecords(res.data.reverse() as MsgResponse[]);
     });
+    markChatConversationRead(targetId).catch((err) =>
+      console.error('标记私信已读失败:', err),
+    );
   }, [targetId]);
 
   useEffect(() => {
-    let socket = ws;
-    if (!socket) {
-      socket = new WS(localStorage.getItem('token') || '');
-      setWS(socket);
-    }
+    const socket = ws;
+    if (!socket) return;
+    socketRef.current = socket;
     if (targetId) {
       markChatRead(targetId);
     }
     const unsubscribe = socket.subscribe((data) => {
       if (data.sender_id === targetId || data.receiver_id === targetId) {
-        setRecords((prev) => [...prev, data]);
+        appendRecord(data);
         markChatRead(targetId);
+        if (data.sender_id === targetId) {
+          mobileApi.chat
+            .markRead(targetId)
+            .catch((err) => console.error('标记私信已读失败:', err));
+        }
       }
     });
-    return unsubscribe;
-  }, [ws, targetId, setWS, markChatRead]);
+    return () => {
+      if (socketRef.current === socket) socketRef.current = null;
+      unsubscribe();
+    };
+  }, [ws, targetId, markChatRead]);
 
   const send = () => {
     if (!text.trim() || !targetId) return;
@@ -118,23 +144,21 @@ const Chat: React.FC = () => {
       type_name: 'str' as const,
       time: moment(Date.now()).format('YYYY-MM-DD HH:mm:ss'),
     };
-    if (!ws?.ws || ws.ws.readyState !== WebSocket.OPEN) {
+    const socket = ws || socketRef.current;
+    if (!socket?.ws || socket.ws.readyState !== WebSocket.OPEN) {
       message.warning('连接尚未建立');
       setSending(false);
       return;
     }
     try {
-      ws.send(payload);
-      setRecords((prev) => [
-        ...prev,
-        {
-          sender_id: myId,
-          receiver_id: targetId,
-          content: payload.content,
-          type_name: payload.type_name,
-          time: payload.time,
-        },
-      ]);
+      socket.send(payload);
+      appendRecord({
+        sender_id: myId,
+        receiver_id: targetId,
+        content: payload.content,
+        type_name: payload.type_name,
+        time: payload.time,
+      });
       setText('');
     } catch {
       message.error('发送失败，请稍后重试');

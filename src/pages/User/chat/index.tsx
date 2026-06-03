@@ -19,6 +19,8 @@ import EmptyCard from 'components/EmptyCard';
 import Loading from 'components/Loading';
 import { useDeviceType } from 'hooks/useDeviceType';
 import MobileChat from 'mobile/pages/Chat';
+import useNotification from 'store/useNotification';
+import { markChatConversationRead } from 'mobile/chatSync';
 
 interface LocationState {
   id: string;
@@ -57,19 +59,36 @@ const DesktopChat: React.FC = () => {
   const { runAsync: getHistory } = useRequest(API.chat.getHistoryById.request, {
     manual: true,
   });
+  const { markChatUnread, markChatRead } = useNotification();
 
   const [loading, setLoading] = useState(true);
 
-  const handleSocketMessage = (res: MsgResponse) => {
+  const handleSocketMessage = (
+    res: MsgResponse,
+    options?: { updateUnread?: boolean },
+  ) => {
+    const peerId = res.sender_id === myId ? res.receiver_id : res.sender_id;
+    if (!peerId) return;
     const newTime = formatYear(res.time, 'YYYY-MM-DD HH:MM:SS');
-    const records = [...getRecords(res.sender_id, myId), { ...res, time: newTime }];
-    setRecords(records, res.sender_id, myId);
+    const records = [...getRecords(peerId, myId), { ...res, time: newTime }];
+    setRecords(records, peerId, myId);
+    if (options?.updateUnread === false) return;
+    if (peerId === selectedId) {
+      markChatRead(peerId);
+      markChatConversationRead(peerId).catch((err) =>
+        console.error('标记私信已读失败:', err),
+      );
+    } else {
+      markChatUnread(peerId);
+    }
   };
 
   const webSocketInit = () => {
     const token = localStorage.getItem('token') as string;
     const socket = new WS(token);
-    const unsubscribe = socket.subscribe(handleSocketMessage);
+    const unsubscribe = socket.subscribe((data) =>
+      handleSocketMessage(data, { updateUnread: false }),
+    );
     setWS(socket);
     return unsubscribe;
   };
@@ -238,14 +257,16 @@ const DesktopChat: React.FC = () => {
     };
     initContacts();
 
-    const unsubscribe = ws ? (ws as WS).subscribe(handleSocketMessage) : webSocketInit();
+    const unsubscribe = ws
+      ? (ws as WS).subscribe((data) => handleSocketMessage(data, { updateUnread: false }))
+      : webSocketInit();
 
     name ? useDocTitle(`${name} - 轻风高谊 - 茶馆`) : useDocTitle(`轻风高谊 - 茶馆`);
 
     return () => {
       unsubscribe?.();
     };
-  }, [myId, ws, name]);
+  }, [myId, ws, name, selectedId]);
 
   return (
     <>
