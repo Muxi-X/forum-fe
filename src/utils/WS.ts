@@ -25,7 +25,8 @@ const resolveWSURL = () => {
   if (import.meta.env.DEV) {
     return 'ws://localhost:8080/api/v1/chat/ws';
   }
-  return 'wss://forum.muxistudio.xyz/api/v1/chat/ws';
+  const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+  return `${protocol}//${window.location.host}/api/v1/chat/ws`;
 };
 
 class WS {
