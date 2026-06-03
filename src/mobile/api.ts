@@ -35,6 +35,7 @@ const request = <T>(
   });
 
 const listTimeoutMs = 12000;
+const publishedListTimeoutMs = 70000;
 
 export type MobileUser = {
   id?: number;
@@ -195,7 +196,7 @@ export const mobileApi = {
     published: (userId: number, query?: Record<string, QueryValue>) =>
       request<{ posts?: MobilePost[] }>(`/post/published/${userId}`, {
         query,
-        timeoutMs: listTimeoutMs,
+        timeoutMs: publishedListTimeoutMs,
       }),
   },
   comments: {
