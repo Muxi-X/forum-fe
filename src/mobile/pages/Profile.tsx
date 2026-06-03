@@ -544,6 +544,8 @@ const Profile: React.FC = () => {
   const [sectionsLoading, setSectionsLoading] = useState(false);
   const [error, setError] = useState('');
   const visibleStateTargetRef = useRef<number | undefined>(undefined);
+  const mountedRef = useRef(true);
+  const loadVersionRef = useRef(0);
   const isMine = Boolean(
     !userId ||
       (currentUserId && userId === currentUserId) ||
@@ -600,6 +602,9 @@ const Profile: React.FC = () => {
   };
 
   const load = async (options?: { force?: boolean }) => {
+    const loadVersion = ++loadVersionRef.current;
+    const isCurrentLoad = () =>
+      mountedRef.current && loadVersionRef.current === loadVersion;
     const targetBeforeResolve = userId || currentUserId;
     const targetIsMine = Boolean(!userId || (currentUserId && userId === currentUserId));
     const cached =
@@ -641,6 +646,7 @@ const Profile: React.FC = () => {
     if (!resolvedCurrentUserId) {
       try {
         const myProfileRes = await mobileApi.user.myProfile();
+        if (!isCurrentLoad()) return;
         if (myProfileRes.code === 0 && myProfileRes.data.id) {
           resolvedCurrentUserId = myProfileRes.data.id;
           setCurrentUserId(resolvedCurrentUserId);
@@ -666,12 +672,14 @@ const Profile: React.FC = () => {
       const profileRes = target
         ? await mobileApi.user.profile(target)
         : await mobileApi.user.myProfile();
+      if (!isCurrentLoad()) return;
       if (profileRes.code === 0) nextProfile = profileRes.data;
       else setError(profileRes.message || '资料加载失败');
     } catch (error) {
       if (import.meta.env.DEV) {
         try {
           const myProfileRes = await mobileApi.user.myProfile();
+          if (!isCurrentLoad()) return;
           if (myProfileRes.code === 0) nextProfile = myProfileRes.data;
         } catch {
           nextProfile = fallbackProfile(target);
@@ -681,6 +689,7 @@ const Profile: React.FC = () => {
 
     const effectiveProfile = nextProfile || fallbackProfile(target);
     const effectiveId = effectiveProfile.id || target;
+    if (!isCurrentLoad()) return;
     setProfile(effectiveProfile);
 
     if (!effectiveId) {
@@ -694,6 +703,7 @@ const Profile: React.FC = () => {
       mobileApi.collection.list(effectiveId, { limit: 3, page: 0 }),
       mobileApi.sipScore.collected(effectiveId, { limit: 3, page: 0 }),
     ]);
+    if (!isCurrentLoad()) return;
     const nextPosts =
       postsRes.status === 'fulfilled' && postsRes.value.code === 0
         ? applyStoredPostStatPatches(postsRes.value.data.posts || [])
@@ -775,6 +785,14 @@ const Profile: React.FC = () => {
     setSectionsLoading(false);
     setLoading(false);
   };
+
+  useLayoutEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+      loadVersionRef.current += 1;
+    };
+  }, []);
 
   useLayoutEffect(() => {
     const nextTarget = userId || currentUserId;
@@ -938,6 +956,11 @@ const Profile: React.FC = () => {
     nav('/login');
   };
 
+  const goBack = () => {
+    loadVersionRef.current += 1;
+    nav(-1);
+  };
+
   const refreshProfile = async () => {
     const target = profile?.id || userId || currentUserId;
     emitMobileProfileRefresh(target ? Number(target) : undefined);
@@ -973,7 +996,7 @@ const Profile: React.FC = () => {
       <PullToRefresh disabled={loading} onRefresh={refreshProfile}>
         <Hero>
           {!isMine ? (
-            <HeroBackButton type="button" onClick={() => nav(-1)} aria-label="返回">
+            <HeroBackButton type="button" onClick={goBack} aria-label="返回">
               <img src={mastergoAssets.icons.backButtonDark} alt="" />
             </HeroBackButton>
           ) : null}
