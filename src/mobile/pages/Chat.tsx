@@ -8,6 +8,7 @@ import { mobilePalette, mobileRadius, PrimaryButton } from '../styles';
 import { mobileApi, MobileUser } from '../api';
 import useProfile from 'store/useProfile';
 import useWS from 'store/useWS';
+import useNotification from 'store/useNotification';
 import WS, { MsgResponse } from 'utils/WS';
 import moment from 'utils/moment';
 
@@ -70,6 +71,7 @@ const Chat: React.FC = () => {
   const targetId = Number(searchParams.get('target_id') || (state as any)?.id || 0);
   const { userProfile } = useProfile();
   const { ws, setWS } = useWS();
+  const { markChatRead } = useNotification();
   const [target, setTarget] = useState<MobileUser | null>(null);
   const [records, setRecords] = useState<MsgResponse[]>([]);
   const [text, setText] = useState('');
@@ -95,15 +97,17 @@ const Chat: React.FC = () => {
       socket = new WS(localStorage.getItem('token') || '');
       setWS(socket);
     }
-    if (socket.ws) {
-      socket.ws.onmessage = (event) => {
-        const data = JSON.parse(event.data) as MsgResponse;
-        if (data.sender_id === targetId || data.receiver_id === targetId) {
-          setRecords((prev) => [...prev, data]);
-        }
-      };
+    if (targetId) {
+      markChatRead(targetId);
     }
-  }, [ws, targetId]);
+    const unsubscribe = socket.subscribe((data) => {
+      if (data.sender_id === targetId || data.receiver_id === targetId) {
+        setRecords((prev) => [...prev, data]);
+        markChatRead(targetId);
+      }
+    });
+    return unsubscribe;
+  }, [ws, targetId, setWS, markChatRead]);
 
   const send = () => {
     if (!text.trim() || !targetId) return;

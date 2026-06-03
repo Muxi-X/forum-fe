@@ -19,6 +19,7 @@ import BackToTopButton from '../components/BackToTopButton';
 import DesignIcon from '../components/DesignIcon';
 import { mobileMotion, mobilePalette, mobileRadius, Section } from '../styles';
 import { mobileApi, MobilePost, MobileUser, SipScoreWithEntries } from '../api';
+import { refreshNotificationStore } from '../notificationSync';
 import {
   emitMobileFollowPatch,
   getFollowRevision,
@@ -499,7 +500,7 @@ const Profile: React.FC = () => {
   const userId = Number(user_id);
   const nav = useNavigate();
   const myId = Number(localStorage.getItem('userId')) || 0;
-  const { unreadCount } = useNotification();
+  const { totalUnreadCount } = useNotification();
   const initialTargetId = userId || myId;
   const isInitialMine = Boolean(!userId || (myId && userId === myId));
   const hasInitialProfileSession = hasActiveMobileProfileSession(
@@ -543,6 +544,7 @@ const Profile: React.FC = () => {
   const [loading, setLoading] = useState(!initialCache);
   const [sectionsLoading, setSectionsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [profileHasUnread, setProfileHasUnread] = useState(false);
   const visibleStateTargetRef = useRef<number | undefined>(undefined);
   const mountedRef = useRef(true);
   const loadVersionRef = useRef(0);
@@ -912,6 +914,39 @@ const Profile: React.FC = () => {
   }, []);
 
   useEffect(() => {
+    if (!isMine) return;
+    let stopped = false;
+    const refreshUnread = () => {
+      if (stopped || !localStorage.getItem('token')) return;
+      refreshNotificationStore()
+        .then((notifications) => {
+          if (!stopped) {
+            setProfileHasUnread(notifications.some((notice) => !notice.read));
+          }
+        })
+        .catch((err) => {
+          console.error('刷新通知红点失败:', err);
+        });
+    };
+    const handleVisible = () => {
+      if (document.visibilityState === 'visible') {
+        refreshUnread();
+      }
+    };
+
+    refreshUnread();
+    window.addEventListener('focus', refreshUnread);
+    document.addEventListener('visibilitychange', handleVisible);
+    const timer = window.setInterval(refreshUnread, 12000);
+    return () => {
+      stopped = true;
+      window.clearInterval(timer);
+      window.removeEventListener('focus', refreshUnread);
+      document.removeEventListener('visibilitychange', handleVisible);
+    };
+  }, [isMine]);
+
+  useEffect(() => {
     if (!toast) return;
     const timer = window.setTimeout(() => setToast(''), 1800);
     return () => window.clearTimeout(timer);
@@ -1008,7 +1043,9 @@ const Profile: React.FC = () => {
                 aria-label="消息"
               >
                 <DesignIcon name="bell" size={23} />
-                {unreadCount > 0 ? <span className="dot" /> : null}
+                {totalUnreadCount > 0 || profileHasUnread ? (
+                  <span className="dot" />
+                ) : null}
               </TitleIconButton>
             ) : null}
           </HeroActions>

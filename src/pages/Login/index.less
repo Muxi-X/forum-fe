@@ -705,13 +705,16 @@
 
   @media (max-width: 870px) {
     .container {
-      min-height: 800px;
-      height: 100vh;
+      min-height: 100dvh;
+      height: 100dvh;
+      overflow-y: auto;
+      overflow-x: hidden;
     }
     .signin-signup {
       width: 100%;
-      top: 95%;
-      transform: translate(-50%, -100%);
+      top: auto;
+      bottom: 24px;
+      transform: translateX(-50%);
       transition: 1s 0.8s ease-in-out;
     }
 
@@ -801,8 +804,9 @@
     }
 
     .container.sign-up-mode .signin-signup {
-      top: 5%;
-      transform: translate(-50%, 0);
+      top: 24px;
+      bottom: auto;
+      transform: translateX(-50%);
     }
 
     .container.flow-mode {
@@ -810,7 +814,7 @@
     }
 
     .container.flow-mode .signin-signup {
-      top: 89%;
+      bottom: 20px;
     }
 
     .container.flow-mode .panels-container {
@@ -855,8 +859,40 @@
 
   @media (max-width: 570px) {
     .auth-stage {
+      max-width: min(430px, calc(100vw - 48px));
+      padding: 26px 28px 24px;
+      border-radius: 24px;
       box-shadow: 0 14px 34px rgba(37, 62, 114, 0.08);
       border-color: rgba(68, 129, 235, 0.08);
+    }
+
+    .auth-visual {
+      height: clamp(88px, 20vh, 128px);
+      margin: -10px 0 16px;
+    }
+
+    .auth-heading {
+      margin-bottom: 20px;
+    }
+
+    .title {
+      font-size: clamp(1.55em, 8vw, 2em);
+      line-height: 1.18;
+    }
+
+    .auth-subtitle {
+      margin-top: 10px;
+      font-size: 0.88em;
+      line-height: 1.55;
+    }
+
+    .stage-submit {
+      height: 46px;
+      margin-top: 4px;
+    }
+
+    .auth-switch-link {
+      margin-top: 12px;
     }
 
     .panels-container {
@@ -878,6 +914,38 @@
     .container.sign-up-mode .right-panel {
       display: flex;
       grid-row: 2 / 3;
+    }
+  }
+
+  @media (max-width: 570px) and (max-height: 760px) {
+    .container {
+      min-height: 760px;
+    }
+
+    .panel {
+      padding-top: 1.8rem;
+      padding-bottom: 1rem;
+    }
+
+    .image {
+      width: 158px;
+    }
+
+    .signin-signup {
+      bottom: 18px;
+    }
+
+    .auth-stage {
+      padding: 22px 24px 22px;
+    }
+
+    .auth-visual {
+      height: 82px;
+      margin-bottom: 12px;
+    }
+
+    .auth-heading {
+      margin-bottom: 16px;
     }
   }
 

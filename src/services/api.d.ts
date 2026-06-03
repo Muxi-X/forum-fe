@@ -1394,5 +1394,24 @@ login the team-forum
 
       export function request(params: Params, options?: any): Promise<Response>;
     }
+
+    /**
+     * 标记 private message 已读
+     * /user/private_message/read
+     */
+    export namespace patchUserPrivateMessageRead {
+      export class Params {
+        /** message_id */
+        id?: string;
+      }
+
+      export type HooksParams = (() => Params) | Params;
+
+      export type Response = ResponseTypeWarpper<defs.Response>;
+
+      export const method: string;
+
+      export function request(params: Params, options?: any): Promise<Response>;
+    }
   }
 }

@@ -119,7 +119,7 @@ const MobileTopBar: React.FC<{
   borderless?: boolean;
 }> = ({ title, back, right, onRight, borderless }) => {
   const nav = useNavigate();
-  const { unreadCount } = useNotification();
+  const { totalUnreadCount } = useNotification();
   return (
     <Bar borderless={borderless}>
       <IconButton
@@ -143,7 +143,7 @@ const MobileTopBar: React.FC<{
       {right || onRight ? (
         <IconButton type="button" onClick={onRight} aria-label="操作">
           <RightIcon action={right} />
-          {right === 'notice' && unreadCount > 0 ? <span className="dot" /> : null}
+          {right === 'notice' && totalUnreadCount > 0 ? <span className="dot" /> : null}
         </IconButton>
       ) : (
         <RightSlot aria-hidden="true" />

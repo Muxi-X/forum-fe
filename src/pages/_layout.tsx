@@ -10,6 +10,7 @@ import Footer from 'components/Footer';
 import ResultPage from './Result';
 import media from 'styles/media';
 import useChat from 'store/useChat';
+import useNotification from 'store/useNotification';
 import { useDeviceType } from 'hooks/useDeviceType';
 import { hasAuthToken, isLoginRoute } from 'utils/auth';
 
@@ -48,6 +49,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   };
   const { setTip, setWS, ws } = useWS();
   const { setSelectedId } = useChat();
+  const { markChatUnread } = useNotification();
   const { showHeader } = useShowHeader();
   const isPhone = useDeviceType() === 'phone';
   const shouldRedirectToLogin = !isLoginRoute(pathname) && !hasAuthToken();
@@ -55,16 +57,20 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const webSocketInit = () => {
     const token = localStorage.getItem('token') as string;
     const WebSocket = new WS(token);
-    if (WebSocket.ws) {
-      WebSocket.ws.onmessage = (res) => {
-        console.log(res.data);
-        const data: MsgResponse = JSON.parse(res.data);
-        if (typeof data?.sender_id === 'number') {
-          setTip(true);
-          setSelectedId(data.sender_id);
+    WebSocket.subscribe((data: MsgResponse) => {
+      if (typeof data?.sender_id === 'number') {
+        const params = new URLSearchParams(window.location.search);
+        const activeChatTargetId =
+          window.location.pathname === '/user/chat'
+            ? Number(params.get('target_id') || 0)
+            : 0;
+        setTip(true);
+        setSelectedId(data.sender_id);
+        if (activeChatTargetId !== data.sender_id) {
+          markChatUnread(data.sender_id);
         }
-      };
-    }
+      }
+    });
     setWS(WebSocket);
   };
 

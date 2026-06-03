@@ -11,11 +11,13 @@ export interface MsgResponse {
   content: string;
   sender_id: number;
   receiver_id: number;
+  sender?: number;
   time: string;
   type_name: 'str' | 'file';
 }
 
 const { parse, stringify } = JSON;
+type MessageHandler = (message: MsgResponse) => void;
 
 const resolveWSURL = () => {
   const envURL = import.meta.env.VITE_WS_URL?.trim();
@@ -32,6 +34,7 @@ class WS {
   ws: WebSocket | null = null;
   url = resolveWSURL();
   token: string;
+  listeners = new Set<MessageHandler>();
   reconnectAttempts = 0; //当前ws重连次数
   maxReconnectAttempts = 3; //最大ws重连次数
   reconnectTimeout: any = null; //重连延时器
@@ -51,6 +54,18 @@ class WS {
       this.clear();
     };
 
+    this.ws.onmessage = (event) => {
+      try {
+        const data = parse(event.data) as MsgResponse;
+        if (!data.sender_id && data.sender) {
+          data.sender_id = data.sender;
+        }
+        this.listeners.forEach((listener) => listener(data));
+      } catch (error) {
+        console.error('WebSocket 消息解析失败', error);
+      }
+    };
+
     this.ws.onerror = (err) => {
       console.error('WebSocket 连接错误', err);
     };
@@ -63,6 +78,13 @@ class WS {
 
   send(message: Message) {
     this.ws?.send(stringify(message));
+  }
+
+  subscribe(listener: MessageHandler) {
+    this.listeners.add(listener);
+    return () => {
+      this.listeners.delete(listener);
+    };
   }
 
   reconnect() {
