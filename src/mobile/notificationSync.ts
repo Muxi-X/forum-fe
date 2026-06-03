@@ -1,6 +1,8 @@
 import useNotification, { Notification } from 'store/useNotification';
 import { mobileApi, PrivateMessage } from './api';
 
+export const notificationPollIntervalMs = 5000;
+
 export const noticeTitle: Record<string, string> = {
   like: '有人点赞了你的帖子',
   collection: '有人收藏了你的帖子',

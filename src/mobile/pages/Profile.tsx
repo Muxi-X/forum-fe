@@ -19,7 +19,10 @@ import BackToTopButton from '../components/BackToTopButton';
 import DesignIcon from '../components/DesignIcon';
 import { mobileMotion, mobilePalette, mobileRadius, Section } from '../styles';
 import { mobileApi, MobilePost, MobileUser, SipScoreWithEntries } from '../api';
-import { refreshNotificationStore } from '../notificationSync';
+import {
+  notificationPollIntervalMs,
+  refreshNotificationStore,
+} from '../notificationSync';
 import {
   emitMobileFollowPatch,
   getFollowRevision,
@@ -937,7 +940,7 @@ const Profile: React.FC = () => {
     refreshUnread();
     window.addEventListener('focus', refreshUnread);
     document.addEventListener('visibilitychange', handleVisible);
-    const timer = window.setInterval(refreshUnread, 12000);
+    const timer = window.setInterval(refreshUnread, notificationPollIntervalMs);
     return () => {
       stopped = true;
       window.clearInterval(timer);

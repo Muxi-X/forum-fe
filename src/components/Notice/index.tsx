@@ -1,7 +1,10 @@
 import React, { useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import useNotification from 'store/useNotification';
-import { refreshNotificationStore } from 'mobile/notificationSync';
+import {
+  notificationPollIntervalMs,
+  refreshNotificationStore,
+} from 'mobile/notificationSync';
 import { hasAuthToken, isLoginRoute } from 'utils/auth';
 
 const GlobalNotificationListener: React.FC = () => {
@@ -24,7 +27,7 @@ const GlobalNotificationListener: React.FC = () => {
     getNotifications();
     pollingRef.current = setInterval(() => {
       getNotifications();
-    }, 12000);
+    }, notificationPollIntervalMs);
 
     return () => {
       if (pollingRef.current) {
