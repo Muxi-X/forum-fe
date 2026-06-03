@@ -7,8 +7,6 @@ import useRequest from 'hooks/useRequest';
 import useForm from 'hooks/useForm';
 import useDocTitle from 'hooks/useDocTitle';
 import useProfile from 'store/useProfile';
-import useWS from 'store/useWS';
-import WS from 'utils/WS';
 import ResultPage from 'pages/Result';
 import './index.less';
 
@@ -129,7 +127,6 @@ const Login: React.FC = () => {
   const handledStudentOAuthCodeRef = useRef('');
   const handledTeamOAuthCodeRef = useRef('');
   const { setUser, setToken } = useProfile();
-  const { setTip, setWS } = useWS();
 
   useDocTitle(`惠然之顾 - 茶馆`);
 
@@ -189,17 +186,6 @@ const Login: React.FC = () => {
     manual: true,
   });
 
-  const webSocketInit = () => {
-    const token = localStorage.getItem('token') as string;
-    const WebSocket = new WS(token);
-    if (WebSocket.ws) {
-      WebSocket.ws.onmessage = () => {
-        setTip(true);
-      };
-      setWS(WebSocket);
-    }
-  };
-
   const finishLogin = async (token: string) => {
     message.success('登录成功');
     localStorage.setItem('token', token);
@@ -212,7 +198,6 @@ const Login: React.FC = () => {
     }
     const qiniu = await getQiniuToken({});
     setToken(qiniu.data.token as string);
-    webSocketInit();
     nav('/');
   };
 

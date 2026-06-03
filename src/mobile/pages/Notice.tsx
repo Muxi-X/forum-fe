@@ -10,6 +10,13 @@ import MobileAvatar from '../components/MobileAvatar';
 import { mobileMotion, mobilePalette, mobileRadius, Section } from '../styles';
 import { ChatUser, mobileApi, PrivateMessage } from '../api';
 import useNotification from 'store/useNotification';
+import {
+  buildNoticeContent,
+  fetchInteractionNotifications,
+  getNoticeTime,
+  noticeTitle,
+  toStoreNotifications,
+} from '../notificationSync';
 
 const List = styled(Section)`
   margin-top: 0;
@@ -23,7 +30,7 @@ const Item = styled.article`
   width: calc(100% - 28px);
   min-height: 72px;
   display: grid;
-  grid-template-columns: 42px minmax(0, 1fr) auto;
+  grid-template-columns: 42px minmax(0, 1fr);
   gap: 12px;
   align-items: center;
   margin: 0 auto 10px;
@@ -58,7 +65,7 @@ const Toolbar = styled.div`
   margin: 0 auto 8px;
 `;
 
-const ClearButton = styled.button`
+const MarkReadButton = styled.button`
   height: 30px;
   padding: 0 11px;
   border-radius: ${mobileRadius.pill};
@@ -72,43 +79,25 @@ const ClearButton = styled.button`
   }
 `;
 
-const DeleteButton = styled.button`
-  min-width: 42px;
-  height: 30px;
-  padding: 0 9px;
-  border-radius: ${mobileRadius.pill};
-  background: rgba(60, 60, 67, 0.06);
-  color: ${mobilePalette.muted};
-  font-size: 12px;
+const ContentWrap = styled.div`
+  min-width: 0;
 `;
 
-const noticeTitle: Record<string, string> = {
-  like: '有人点赞了你的帖子',
-  collection: '有人收藏了你的帖子',
-  comment: '有人评论了你的帖子',
-  reply_comment: '有人回复了评论',
+const DotBadge = styled(Badge)`
+  .ant-badge-dot {
+    right: 2px;
+    top: 3px;
+  }
+`;
+
+const getChatTime = (user: ChatUser, index = 0) => {
+  const time = user.last_message_time ? new Date(user.last_message_time).getTime() : 0;
+  return Number.isFinite(time) && time > 0 ? time : Date.now() - index;
 };
 
-const buildNoticeContent = (item: PrivateMessage) => {
-  const sender = item.sender_name || '茶友';
-  const title = item.post_title ? `《${item.post_title}》` : '你的帖子';
-  const content = item.content || item.comment_content || '';
-  if (item.type === 'like') return `${sender} 点赞了 ${title}`;
-  if (item.type === 'collection') return `${sender} 收藏了 ${title}`;
-  if (item.type === 'reply_comment')
-    return `${sender} 回复了 ${title} 下的评论：${content}`;
-  return `${sender} 评论了 ${title}${content ? `：${content}` : ''}`;
-};
-
-const toStoreNotifications = (items: PrivateMessage[]) =>
-  items.map((item, index) => ({
-    id: item.id || `${item.post_id}_${item.type}_${index}`,
-    postId: Number(item.post_id),
-    type: item.type as any,
-    content: buildNoticeContent(item),
-    read: false,
-    timestamp: Date.now() - index,
-  }));
+type ListEntry =
+  | { kind: 'notice'; item: PrivateMessage; time: number; key: string }
+  | { kind: 'chat'; item: ChatUser; time: number; key: string };
 
 const Notice: React.FC = () => {
   const nav = useNavigate();
@@ -118,18 +107,21 @@ const Notice: React.FC = () => {
   const [loadingNotice, setLoadingNotice] = useState(false);
   const [loadingChat, setLoadingChat] = useState(false);
   const [error, setError] = useState('');
-  const { replaceNotifications } = useNotification();
+  const {
+    replaceNotifications,
+    markAsRead,
+    markAllAsRead,
+    markChatRead,
+    markAllChatRead,
+    chatUnread,
+    totalUnreadCount,
+  } = useNotification();
 
   const loadNotifications = async () => {
     setLoadingNotice(true);
     setError('');
     try {
-      const res = await mobileApi.user.privateMessages({ limit: 80, page: 0 });
-      if (res.code !== 0) {
-        setError(res.message || '通知加载失败');
-        return;
-      }
-      const next = (res.data.messages || []).filter((item) => item.post_id && item.type);
+      const next = await fetchInteractionNotifications();
       setNotifications(next);
       replaceNotifications(toStoreNotifications(next));
     } catch (err) {
@@ -161,31 +153,64 @@ const Notice: React.FC = () => {
     return true;
   });
 
-  const removeNotice = async (event: React.MouseEvent, item: PrivateMessage) => {
-    event.stopPropagation();
+  const allEntries: ListEntry[] = [
+    ...notifications.map((item, index) => ({
+      kind: 'notice' as const,
+      item,
+      time: getNoticeTime(item, index),
+      key: item.id || `notice_${item.post_id}_${item.type}_${index}`,
+    })),
+    ...chatUsers.map((item, index) => ({
+      kind: 'chat' as const,
+      item,
+      time: getChatTime(item, index),
+      key: `chat_${item.id || index}`,
+    })),
+  ].sort((a, b) => b.time - a.time);
+
+  const markNoticeRead = async (item: PrivateMessage) => {
     if (!item.id) {
-      message.warning('这条通知暂时不能单独忽略');
       return;
     }
-    const res = await mobileApi.user.deletePrivateMessage(item.id);
-    if (res.code !== 0) {
-      message.error(res.message || '删除失败');
-      return;
-    }
-    const next = notifications.filter((notice) => notice.id !== item.id);
+    const next = notifications.map((notice) =>
+      notice.id === item.id ? { ...notice, read: true } : notice,
+    );
     setNotifications(next);
     replaceNotifications(toStoreNotifications(next));
+    markAsRead(item.id);
+    const res = await mobileApi.user.markPrivateMessageRead(item.id);
+    if (res.code !== 0) {
+      console.error('标记通知已读失败:', res.message);
+    }
   };
 
-  const clearAll = async () => {
-    const res = await mobileApi.user.deletePrivateMessage();
+  const markAllRead = async () => {
+    const next = notifications.map((notice) => ({ ...notice, read: true }));
+    setNotifications(next);
+    replaceNotifications(toStoreNotifications(next));
+    markAllAsRead();
+    markAllChatRead();
+    const res = await mobileApi.user.markPrivateMessageRead();
     if (res.code !== 0) {
-      message.error(res.message || '清空失败');
+      message.warning('已本地标记，刷新后可能恢复');
       return;
     }
-    setNotifications([]);
-    replaceNotifications([]);
-    message.success('已清空通知');
+    message.success('已全部已读');
+  };
+
+  const openNotice = async (item: PrivateMessage) => {
+    if (!item.read) {
+      await markNoticeRead(item);
+    }
+    const postId = Number(item.post_id);
+    if (postId) nav(`/article/${postId}`);
+  };
+
+  const openChat = (user: ChatUser) => {
+    if (user.id) {
+      markChatRead(user.id);
+      nav(`/user/chat?target_id=${user.id}`);
+    }
   };
 
   return (
@@ -206,12 +231,14 @@ const Notice: React.FC = () => {
         chatUsers.length ? (
           <List>
             {chatUsers.map((user) => (
-              <Item key={user.id} onClick={() => nav(`/user/chat?target_id=${user.id}`)}>
-                <MobileAvatar url={user.avatar} size={42} />
-                <div>
+              <Item key={user.id} onClick={() => openChat(user)}>
+                <DotBadge dot={Boolean(user.id && chatUnread[user.id])}>
+                  <MobileAvatar url={user.avatar} size={42} />
+                </DotBadge>
+                <ContentWrap>
                   <h3>{user.name || '茶友'}</h3>
-                  <p>查看私信记录</p>
-                </div>
+                  <p>{user.last_message || '查看私信记录'}</p>
+                </ContentWrap>
               </Item>
             ))}
           </List>
@@ -225,33 +252,53 @@ const Notice: React.FC = () => {
         <LoadingState text="正在读取通知..." />
       ) : error ? (
         <EmptyState title="通知加载失败" text={error} />
-      ) : filtered.length ? (
+      ) : tab === 'all' && allEntries.length ? (
         <List>
-          {tab === 'all' && notifications.length ? (
+          {totalUnreadCount > 0 ? (
             <Toolbar>
-              <ClearButton type="button" onClick={clearAll}>
-                全部清空
-              </ClearButton>
+              <MarkReadButton type="button" onClick={markAllRead}>
+                全部已读
+              </MarkReadButton>
             </Toolbar>
           ) : null}
+          {allEntries.map((entry) =>
+            entry.kind === 'chat' ? (
+              <Item key={entry.key} onClick={() => openChat(entry.item)}>
+                <DotBadge dot={Boolean(entry.item.id && chatUnread[entry.item.id])}>
+                  <MobileAvatar url={entry.item.avatar} size={42} />
+                </DotBadge>
+                <ContentWrap>
+                  <h3>{entry.item.name || '茶友'}</h3>
+                  <p>{entry.item.last_message || '查看私信记录'}</p>
+                </ContentWrap>
+              </Item>
+            ) : (
+              <Item key={entry.key} onClick={() => openNotice(entry.item)}>
+                <DotBadge dot={!entry.item.read}>
+                  <MobileAvatar url={entry.item.avatar} size={42} />
+                </DotBadge>
+                <ContentWrap>
+                  <h3>{noticeTitle[entry.item.type || ''] || '新的通知'}</h3>
+                  <p>{buildNoticeContent(entry.item)}</p>
+                </ContentWrap>
+              </Item>
+            ),
+          )}
+        </List>
+      ) : filtered.length ? (
+        <List>
           {filtered.map((item, index) => (
             <Item
               key={item.id || `${item.post_id}_${index}`}
-              onClick={() => {
-                const postId = Number(item.post_id);
-                if (postId) nav(`/article/${postId}`);
-              }}
+              onClick={() => openNotice(item)}
             >
-              <Badge dot>
+              <DotBadge dot={!item.read}>
                 <MobileAvatar url={item.avatar} size={42} />
-              </Badge>
-              <div>
+              </DotBadge>
+              <ContentWrap>
                 <h3>{noticeTitle[item.type || ''] || '新的通知'}</h3>
                 <p>{buildNoticeContent(item)}</p>
-              </div>
-              <DeleteButton type="button" onClick={(event) => removeNotice(event, item)}>
-                忽略
-              </DeleteButton>
+              </ContentWrap>
             </Item>
           ))}
         </List>

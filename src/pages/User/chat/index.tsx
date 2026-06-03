@@ -51,7 +51,7 @@ const DesktopChat: React.FC = () => {
   const name = userProfile.name;
   const { setContacts, setSelectedId, contacts, getRecords, setRecords, selectedId } =
     chatStore;
-  const { ws, setTip, setWS } = useWS();
+  const { ws, setWS } = useWS();
   const { state } = useLocation();
   const { runAsync } = useRequest(API.user.getUserProfileById.request, { manual: true });
   const { runAsync: getHistory } = useRequest(API.chat.getHistoryById.request, {
@@ -60,19 +60,18 @@ const DesktopChat: React.FC = () => {
 
   const [loading, setLoading] = useState(true);
 
+  const handleSocketMessage = (res: MsgResponse) => {
+    const newTime = formatYear(res.time, 'YYYY-MM-DD HH:MM:SS');
+    const records = [...getRecords(res.sender_id, myId), { ...res, time: newTime }];
+    setRecords(records, res.sender_id, myId);
+  };
+
   const webSocketInit = () => {
     const token = localStorage.getItem('token') as string;
-    const WebSocket = new WS(token);
-    if (WebSocket.ws) {
-      WebSocket.ws.onmessage = (e) => {
-        const res = JSON.parse(e.data) as MsgResponse;
-        const newTime = formatYear(res.time, 'YYYY-MM-DD HH:MM:SS');
-        const records = [...getRecords(res.sender_id, myId), { ...res, time: newTime }];
-        setRecords(records, res.sender_id, myId);
-      };
-    }
-    setWS(WebSocket);
-    console.log(WebSocket);
+    const socket = new WS(token);
+    const unsubscribe = socket.subscribe(handleSocketMessage);
+    setWS(socket);
+    return unsubscribe;
   };
 
   const messageMerge = (messages: (MsgResponse | Message)[]) => {
@@ -239,28 +238,12 @@ const DesktopChat: React.FC = () => {
     };
     initContacts();
 
-    if (ws) {
-      (ws as WS).ws!.onmessage = (e) => {
-        const res = JSON.parse(e.data) as MsgResponse;
-        const newTime = formatYear(res.time, 'YYYY-MM-DD HH:MM:SS');
-        const records = [...getRecords(res.sender_id, myId), { ...res, time: newTime }];
-        setRecords(records, res.sender_id, myId);
-      };
-    } else {
-      webSocketInit();
-    }
+    const unsubscribe = ws ? (ws as WS).subscribe(handleSocketMessage) : webSocketInit();
 
     name ? useDocTitle(`${name} - 轻风高谊 - 茶馆`) : useDocTitle(`轻风高谊 - 茶馆`);
 
     return () => {
-      if (ws)
-        (ws as WS).ws!.onmessage = (res) => {
-          const data: MsgResponse = JSON.parse(res.data);
-          if (typeof data?.sender_id === 'number') {
-            setTip(true);
-            setSelectedId(data.sender_id);
-          }
-        };
+      unsubscribe?.();
     };
   }, [myId, ws, name]);
 

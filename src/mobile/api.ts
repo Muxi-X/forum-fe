@@ -166,12 +166,16 @@ export type PrivateMessage = {
   comment_content?: string;
   avatar?: string;
   sender_name?: string;
+  read?: boolean;
+  created_at?: string;
 };
 
 export type ChatUser = {
   id?: number;
   name?: string;
   avatar?: string;
+  last_message_time?: string;
+  last_message?: string;
 };
 
 export const mobileApi = {
@@ -251,6 +255,11 @@ export const mobileApi = {
       request<{ messages?: PrivateMessage[] }>('/user/private_message/list', { query }),
     sendPrivateMessage: (body: Record<string, unknown>) =>
       request<Record<string, never>>('/user/private_message', { method: 'POST', body }),
+    markPrivateMessageRead: (id?: string) =>
+      request<Record<string, never>>('/user/private_message/read', {
+        method: 'PATCH',
+        query: { id },
+      }),
     deletePrivateMessage: (id?: string) =>
       request<Record<string, never>>('/user/private_message', {
         method: 'DELETE',
