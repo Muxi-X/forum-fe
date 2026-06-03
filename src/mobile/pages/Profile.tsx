@@ -1,4 +1,4 @@
-import React, { useEffect, useLayoutEffect, useState } from 'react';
+import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import styled from 'styled-components';
 import {
   useLocation,
@@ -29,6 +29,15 @@ import { mastergoAssets } from '../assets/mastergo';
 import { clearAuthStorage } from '../../utils/auth';
 import useNotification from 'store/useNotification';
 import {
+  createMobileProfileSessionState,
+  emitMobileProfileRefresh,
+  getMobileProfileRefreshRevision,
+  hasActiveMobileProfileSession,
+  MOBILE_PROFILE_REFRESH_EVENT,
+  MobileProfileRefreshPatch,
+  MobileProfileRouteState,
+} from '../profileSession';
+import {
   applyPostStatPatch,
   applyStoredPostStatPatches,
   applyStoredSipScorePatches,
@@ -56,6 +65,7 @@ type ProfileCacheState = {
   followRevision: number;
   postRevision: number;
   sipScoreRevision: number;
+  profileRefreshRevision: number;
 };
 
 const profileCache = new Map<number, ProfileCacheState>();
@@ -67,6 +77,19 @@ export const clearMobileProfileCache = (profileId?: number) => {
   }
   profileCache.clear();
 };
+
+const profileRefreshListenerKey = '__forumMobileProfileRefreshListener';
+
+if (
+  typeof window !== 'undefined' &&
+  !(window as typeof window & Record<string, boolean>)[profileRefreshListenerKey]
+) {
+  (window as typeof window & Record<string, boolean>)[profileRefreshListenerKey] = true;
+  window.addEventListener(MOBILE_PROFILE_REFRESH_EVENT, (event) => {
+    const patch = (event as CustomEvent<MobileProfileRefreshPatch>).detail;
+    clearMobileProfileCache(patch?.userId);
+  });
+}
 
 export const applyMobileProfileFollowPatch = (patch: MobileFollowPatch) => {
   if (!patch?.targetUserId) return;
@@ -472,18 +495,29 @@ const profileListPath = (profileId: number | string, tab: string) =>
 const Profile: React.FC = () => {
   const { user_id } = useParams();
   const { state } = useLocation();
+  const routeState = state as MobileProfileRouteState | null;
   const userId = Number(user_id);
   const nav = useNavigate();
   const myId = Number(localStorage.getItem('userId')) || 0;
   const { unreadCount } = useNotification();
   const initialTargetId = userId || myId;
+  const isInitialMine = Boolean(!userId || (myId && userId === myId));
+  const hasInitialProfileSession = hasActiveMobileProfileSession(
+    routeState,
+    initialTargetId,
+  );
+  const canUseInitialCache =
+    !routeState?.refreshProfile && (isInitialMine || hasInitialProfileSession);
   const initialCacheCandidate = initialTargetId
     ? profileCache.get(initialTargetId)
     : undefined;
   const initialCache =
+    canUseInitialCache &&
     initialCacheCandidate &&
     initialCacheCandidate.postRevision === getPostRevision() &&
-    initialCacheCandidate.sipScoreRevision === getSipScoreRevision()
+    initialCacheCandidate.sipScoreRevision === getSipScoreRevision() &&
+    initialCacheCandidate.profileRefreshRevision ===
+      getMobileProfileRefreshRevision(initialTargetId)
       ? initialCacheCandidate
       : undefined;
   const [currentUserId, setCurrentUserId] = useState(initialCache?.currentUserId || myId);
@@ -509,6 +543,7 @@ const Profile: React.FC = () => {
   const [loading, setLoading] = useState(!initialCache);
   const [sectionsLoading, setSectionsLoading] = useState(false);
   const [error, setError] = useState('');
+  const visibleStateTargetRef = useRef<number | undefined>(undefined);
   const isMine = Boolean(
     !userId ||
       (currentUserId && userId === currentUserId) ||
@@ -516,16 +551,30 @@ const Profile: React.FC = () => {
   );
   const canViewCollection = isMine || profile?.is_public_collection_and_like !== false;
 
-  const remoteListState = () =>
-    isMine ? null : { forceReload: Date.now(), source: 'profile' };
+  const isProfileSessionFor = (targetId?: number) =>
+    hasActiveMobileProfileSession(routeState, targetId);
 
-  const resetVisibleStateForRoute = () => {
+  const shouldUseProfileCache = (isTargetMine: boolean, targetId?: number) =>
+    !routeState?.refreshProfile && (isTargetMine || isProfileSessionFor(targetId));
+
+  const internalListState = () =>
+    isMine
+      ? null
+      : isProfileSessionFor(profile?.id || userId)
+      ? routeState
+      : createMobileProfileSessionState(Number(profile?.id || userId));
+
+  const resetVisibleStateForRoute = (options?: { resetPanels?: boolean }) => {
     const nextTarget = userId || currentUserId;
+    const nextIsMine = Boolean(!userId || (currentUserId && userId === currentUserId));
     const cacheCandidate = nextTarget ? profileCache.get(nextTarget) : undefined;
     const cached =
+      shouldUseProfileCache(nextIsMine, nextTarget) &&
       cacheCandidate &&
       cacheCandidate.postRevision === getPostRevision() &&
-      cacheCandidate.sipScoreRevision === getSipScoreRevision()
+      cacheCandidate.sipScoreRevision === getSipScoreRevision() &&
+      cacheCandidate.profileRefreshRevision ===
+        getMobileProfileRefreshRevision(nextTarget)
         ? cacheCandidate
         : undefined;
     if (cached) {
@@ -542,22 +591,29 @@ const Profile: React.FC = () => {
       setCollectedRankings([]);
       setLoading(true);
     }
-    setExpanded({ posts: false, collections: false });
-    setCollectionExpanded({ posts: false, rankings: false });
+    if (options?.resetPanels !== false) {
+      setExpanded({ posts: false, collections: false });
+      setCollectionExpanded({ posts: false, rankings: false });
+    }
     setError('');
     setSectionsLoading(false);
   };
 
   const load = async (options?: { force?: boolean }) => {
     const targetBeforeResolve = userId || currentUserId;
+    const targetIsMine = Boolean(!userId || (currentUserId && userId === currentUserId));
     const cached =
-      !options?.force && targetBeforeResolve
+      shouldUseProfileCache(targetIsMine, targetBeforeResolve) &&
+      !options?.force &&
+      targetBeforeResolve
         ? profileCache.get(targetBeforeResolve)
         : undefined;
     if (
       cached &&
       cached.postRevision === getPostRevision() &&
-      cached.sipScoreRevision === getSipScoreRevision()
+      cached.sipScoreRevision === getSipScoreRevision() &&
+      cached.profileRefreshRevision ===
+        getMobileProfileRefreshRevision(targetBeforeResolve)
     ) {
       setProfile(cached.profile);
       const cachedPosts = applyStoredPostStatPatches(cached.posts);
@@ -688,6 +744,17 @@ const Profile: React.FC = () => {
     } else {
       setCollectedRankings([]);
     }
+    const effectiveIsMine = Boolean(
+      !userId || (resolvedCurrentUserId && Number(effectiveId) === resolvedCurrentUserId),
+    );
+    const shouldStartProfileSession = Boolean(
+      Number(effectiveId) &&
+        !effectiveIsMine &&
+        !isProfileSessionFor(Number(effectiveId)),
+    );
+    if (shouldStartProfileSession) {
+      emitMobileProfileRefresh(Number(effectiveId));
+    }
     profileCache.set(Number(effectiveId), {
       profile: effectiveProfile,
       posts: nextPosts,
@@ -697,20 +764,30 @@ const Profile: React.FC = () => {
       followRevision: getFollowRevision(),
       postRevision: getPostRevision(),
       sipScoreRevision: getSipScoreRevision(),
+      profileRefreshRevision: getMobileProfileRefreshRevision(effectiveId),
     });
+    if (shouldStartProfileSession) {
+      nav(`/user/${effectiveId}`, {
+        replace: true,
+        state: createMobileProfileSessionState(Number(effectiveId)),
+      });
+    }
     setSectionsLoading(false);
     setLoading(false);
   };
 
   useLayoutEffect(() => {
-    resetVisibleStateForRoute();
-    if ((state as any)?.refreshProfile) {
+    const nextTarget = userId || currentUserId;
+    const shouldResetPanels = visibleStateTargetRef.current !== nextTarget;
+    visibleStateTargetRef.current = nextTarget;
+    resetVisibleStateForRoute({ resetPanels: shouldResetPanels });
+    if (routeState?.refreshProfile) {
       refreshProfile();
       nav(`/user/${userId || currentUserId || ''}`, { replace: true, state: null });
       return;
     }
     load();
-  }, [userId, (state as any)?.refreshProfile]);
+  }, [userId, routeState?.refreshProfile, routeState?.profileSessionId]);
 
   useEffect(() => {
     const handlePostPatch = (event: Event) => {
@@ -863,7 +940,7 @@ const Profile: React.FC = () => {
 
   const refreshProfile = async () => {
     const target = profile?.id || userId || currentUserId;
-    if (target) profileCache.delete(Number(target));
+    emitMobileProfileRefresh(target ? Number(target) : undefined);
     await load({ force: true });
   };
 
@@ -927,7 +1004,7 @@ const Profile: React.FC = () => {
               <button
                 type="button"
                 onClick={() =>
-                  nav(`/user/${profileId}/following`, { state: remoteListState() })
+                  nav(`/user/${profileId}/following`, { state: internalListState() })
                 }
                 aria-label="查看关注列表"
               >
@@ -936,7 +1013,7 @@ const Profile: React.FC = () => {
               <button
                 type="button"
                 onClick={() =>
-                  nav(`/user/${profileId}/followers`, { state: remoteListState() })
+                  nav(`/user/${profileId}/followers`, { state: internalListState() })
                 }
                 aria-label="查看粉丝列表"
               >
@@ -989,7 +1066,7 @@ const Profile: React.FC = () => {
                     type="button"
                     onClick={() =>
                       nav(profileListPath(profileId, 'published'), {
-                        state: remoteListState(),
+                        state: internalListState(),
                       })
                     }
                   >
@@ -1064,7 +1141,7 @@ const Profile: React.FC = () => {
                           type="button"
                           onClick={() =>
                             nav(profileListPath(profileId, 'post'), {
-                              state: remoteListState(),
+                              state: internalListState(),
                             })
                           }
                         >
@@ -1129,7 +1206,7 @@ const Profile: React.FC = () => {
                           type="button"
                           onClick={() =>
                             nav(profileListPath(profileId, 'sipScore'), {
-                              state: remoteListState(),
+                              state: internalListState(),
                             })
                           }
                         >

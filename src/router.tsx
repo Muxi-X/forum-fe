@@ -1,5 +1,5 @@
 import React, { Suspense, useEffect } from 'react';
-import { BrowserRouter as Router, useRoutes } from 'react-router-dom';
+import { BrowserRouter as Router, useLocation, useRoutes } from 'react-router-dom';
 import routes from '~react-pages';
 import useRequest from 'hooks/useRequest';
 import Header from 'components/Header/header';
@@ -11,8 +11,13 @@ import Loading from 'components/Loading';
 import GlobalNotificationListener from 'components/Notice';
 import { useDeviceType } from 'hooks/useDeviceType';
 import { hasAuthToken, isLoginRoute } from 'utils/auth';
+import { syncMobileProfileSessionForRoute } from 'mobile/profileSession';
 
 const Routes = () => {
+  const location = useLocation();
+
+  syncMobileProfileSessionForRoute(location.pathname, location.search);
+
   return (
     <Layout>
       <Suspense

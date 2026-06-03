@@ -26,6 +26,7 @@ import {
   SipScoreEntryPatch,
   SipScorePatch,
 } from '../postEvents';
+import { useMobileScrollMemory } from '../scrollMemory';
 
 const PREVIEW_ENTRY_LIMIT = 3;
 const BRAND_LOGO = 'https://ossforum.muxixyz.com/logo1.png';
@@ -348,6 +349,12 @@ const SipScore: React.FC = () => {
   const [loaded, setLoaded] = useState(sipScoreCache.loaded);
   const [error, setError] = useState('');
   const [pressedCardKey, setPressedCardKey] = useState<string | null>(null);
+
+  useMobileScrollMemory({
+    key: '/sip-score',
+    restoreToken: `${sort}:${keyword}:${items.length}:${loaded}`,
+    restoreOnPush: true,
+  });
 
   const load = async () => {
     setLoading(true);

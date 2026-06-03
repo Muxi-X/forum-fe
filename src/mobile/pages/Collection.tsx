@@ -28,6 +28,14 @@ import {
   removeUncollectedSipScores,
   SipScorePatch,
 } from '../postEvents';
+import {
+  emitMobileProfileRefresh,
+  getMobileProfileRefreshRevision,
+  hasActiveMobileProfileSession,
+  MOBILE_PROFILE_REFRESH_EVENT,
+  MobileProfileRefreshPatch,
+  MobileProfileRouteState,
+} from '../profileSession';
 
 const List = styled.div`
   display: grid;
@@ -87,6 +95,7 @@ type CollectionCacheState = {
   rankings: SipScoreWithEntries[];
   error: string;
   privacyBlocked: boolean;
+  profileRefreshRevision: number;
 };
 
 const collectionCache = new Map<string, CollectionCacheState>();
@@ -95,6 +104,30 @@ const normalizeTab = (value: string): CollectionTab =>
   value === 'published' || value === 'sipScore' ? value : 'post';
 
 const collectionCacheKey = (userId: number, tab: CollectionTab) => `${userId}:${tab}`;
+
+const clearMobileCollectionCache = (userId?: number) => {
+  if (!userId) {
+    collectionCache.clear();
+    return;
+  }
+  collectionCache.delete(collectionCacheKey(userId, 'published'));
+  collectionCache.delete(collectionCacheKey(userId, 'post'));
+  collectionCache.delete(collectionCacheKey(userId, 'sipScore'));
+};
+
+const collectionRefreshListenerKey = '__forumMobileCollectionRefreshListener';
+
+if (
+  typeof window !== 'undefined' &&
+  !(window as typeof window & Record<string, boolean>)[collectionRefreshListenerKey]
+) {
+  (window as typeof window & Record<string, boolean>)[collectionRefreshListenerKey] =
+    true;
+  window.addEventListener(MOBILE_PROFILE_REFRESH_EVENT, (event) => {
+    const patch = (event as CustomEvent<MobileProfileRefreshPatch>).detail;
+    clearMobileCollectionCache(patch?.userId);
+  });
+}
 
 const normalizeCacheForTab = (
   cache: CollectionCacheState,
@@ -124,14 +157,23 @@ const Collection: React.FC = () => {
   const nav = useNavigate();
   const location = useLocation();
   const { state } = location;
+  const routeState = state as MobileProfileRouteState | null;
   const [searchParams, setSearchParams] = useSearchParams();
   const initialTab = normalizeTab(searchParams.get('tab') || 'post');
-  const shouldForceInitialLoad = Boolean((state as any)?.forceReload);
+  const initialCurrentUserId = Number(localStorage.getItem('userId')) || 0;
+  const isInitialOwnCollection = Boolean(
+    initialCurrentUserId && userId === initialCurrentUserId,
+  );
+  const shouldForceInitialLoad =
+    Boolean(routeState?.forceReload) ||
+    (!isInitialOwnCollection && !hasActiveMobileProfileSession(routeState, userId));
   const initialCacheRaw = userId
     ? collectionCache.get(collectionCacheKey(userId, initialTab))
     : undefined;
   const initialCache =
-    !shouldForceInitialLoad && initialCacheRaw
+    !shouldForceInitialLoad &&
+    initialCacheRaw &&
+    initialCacheRaw.profileRefreshRevision === getMobileProfileRefreshRevision(userId)
       ? normalizeCacheForTab(initialCacheRaw, initialTab)
       : undefined;
   const [tab, setTab] = useState<CollectionTab>(initialTab);
@@ -153,7 +195,10 @@ const Collection: React.FC = () => {
   }, [tab]);
 
   const applyCache = (cache: CollectionCacheState, targetTab = tab) => {
-    const normalized = normalizeCacheForTab(cache, targetTab);
+    const normalized = {
+      ...normalizeCacheForTab(cache, targetTab),
+      profileRefreshRevision: getMobileProfileRefreshRevision(userId),
+    };
     const key = userId ? collectionCacheKey(userId, targetTab) : '';
     if (key) collectionCache.set(key, normalized);
     setPosts(normalized.posts);
@@ -169,12 +214,16 @@ const Collection: React.FC = () => {
     const currentUserId = Number(localStorage.getItem('userId')) || 0;
     const key = collectionCacheKey(userId, tab);
     const cached = collectionCache.get(key);
-    if (cached && !options?.force) {
-      applyCache(cached, tab);
+    const usableCache =
+      cached && cached.profileRefreshRevision === getMobileProfileRefreshRevision(userId)
+        ? cached
+        : undefined;
+    if (usableCache && !options?.force) {
+      applyCache(usableCache, tab);
       return;
     }
-    setLoading(!cached);
-    if (!cached) {
+    setLoading(options?.force ? true : !usableCache);
+    if (!usableCache) {
       setError('');
       setPrivacyBlocked(false);
       setPosts([]);
@@ -193,6 +242,7 @@ const Collection: React.FC = () => {
             rankings: [],
             error: '对方打开了隐私权限哦',
             privacyBlocked: true,
+            profileRefreshRevision: getMobileProfileRefreshRevision(userId),
           };
           if (requestSeq !== requestSeqRef.current) return;
           collectionCache.set(key, next);
@@ -220,6 +270,7 @@ const Collection: React.FC = () => {
           rankings: [],
           error: '对方打开了隐私权限哦',
           privacyBlocked: true,
+          profileRefreshRevision: getMobileProfileRefreshRevision(userId),
         };
         collectionCache.set(key, next);
         applyCache(next, tab);
@@ -231,7 +282,7 @@ const Collection: React.FC = () => {
             ? res.message || '发布的帖子加载失败'
             : res.message || '收藏加载失败';
         message.error(msg);
-        if (!cached) setError(msg);
+        if (!usableCache) setError(msg);
         return;
       }
       if (tab === 'published' || tab === 'post') {
@@ -248,6 +299,7 @@ const Collection: React.FC = () => {
           rankings: [],
           error: '',
           privacyBlocked: false,
+          profileRefreshRevision: getMobileProfileRefreshRevision(userId),
         };
         collectionCache.set(key, next);
         applyCache(next, tab);
@@ -269,6 +321,7 @@ const Collection: React.FC = () => {
           ),
           error: '',
           privacyBlocked: false,
+          profileRefreshRevision: getMobileProfileRefreshRevision(userId),
         };
         collectionCache.set(key, next);
         applyCache(next, tab);
@@ -277,7 +330,7 @@ const Collection: React.FC = () => {
       if (requestSeq !== requestSeqRef.current) return;
       const fallback = tab === 'published' ? '发布的帖子加载失败' : '收藏加载失败';
       const msg = err instanceof Error ? err.message || fallback : fallback;
-      if (cached) {
+      if (usableCache) {
         message.error(msg);
       } else {
         setError(msg);
@@ -287,13 +340,22 @@ const Collection: React.FC = () => {
     }
   };
 
+  const refreshCollection = async () => {
+    emitMobileProfileRefresh(userId || undefined);
+    await load({ force: true });
+  };
+
   useEffect(() => {
-    const shouldForce = Boolean((state as any)?.forceReload);
+    const currentUserId = Number(localStorage.getItem('userId')) || 0;
+    const isOwnCollection = Boolean(currentUserId && userId === currentUserId);
+    const shouldForce =
+      Boolean(routeState?.forceReload) ||
+      (!isOwnCollection && !hasActiveMobileProfileSession(routeState, userId));
     load({ force: shouldForce });
-    if (shouldForce) {
+    if (routeState?.forceReload) {
       nav(`${location.pathname}${location.search}`, { replace: true, state: null });
     }
-  }, [tab, userId, (state as any)?.forceReload]);
+  }, [tab, userId, routeState?.forceReload, routeState?.profileSessionId]);
 
   const changeTab = (value: string | number) => {
     const nextTab = normalizeTab(String(value));
@@ -304,7 +366,10 @@ const Collection: React.FC = () => {
     const cached = userId
       ? collectionCache.get(collectionCacheKey(userId, nextTab))
       : undefined;
-    if (cached) {
+    if (
+      cached &&
+      cached.profileRefreshRevision === getMobileProfileRefreshRevision(userId)
+    ) {
       applyCache(cached, nextTab);
     } else {
       setLoading(true);
@@ -327,7 +392,10 @@ const Collection: React.FC = () => {
     const cached = userId
       ? collectionCache.get(collectionCacheKey(userId, nextTab))
       : undefined;
-    if (cached) {
+    if (
+      cached &&
+      cached.profileRefreshRevision === getMobileProfileRefreshRevision(userId)
+    ) {
       applyCache(cached, nextTab);
     } else {
       setLoading(true);
@@ -407,7 +475,7 @@ const Collection: React.FC = () => {
       <PullToRefresh
         disabled={loading}
         indicatorTop="calc(112px + env(safe-area-inset-top))"
-        onRefresh={() => load({ force: true })}
+        onRefresh={refreshCollection}
       >
         {loading ? (
           <LoadingState
@@ -417,7 +485,7 @@ const Collection: React.FC = () => {
           privacyBlocked ? (
             <EmptyState title="对方打开了隐私权限哦" text="公开收藏后才能查看这里。" />
           ) : (
-            <ErrorState text={error} onRetry={() => load({ force: true })} />
+            <ErrorState text={error} onRetry={refreshCollection} />
           )
         ) : tab === 'published' || tab === 'post' ? (
           posts.length ? (

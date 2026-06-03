@@ -24,6 +24,7 @@ import {
   MOBILE_POST_STAT_EVENT,
   MobilePostStatPatch,
 } from '../postEvents';
+import { getMobileScrollMemoryKey, useMobileScrollMemory } from '../scrollMemory';
 
 const BRAND_LOGO = 'https://ossforum.muxixyz.com/logo1.png';
 
@@ -404,7 +405,7 @@ const getHomeCacheKey = (input: {
 
 const Home: React.FC = () => {
   const nav = useNavigate();
-  const { pathname } = useLocation();
+  const { pathname, search } = useLocation();
   const params = useParams();
   const [searchParams] = useSearchParams();
   const query = searchParams.get('query') || '';
@@ -426,6 +427,13 @@ const Home: React.FC = () => {
     category: table?.apiCategory,
     activeTag,
     sort,
+  });
+  const scrollMemoryKey = getMobileScrollMemoryKey(pathname, search);
+
+  useMobileScrollMemory({
+    key: scrollMemoryKey,
+    restoreToken: `${cacheKey}:${posts.length}:${loaded}`,
+    restoreOnPush: true,
   });
 
   const fetchPosts = async (nextPage = 0, append = false, requestKey = cacheKey) => {

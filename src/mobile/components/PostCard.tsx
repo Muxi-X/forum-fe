@@ -114,14 +114,19 @@ const Summary = styled.p`
 const CompactMeta = styled.div`
   display: grid;
   grid-template-columns: 36px minmax(0, 1fr);
-  align-items: center;
+  align-items: start;
   column-gap: 10px;
   margin: 0 0 8px;
   color: ${mobilePalette.muted};
   font-size: 12px;
+  .text {
+    min-width: 0;
+    display: grid;
+    gap: 2px;
+  }
   button {
     min-width: 0;
-    display: inline;
+    display: block;
     padding: 0;
     background: transparent;
     color: ${mobilePalette.ink};
@@ -133,11 +138,26 @@ const CompactMeta = styled.div`
     text-overflow: ellipsis;
     white-space: nowrap;
   }
+  .sub {
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    overflow: hidden;
+    white-space: nowrap;
+  }
+  .time {
+    flex: 0 1 auto;
+    min-width: max-content;
+  }
   .dot {
-    margin: 0 5px;
+    flex: 0 0 auto;
     color: rgba(127, 131, 138, 0.48);
   }
   .table {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
     color: #c46c00;
     font-weight: 700;
   }
@@ -358,7 +378,7 @@ const PostCard: React.FC<{ post: MobilePost; variant?: 'default' | 'compactOwn' 
         <>
           <CompactMeta>
             <MobileAvatar url={post.creator_avatar} size={36} />
-            <span>
+            <span className="text">
               <button
                 type="button"
                 data-post-author
@@ -367,8 +387,10 @@ const PostCard: React.FC<{ post: MobilePost; variant?: 'default' | 'compactOwn' 
               >
                 {post.creator_name || '茶友'}
               </button>
-              <span>
-                {post.time ? moment(post.time).fromNow() : ''}
+              <span className="sub">
+                {post.time ? (
+                  <span className="time">{moment(post.time).fromNow()}</span>
+                ) : null}
                 {post.time ? <span className="dot">·</span> : null}
                 <span className="table">{table.name}</span>
               </span>

@@ -18,6 +18,14 @@ import {
 } from '../followEvents';
 import { mobileMotion, mobilePalette, mobileRadius, Section } from '../styles';
 import { applyMobileProfileFollowPatch } from './Profile';
+import {
+  emitMobileProfileRefresh,
+  getMobileProfileRefreshRevision,
+  hasActiveMobileProfileSession,
+  MOBILE_PROFILE_REFRESH_EVENT,
+  MobileProfileRefreshPatch,
+  MobileProfileRouteState,
+} from '../profileSession';
 
 const List = styled(Section)`
   min-height: calc(100dvh - 56px - env(safe-area-inset-top));
@@ -107,10 +115,20 @@ type FollowListCacheState = {
   users: MobileUser[];
   currentUserId: number;
   followRevision: number;
+  profileRefreshRevision: number;
 };
 
 const followListCache = new Map<string, FollowListCacheState>();
 const followListCacheKey = (userId: number, mode: FollowMode) => `${userId}:${mode}`;
+
+const clearMobileFollowListCache = (userId?: number) => {
+  if (!userId) {
+    followListCache.clear();
+    return;
+  }
+  followListCache.delete(followListCacheKey(userId, 'following'));
+  followListCache.delete(followListCacheKey(userId, 'followers'));
+};
 
 const applyFollowPatchToUsers = (
   users: MobileUser[],
@@ -181,6 +199,10 @@ if (
     const patch = (event as CustomEvent<MobileFollowPatch>).detail;
     if (patch?.targetUserId) applyFollowPatchToFollowCaches(patch);
   });
+  window.addEventListener(MOBILE_PROFILE_REFRESH_EVENT, (event) => {
+    const patch = (event as CustomEvent<MobileProfileRefreshPatch>).detail;
+    clearMobileFollowListCache(patch?.userId);
+  });
 }
 
 const FollowList: React.FC = () => {
@@ -188,20 +210,29 @@ const FollowList: React.FC = () => {
   const nav = useNavigate();
   const location = useLocation();
   const { pathname, state } = location;
+  const routeState = state as MobileProfileRouteState | null;
   const userId = Number(user_id);
   const mode = useMemo<FollowMode>(
     () => (pathname.endsWith('/followers') ? 'followers' : 'following'),
     [pathname],
   );
   const initialCurrentUserId = Number(localStorage.getItem('userId')) || 0;
-  const shouldForceInitialLoad = Boolean((state as any)?.forceReload);
+  const isInitialOwnList = Boolean(
+    initialCurrentUserId && userId === initialCurrentUserId,
+  );
+  const shouldRefreshOwnFollowers = isInitialOwnList && mode === 'followers';
+  const shouldForceInitialLoad =
+    Boolean(routeState?.forceReload) ||
+    shouldRefreshOwnFollowers ||
+    (!isInitialOwnList && !hasActiveMobileProfileSession(routeState, userId));
   const initialCache = userId
     ? followListCache.get(followListCacheKey(userId, mode))
     : undefined;
   const initialUsableCache =
     !shouldForceInitialLoad &&
     initialCache &&
-    initialCache.followRevision === getFollowRevision()
+    initialCache.followRevision === getFollowRevision() &&
+    initialCache.profileRefreshRevision === getMobileProfileRefreshRevision(userId)
       ? initialCache
       : undefined;
   const [users, setUsers] = useState<MobileUser[]>(initialUsableCache?.users || []);
@@ -215,6 +246,11 @@ const FollowList: React.FC = () => {
 
   const title = mode === 'followers' ? '粉丝' : '关注';
 
+  const refreshList = async () => {
+    emitMobileProfileRefresh(userId || undefined);
+    await load({ force: true });
+  };
+
   const applyCache = (cache: FollowListCacheState) => {
     setUsers(cache.users);
     setCurrentUserId(cache.currentUserId);
@@ -227,13 +263,20 @@ const FollowList: React.FC = () => {
     const key = followListCacheKey(userId, mode);
     const cached = followListCache.get(key);
     const usableCache =
-      cached && cached.followRevision === getFollowRevision() ? cached : undefined;
+      cached &&
+      cached.followRevision === getFollowRevision() &&
+      cached.profileRefreshRevision === getMobileProfileRefreshRevision(userId)
+        ? cached
+        : undefined;
     if (usableCache && !options?.force) {
       applyCache(usableCache);
       return;
     }
     const requestSeq = ++requestSeqRef.current;
-    setLoading(!usableCache);
+    setLoading(options?.force ? true : !usableCache);
+    if (!usableCache || options?.force) {
+      setUsers([]);
+    }
     setError('');
     try {
       const [listRes, myProfileRes] = await Promise.allSettled([
@@ -265,6 +308,7 @@ const FollowList: React.FC = () => {
         users: nextUsers,
         currentUserId: nextCurrentUserId,
         followRevision: getFollowRevision(),
+        profileRefreshRevision: getMobileProfileRefreshRevision(userId),
       });
     } catch (err) {
       if (requestSeq !== requestSeqRef.current) return;
@@ -280,12 +324,17 @@ const FollowList: React.FC = () => {
   };
 
   useEffect(() => {
-    const shouldForce = Boolean((state as any)?.forceReload);
+    const isOwnList = Boolean(currentUserId && userId === currentUserId);
+    const shouldRefreshCurrentFollowers = isOwnList && mode === 'followers';
+    const shouldForce =
+      Boolean(routeState?.forceReload) ||
+      shouldRefreshCurrentFollowers ||
+      (!isOwnList && !hasActiveMobileProfileSession(routeState, userId));
     load({ force: shouldForce });
-    if (shouldForce) {
+    if (routeState?.forceReload) {
       nav(pathname, { replace: true, state: null });
     }
-  }, [userId, mode, (state as any)?.forceReload]);
+  }, [userId, mode, routeState?.forceReload, routeState?.profileSessionId]);
 
   const toggleFollow = async (target: MobileUser) => {
     if (!target.id) return;
@@ -336,7 +385,7 @@ const FollowList: React.FC = () => {
   if (error && !users.length) {
     return (
       <MobileShell title={title} back tabs={false}>
-        <ErrorState text={error} onRetry={() => load({ force: true })} />
+        <ErrorState text={error} onRetry={refreshList} />
       </MobileShell>
     );
   }
@@ -346,7 +395,7 @@ const FollowList: React.FC = () => {
       <PullToRefresh
         disabled={loading}
         indicatorTop="calc(66px + env(safe-area-inset-top))"
-        onRefresh={() => load({ force: true })}
+        onRefresh={refreshList}
       >
         {users.length ? (
           <List>
@@ -389,7 +438,7 @@ const FollowList: React.FC = () => {
             })}
           </List>
         ) : error ? (
-          <ErrorState text={error} onRetry={() => load({ force: true })} />
+          <ErrorState text={error} onRetry={refreshList} />
         ) : (
           <EmptyState
             title={mode === 'followers' ? '还没有粉丝' : '还没有关注的人'}

@@ -4,6 +4,13 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import useProfile from 'store/useProfile';
 import DesignIcon from './DesignIcon';
 import { MOBILE_TABLES } from '../constants';
+import {
+  getCurrentMobileScrollTop,
+  getMobileScrollMemoryKey,
+  getMobileSavedScrollPosition,
+  requestMobileScrollRestore,
+  saveMobileScrollPosition,
+} from '../scrollMemory';
 import { mobileMotion, mobilePalette } from '../styles';
 
 const Tabs = styled.nav`
@@ -79,7 +86,7 @@ const Label = styled.span<{ active: boolean }>`
 
 const MobileBottomTabs: React.FC = () => {
   const nav = useNavigate();
-  const { pathname } = useLocation();
+  const { pathname, search, state } = useLocation();
   const {
     userProfile: { id },
   } = useProfile();
@@ -94,12 +101,14 @@ const MobileBottomTabs: React.FC = () => {
       path: '/',
       active: pathname === '/' || pathname === '/search' || isTeaTableRoute,
       icon: 'home' as const,
+      restoreKey: '/',
     },
     {
       label: '茶评',
       path: '/sip-score',
       active: pathname.startsWith('/sip-score'),
       icon: 'teaReview' as const,
+      restoreKey: '/sip-score',
     },
     {
       label: '我的',
@@ -109,6 +118,36 @@ const MobileBottomTabs: React.FC = () => {
     },
   ];
 
+  const rememberAndNavigate = (item: (typeof items)[number]) => {
+    const currentKey = getMobileScrollMemoryKey(pathname, search);
+    const currentTop = getCurrentMobileScrollTop();
+    const routeState = (state || {}) as {
+      mobileScrollPositions?: Record<string, number>;
+    };
+    const mobileScrollPositions = {
+      ...(routeState.mobileScrollPositions || {}),
+      [currentKey]: currentTop,
+    };
+    saveMobileScrollPosition(currentKey, currentTop);
+
+    if (!item.restoreKey) {
+      nav(item.path, { state: { mobileScrollPositions } });
+      return;
+    }
+
+    const restoreTop =
+      mobileScrollPositions[item.restoreKey] ||
+      getMobileSavedScrollPosition(item.restoreKey);
+    requestMobileScrollRestore(item.restoreKey);
+    nav(item.path, {
+      state: {
+        mobileScrollPositions,
+        restoreScrollKey: item.restoreKey,
+        restoreScrollTop: restoreTop,
+      },
+    });
+  };
+
   return (
     <Tabs>
       {items.map((item) => (
@@ -117,7 +156,7 @@ const MobileBottomTabs: React.FC = () => {
           type="button"
           active={item.active}
           aria-current={item.active ? 'page' : undefined}
-          onClick={() => nav(item.path)}
+          onClick={() => rememberAndNavigate(item)}
         >
           <TabInner active={item.active}>
             <DesignIcon name={item.icon} active={item.active} size={20} />
