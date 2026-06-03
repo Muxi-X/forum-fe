@@ -7,23 +7,34 @@ const handleAuthError = (res: any) => {
 };
 
 const Request = (url: string, options: any = {}) => {
+  const { timeoutMs, ...fetchOptions } = options;
   url = `/api/v1${url}`;
-  const isFile = options.body instanceof FormData;
+  const isFile = fetchOptions.body instanceof FormData;
   const authToken = getAuthToken();
-  options.headers = isFile
+  fetchOptions.headers = isFile
     ? {}
     : {
         Accept: 'application/json',
         'Content-Type': 'application/json',
       };
   if (authToken) {
-    options.headers.Authorization = authToken;
+    fetchOptions.headers.Authorization = authToken;
   }
 
-  if (options.body) {
-    options.body = isFile ? options.body : JSON.stringify(options.body);
+  if (fetchOptions.body) {
+    fetchOptions.body = isFile ? fetchOptions.body : JSON.stringify(fetchOptions.body);
   }
-  return fetch(url, options)
+  let timeoutId: number | undefined;
+  let timedOut = false;
+  if (timeoutMs && !fetchOptions.signal) {
+    const controller = new AbortController();
+    fetchOptions.signal = controller.signal;
+    timeoutId = window.setTimeout(() => {
+      timedOut = true;
+      controller.abort();
+    }, timeoutMs);
+  }
+  return fetch(url, fetchOptions)
     .then((response) => {
       if (response.ok) {
         return response.json().then((res) => {
@@ -40,8 +51,14 @@ const Request = (url: string, options: any = {}) => {
       }
     })
     .catch((e) => {
+      if (timedOut) {
+        throw new Error('请求超时，请稍后重试');
+      }
       console.log(`服务端错误：${e.message}`);
       throw e;
+    })
+    .finally(() => {
+      if (timeoutId) window.clearTimeout(timeoutId);
     });
 };
 

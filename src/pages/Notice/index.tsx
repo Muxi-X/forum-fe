@@ -42,7 +42,7 @@ const DesktopNotice: React.FC = () => {
       case 'collection':
         return '有人收藏了你的帖子';
       case 'reply_comment':
-        return '有人回复了你的评论';
+        return '有人回复了评论';
       default:
         return '不是哥们这能被你整出来啊';
     }

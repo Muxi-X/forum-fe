@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { mastergoAssets } from '../assets/mastergo';
 import { mobilePalette, mobileRadius } from '../styles';
 import DesignIcon from './DesignIcon';
+import useNotification from 'store/useNotification';
 
 const Bar = styled.header<{ borderless?: boolean }>`
   position: sticky;
@@ -38,6 +39,7 @@ const Title = styled.h1`
 `;
 
 const IconButton = styled.button`
+  position: relative;
   width: 64px;
   height: 56px;
   display: grid;
@@ -52,6 +54,16 @@ const IconButton = styled.button`
   img {
     display: block;
     object-fit: contain;
+  }
+  .dot {
+    position: absolute;
+    right: 20px;
+    top: 15px;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: ${mobilePalette.danger};
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.9);
   }
 `;
 
@@ -107,6 +119,7 @@ const MobileTopBar: React.FC<{
   borderless?: boolean;
 }> = ({ title, back, right, onRight, borderless }) => {
   const nav = useNavigate();
+  const { unreadCount } = useNotification();
   return (
     <Bar borderless={borderless}>
       <IconButton
@@ -130,6 +143,7 @@ const MobileTopBar: React.FC<{
       {right || onRight ? (
         <IconButton type="button" onClick={onRight} aria-label="操作">
           <RightIcon action={right} />
+          {right === 'notice' && unreadCount > 0 ? <span className="dot" /> : null}
         </IconButton>
       ) : (
         <RightSlot aria-hidden="true" />

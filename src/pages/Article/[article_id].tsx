@@ -33,6 +33,15 @@ interface ActionProps {
   done?: boolean;
 }
 
+type InteractionNotificationType = 'comment' | 'like' | 'collection' | 'reply_comment';
+
+type SendNotificationOptions = {
+  content?: string;
+  commentId?: number;
+  commentContent?: string;
+  targetUserIds?: Array<number | undefined>;
+};
+
 const { Category } = Tag;
 const { TextArea } = Input;
 
@@ -170,6 +179,7 @@ const DesktopArticle: React.FC = () => {
 
   const {
     content_type,
+    title,
     creator_name,
     creator_avatar,
     creator_id,
@@ -268,23 +278,32 @@ const DesktopArticle: React.FC = () => {
 
   // 私信通知方法
   const sendNotification = (
-    type: 'comment' | 'like' | 'collection' | 'reply_comment',
-    content?: string,
-    comment_id?: number,
+    type: InteractionNotificationType,
+    options: SendNotificationOptions = {},
   ) => {
-    // 确保不会自己给自己发送通知
-    if (userProfile.id === creator_id) return;
+    const receiverIds = Array.from(
+      new Set(
+        (options.targetUserIds?.length ? options.targetUserIds : [creator_id])
+          .map((id) => Number(id || 0))
+          .filter((id) => Number.isFinite(id) && id > 0),
+      ),
+    ).filter((receiverId) => receiverId !== Number(userProfile.id || 0));
 
-    const params = {
+    if (!receiverIds.length) return;
+
+    const baseParams = {
       post_id: +(article_id as string),
-      receive_userid: creator_id,
       type: type,
-      content,
-      comment_id,
+      content: options.content,
+      comment_id: options.commentId,
+      post_title: title || '未命名帖子',
+      comment_content: options.commentContent || '',
     };
 
     try {
-      postPrivateMessage({}, params);
+      receiverIds.forEach((receive_userid) => {
+        postPrivateMessage({}, { ...baseParams, receive_userid });
+      });
     } catch (error) {
       console.error('通知发送失败:', error);
     }
@@ -308,15 +327,26 @@ const DesktopArticle: React.FC = () => {
     report({}, { cause: reportVal, id: +(article_id as string), type_name: 'post' });
   };
 
-  const handleAddComment = (num: number, content?: string, comment_id?: number) => {
+  const handleAddComment = (
+    num: number,
+    content?: string,
+    comment_id?: number,
+    replyCreatorId?: number,
+    commentContent?: string,
+  ) => {
     setCommentNum(num);
 
     // 如果有评论内容，先判断是根评论还是子评论再发送
     if (content) {
       if (comment_id) {
-        sendNotification('reply_comment', content, comment_id);
+        sendNotification('reply_comment', {
+          content,
+          commentId: comment_id,
+          commentContent,
+          targetUserIds: [replyCreatorId, creator_id],
+        });
       } else {
-        sendNotification('comment', content);
+        sendNotification('comment', { content });
       }
     }
   };

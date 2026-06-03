@@ -13,6 +13,7 @@ interface NotificationStore {
   notifications: Notification[];
   unreadCount: number;
   addNotifications: (notifications: Notification[]) => void;
+  replaceNotifications: (notifications: Notification[]) => void;
   markAsRead: (id: string) => void;
   markAllAsRead: () => void;
   resetNotifications: () => void;
@@ -30,14 +31,22 @@ const useNotification = create<NotificationStore>((set, get) => ({
     }));
   },
 
+  replaceNotifications: (newNotifications) => {
+    set(() => ({
+      notifications: newNotifications,
+      unreadCount: newNotifications.filter((notification) => !notification.read).length,
+    }));
+  },
+
   markAsRead: (id) => {
     const { notifications, unreadCount } = get();
+    const target = notifications.find((notification) => notification.id === id);
     const updatedNotifications = notifications.map((notification) =>
       notification.id === id ? { ...notification, read: true } : notification,
     );
     set(() => ({
       notifications: updatedNotifications,
-      unreadCount: unreadCount - 1,
+      unreadCount: target && !target.read ? Math.max(0, unreadCount - 1) : unreadCount,
     }));
   },
 

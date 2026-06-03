@@ -20,10 +20,18 @@ const { TextArea } = Input;
 
 type commentType = 'comment' | 'subComment' | 'reply';
 
+type HandleAddComment = (
+  num: number,
+  content?: string,
+  comment_id?: number,
+  replyCreatorId?: number,
+  commentContent?: string,
+) => void;
+
 interface IProps {
   commentList: defs.post_SubPost[];
   post_id: number;
-  handleAddComment: (num: number, content?: string, comment_id?: number) => void;
+  handleAddComment: HandleAddComment;
   commentNum: number;
 }
 
@@ -46,7 +54,7 @@ interface CommentItemProps extends defs.post_Comment, defs.post_SubPost {
   commentType?: commentType;
   post_id: number;
   addReply?: (reply: defs.post_Comment) => void;
-  handleAddComment: (num: number, content?: string, comment_id?: number) => void;
+  handleAddComment: HandleAddComment;
   commentNum: number;
 }
 
@@ -58,7 +66,7 @@ const SubList: React.FC<{
   subComments: defs.post_Comment[];
   post_id: number;
   syncSubComments: (subs: defs.post_Comment[]) => void;
-  handleAddComment: (num: number, content?: string, comment_id?: number) => void;
+  handleAddComment: HandleAddComment;
   commentNum: number;
 }> = ({ subComments, post_id, syncSubComments, commentNum, handleAddComment }) => {
   if (subComments.length === 0) return <></>;
@@ -146,7 +154,7 @@ const CommentItem: React.FC<CommentItemProps> = ({
           setReply(false);
           addReply && addReply(res.data);
         }
-        handleAddComment(commentNum + 1, replyContent, id);
+        handleAddComment(commentNum + 1, replyContent, id, creator_id, content);
         setImg('');
       }, 500);
     },
@@ -309,7 +317,7 @@ const CommentItem: React.FC<CommentItemProps> = ({
 const CommentList: React.FC<{
   comments: defs.post_SubPost[];
   post_id: number;
-  handleAddComment: (num: number, content?: string, comment_id?: number) => void;
+  handleAddComment: HandleAddComment;
   commentNum: number;
 }> = ({ comments, post_id, commentNum, handleAddComment }) => {
   return (

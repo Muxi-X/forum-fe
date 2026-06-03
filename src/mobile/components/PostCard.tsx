@@ -13,6 +13,7 @@ import {
   MOBILE_POST_STAT_EVENT,
   MobilePostStatPatch,
 } from '../postEvents';
+import { sendPostInteractionNotification } from '../notifications';
 
 const stripHtml = (value?: string) =>
   (value || '')
@@ -48,13 +49,17 @@ const Card = styled.article<{ $pressed: boolean; $compact?: boolean }>`
       : ''}
 `;
 
-const Meta = styled.div`
+const Meta = styled.button`
+  width: 100%;
   display: grid;
   grid-template-columns: 36px minmax(0, 1fr);
   align-items: start;
   column-gap: 10px;
+  padding: 0;
+  background: transparent;
   color: #7f838a;
   font-size: 12px;
+  text-align: left;
   .author {
     display: block;
     max-width: 100%;
@@ -107,9 +112,27 @@ const Summary = styled.p`
 `;
 
 const CompactMeta = styled.div`
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr);
+  align-items: center;
+  column-gap: 10px;
   margin: 0 0 8px;
   color: ${mobilePalette.muted};
   font-size: 12px;
+  button {
+    min-width: 0;
+    display: inline;
+    padding: 0;
+    background: transparent;
+    color: ${mobilePalette.ink};
+    font-size: 15px;
+    font-weight: 800;
+    line-height: 1.25;
+    text-align: left;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
   .dot {
     margin: 0 5px;
     color: rgba(127, 131, 138, 0.48);
@@ -154,8 +177,9 @@ const Stats = styled.div`
   }
 `;
 
-const isStatsTarget = (target: EventTarget | null) =>
-  target instanceof Element && Boolean(target.closest('[data-post-stat]'));
+const isCardActionTarget = (target: EventTarget | null) =>
+  target instanceof Element &&
+  Boolean(target.closest('[data-post-stat], [data-post-author]'));
 
 const Tags = styled.div`
   flex: 1 1 auto;
@@ -232,8 +256,13 @@ const PostCard: React.FC<{ post: MobilePost; variant?: 'default' | 'compactOwn' 
   };
 
   const handleOpenPost = (event: React.MouseEvent<HTMLElement>) => {
-    if (isStatsTarget(event.target)) return;
+    if (isCardActionTarget(event.target)) return;
     openPost();
+  };
+
+  const openAuthor = (event: React.MouseEvent) => {
+    event.stopPropagation();
+    if (post.creator_id) nav(`/user/${post.creator_id}`);
   };
 
   const toggleLike = async (event: React.MouseEvent) => {
@@ -259,6 +288,8 @@ const PostCard: React.FC<{ post: MobilePost; variant?: 'default' | 'compactOwn' 
         is_liked: !nextLiked,
         like_num: revertedCount,
       });
+    } else if (nextLiked) {
+      sendPostInteractionNotification(post, 'like');
     }
   };
 
@@ -276,6 +307,7 @@ const PostCard: React.FC<{ post: MobilePost; variant?: 'default' | 'compactOwn' 
     emitPostStatPatch({
       id: postId,
       is_collection: nextCollected,
+      collected_at: nextCollected ? Date.now() : 0,
       collection_num: nextCount,
     });
     const res = await mobileApi.collection.toggle(postId, TARGET_TYPE.post);
@@ -287,13 +319,16 @@ const PostCard: React.FC<{ post: MobilePost; variant?: 'default' | 'compactOwn' 
       emitPostStatPatch({
         id: postId,
         is_collection: !nextCollected,
+        collected_at: !nextCollected ? Date.now() : 0,
         collection_num: revertedCount,
       });
+    } else if (nextCollected) {
+      sendPostInteractionNotification(post, 'collection');
     }
   };
 
   const handlePointerDown = (event: React.PointerEvent<HTMLElement>) => {
-    if (isStatsTarget(event.target)) return;
+    if (isCardActionTarget(event.target)) return;
     setPressed(true);
   };
 
@@ -321,16 +356,34 @@ const PostCard: React.FC<{ post: MobilePost; variant?: 'default' | 'compactOwn' 
     >
       {compactOwn ? (
         <>
-          <Title>{post.title || '未命名帖子'}</Title>
           <CompactMeta>
-            {post.time ? moment(post.time).fromNow() : ''}
-            {post.time ? <span className="dot">·</span> : null}
-            <span className="table">{table.name}</span>
+            <MobileAvatar url={post.creator_avatar} size={36} />
+            <span>
+              <button
+                type="button"
+                data-post-author
+                onClick={openAuthor}
+                aria-label={`查看 ${post.creator_name || '茶友'} 的主页`}
+              >
+                {post.creator_name || '茶友'}
+              </button>
+              <span>
+                {post.time ? moment(post.time).fromNow() : ''}
+                {post.time ? <span className="dot">·</span> : null}
+                <span className="table">{table.name}</span>
+              </span>
+            </span>
           </CompactMeta>
+          <Title>{post.title || '未命名帖子'}</Title>
         </>
       ) : (
         <>
-          <Meta>
+          <Meta
+            type="button"
+            data-post-author
+            onClick={openAuthor}
+            aria-label={`查看 ${post.creator_name || '茶友'} 的主页`}
+          >
             <MobileAvatar url={post.creator_avatar} size={36} />
             <span>
               <span className="author">{post.creator_name || '茶友'}</span>

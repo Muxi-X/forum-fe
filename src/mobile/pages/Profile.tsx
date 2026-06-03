@@ -21,6 +21,7 @@ import { mobileMotion, mobilePalette, mobileRadius, Section } from '../styles';
 import { mobileApi, MobilePost, MobileUser, SipScoreWithEntries } from '../api';
 import { mastergoAssets } from '../assets/mastergo';
 import { clearAuthStorage } from '../../utils/auth';
+import useNotification from 'store/useNotification';
 import {
   applyPostStatPatch,
   applyStoredPostStatPatches,
@@ -34,6 +35,7 @@ import {
   MOBILE_SIP_SCORE_COLLECTION_EVENT,
   MOBILE_SIP_SCORE_EVENT,
   MobilePostStatPatch,
+  orderPostsByLocalCollectionTime,
   removeUncollectedPosts,
   removeUncollectedSipScores,
   SipScorePatch,
@@ -50,6 +52,14 @@ type ProfileCacheState = {
 };
 
 const profileCache = new Map<number, ProfileCacheState>();
+
+export const clearMobileProfileCache = (profileId?: number) => {
+  if (profileId) {
+    profileCache.delete(profileId);
+    return;
+  }
+  profileCache.clear();
+};
 
 const Hero = styled.section`
   position: relative;
@@ -88,6 +98,29 @@ const HeroActions = styled.div`
   align-items: center;
   justify-content: flex-end;
   gap: 12px;
+`;
+
+const HeroBackButton = styled.button`
+  position: absolute;
+  left: 18px;
+  top: calc(18px + env(safe-area-inset-top));
+  z-index: 4;
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.72);
+  box-shadow: 0 10px 26px rgba(16, 24, 40, 0.08);
+  backdrop-filter: blur(14px);
+  transition: transform ${mobileMotion.fast};
+  img {
+    width: 9px;
+    height: 17px;
+  }
+  &:active {
+    transform: scale(0.96);
+  }
 `;
 
 const TitleIconButton = styled.button`
@@ -415,6 +448,7 @@ const Profile: React.FC = () => {
   const userId = Number(user_id);
   const nav = useNavigate();
   const myId = Number(localStorage.getItem('userId')) || 0;
+  const { unreadCount } = useNotification();
   const [currentUserId, setCurrentUserId] = useState(myId);
   const [profile, setProfile] = useState<MobileUser | null>(null);
   const [posts, setPosts] = useState<MobilePost[]>([]);
@@ -430,12 +464,26 @@ const Profile: React.FC = () => {
   });
   const [toast, setToast] = useState<string>('');
   const [loading, setLoading] = useState(true);
+  const [sectionsLoading, setSectionsLoading] = useState(false);
   const [error, setError] = useState('');
   const isMine = Boolean(
     !userId ||
       (currentUserId && userId === currentUserId) ||
       (profile?.id && currentUserId && profile.id === currentUserId),
   );
+  const canViewCollection = isMine || profile?.is_public_collection_and_like !== false;
+
+  const resetVisibleStateForRoute = () => {
+    setProfile(null);
+    setPosts([]);
+    setCollectedPosts([]);
+    setCollectedRankings([]);
+    setExpanded({ posts: false, collections: false });
+    setCollectionExpanded({ posts: false, rankings: false });
+    setError('');
+    setLoading(true);
+    setSectionsLoading(false);
+  };
 
   const load = async (options?: { force?: boolean }) => {
     const targetBeforeResolve = userId || currentUserId;
@@ -450,8 +498,8 @@ const Profile: React.FC = () => {
     ) {
       setProfile(cached.profile);
       const cachedPosts = applyStoredPostStatPatches(cached.posts);
-      const cachedCollectedPosts = removeUncollectedPosts(
-        applyStoredPostStatPatches(cached.collectedPosts),
+      const cachedCollectedPosts = orderPostsByLocalCollectionTime(
+        removeUncollectedPosts(applyStoredPostStatPatches(cached.collectedPosts)),
       );
       const cachedCollectedRankings = removeUncollectedSipScores(
         applyStoredSipScorePatches(cached.collectedRankings),
@@ -463,6 +511,7 @@ const Profile: React.FC = () => {
       setCollectedPosts(cachedCollectedPosts);
       setCollectedRankings(cachedCollectedRankings);
       setCurrentUserId(cached.currentUserId);
+      setSectionsLoading(false);
       setLoading(false);
       return;
     } else {
@@ -515,7 +564,12 @@ const Profile: React.FC = () => {
     const effectiveId = effectiveProfile.id || target;
     setProfile(effectiveProfile);
 
-    if (!effectiveId) return;
+    if (!effectiveId) {
+      setSectionsLoading(false);
+      setLoading(false);
+      return;
+    }
+    setSectionsLoading(true);
     const [postsRes, collectedPostsRes, collectedRankingsRes] = await Promise.allSettled([
       mobileApi.posts.published(effectiveId, { limit: 10 }),
       mobileApi.collection.list(effectiveId, { limit: 3, page: 0 }),
@@ -527,12 +581,14 @@ const Profile: React.FC = () => {
         : [];
     const nextCollectedPosts =
       collectedPostsRes.status === 'fulfilled' && collectedPostsRes.value.code === 0
-        ? removeUncollectedPosts(
-            applyStoredPostStatPatches(
-              (collectedPostsRes.value.data.posts || []).map((post) => ({
-                ...post,
-                is_collection: true,
-              })),
+        ? orderPostsByLocalCollectionTime(
+            removeUncollectedPosts(
+              applyStoredPostStatPatches(
+                (collectedPostsRes.value.data.posts || []).map((post) => ({
+                  ...post,
+                  is_collection: true,
+                })),
+              ),
             ),
           )
         : [];
@@ -578,17 +634,19 @@ const Profile: React.FC = () => {
       postRevision: getPostRevision(),
       sipScoreRevision: getSipScoreRevision(),
     });
+    setSectionsLoading(false);
     setLoading(false);
   };
 
   useEffect(() => {
+    resetVisibleStateForRoute();
     if ((state as any)?.refreshProfile) {
       refreshProfile();
       nav(`/user/${userId || currentUserId || ''}`, { replace: true, state: null });
       return;
     }
     load();
-  }, [userId, currentUserId, (state as any)?.refreshProfile]);
+  }, [userId, (state as any)?.refreshProfile]);
 
   useEffect(() => {
     const handlePostPatch = (event: Event) => {
@@ -680,11 +738,23 @@ const Profile: React.FC = () => {
       message.error(res.message);
       return;
     }
-    setProfile({
+    const nextProfile = {
       ...profile,
       is_following: res.data.is_following,
       follower_count: res.data.follower_count,
-    });
+    };
+    setProfile(nextProfile);
+    const cached = profileCache.get(profile.id);
+    if (cached) cached.profile = nextProfile;
+    if (currentUserId) {
+      const myCached = profileCache.get(currentUserId);
+      if (myCached) {
+        myCached.profile = {
+          ...myCached.profile,
+          following_count: res.data.following_count,
+        };
+      }
+    }
   };
 
   const logout = () => {
@@ -726,6 +796,11 @@ const Profile: React.FC = () => {
     >
       <PullToRefresh disabled={loading} onRefresh={refreshProfile}>
         <Hero>
+          {!isMine ? (
+            <HeroBackButton type="button" onClick={() => nav(-1)} aria-label="返回">
+              <img src={mastergoAssets.icons.backButtonDark} alt="" />
+            </HeroBackButton>
+          ) : null}
           <HeroActions>
             {isMine ? (
               <TitleIconButton
@@ -734,12 +809,9 @@ const Profile: React.FC = () => {
                 aria-label="消息"
               >
                 <DesignIcon name="bell" size={23} />
+                {unreadCount > 0 ? <span className="dot" /> : null}
               </TitleIconButton>
-            ) : (
-              <TitleIconButton type="button" aria-label="更多">
-                <DesignIcon name="more" size={23} />
-              </TitleIconButton>
-            )}
+            ) : null}
           </HeroActions>
           <ProfilePanel>
             <Avatar url={profile.avatar || profile.avatar_url} size={100} bordered />
@@ -755,14 +827,14 @@ const Profile: React.FC = () => {
             <Counts>
               <button
                 type="button"
-                onClick={() => message.info('关注列表暂未开放')}
+                onClick={() => nav(`/user/${profileId}/following`)}
                 aria-label="查看关注列表"
               >
                 <strong>{profile.following_count || 0}</strong>关注
               </button>
               <button
                 type="button"
-                onClick={() => message.info('粉丝列表暂未开放')}
+                onClick={() => nav(`/user/${profileId}/followers`)}
                 aria-label="查看粉丝列表"
               >
                 <strong>{profile.follower_count || 0}</strong>粉丝
@@ -798,7 +870,9 @@ const Profile: React.FC = () => {
           {expanded.posts ? (
             <ExpandedPanel>
               <ExpandedPosts id="profile-posts">
-                {posts.length ? (
+                {sectionsLoading ? (
+                  <MiniEmpty>正在读取发过的帖子...</MiniEmpty>
+                ) : posts.length ? (
                   posts
                     .slice(0, 1)
                     .map((post) => (
@@ -807,7 +881,7 @@ const Profile: React.FC = () => {
                 ) : (
                   <MiniEmpty>{isMine ? '还没有发过帖子' : 'Ta 还没有发过帖子'}</MiniEmpty>
                 )}
-                {posts.length > 1 ? (
+                {!sectionsLoading && posts.length > 1 ? (
                   <ViewAllButton
                     type="button"
                     onClick={() => nav(profileListPath(profileId, 'published'))}
@@ -834,7 +908,9 @@ const Profile: React.FC = () => {
             }
           >
             <DesignIcon name="star" size={24} />
-            <span>{isMine ? '我的收藏' : '公开收藏'}</span>
+            <span>
+              {isMine ? '我的收藏' : canViewCollection ? '公开收藏' : '收藏未公开'}
+            </span>
             <span className="chevron">
               <DesignIcon
                 name={expanded.collections ? 'chevronUp' : 'chevronDown'}
@@ -844,100 +920,112 @@ const Profile: React.FC = () => {
           </MenuItem>
           {expanded.collections ? (
             <ExpandedPanel>
-              <CollectionGroupButton
-                type="button"
-                onClick={() =>
-                  setCollectionExpanded((current) => ({
-                    ...current,
-                    posts: !current.posts,
-                  }))
-                }
-              >
-                <span>帖子收藏</span>
-                <DesignIcon
-                  name={collectionExpanded.posts ? 'chevronUp' : 'chevronDown'}
-                  size={18}
-                />
-              </CollectionGroupButton>
-              {collectionExpanded.posts ? (
-                <ExpandedPosts>
-                  {collectedPosts.length ? (
-                    collectedPosts
-                      .slice(0, 1)
-                      .map((post) => <PostCard key={post.id} post={post} />)
-                  ) : (
-                    <MiniEmpty>
-                      {isMine ? '还没有收藏帖子' : 'Ta 还没有收藏帖子'}
-                    </MiniEmpty>
-                  )}
-                  {collectedPosts.length > 1 ? (
-                    <ViewAllButton
-                      type="button"
-                      onClick={() => nav(profileListPath(profileId, 'post'))}
-                    >
-                      <span>查看全部收藏帖子</span>
-                      <DesignIcon name="chevronRight" size={18} />
-                    </ViewAllButton>
-                  ) : null}
-                </ExpandedPosts>
-              ) : null}
-              <CollectionGroupButton
-                type="button"
-                onClick={() =>
-                  setCollectionExpanded((current) => ({
-                    ...current,
-                    rankings: !current.rankings,
-                  }))
-                }
-              >
-                <span>榜单收藏</span>
-                <DesignIcon
-                  name={collectionExpanded.rankings ? 'chevronUp' : 'chevronDown'}
-                  size={18}
-                />
-              </CollectionGroupButton>
-              {collectionExpanded.rankings ? (
-                <ExpandedPosts>
-                  {collectedRankings.length ? (
-                    collectedRankings.slice(0, 1).map((item) => {
-                      const ranking = item.sip_score || {};
-                      return (
-                        <RankingCard
-                          key={ranking.id || ranking.name}
+              {!canViewCollection ? (
+                <MiniEmpty>对方打开了隐私权限哦</MiniEmpty>
+              ) : (
+                <>
+                  <CollectionGroupButton
+                    type="button"
+                    onClick={() =>
+                      setCollectionExpanded((current) => ({
+                        ...current,
+                        posts: !current.posts,
+                      }))
+                    }
+                  >
+                    <span>帖子收藏</span>
+                    <DesignIcon
+                      name={collectionExpanded.posts ? 'chevronUp' : 'chevronDown'}
+                      size={18}
+                    />
+                  </CollectionGroupButton>
+                  {collectionExpanded.posts ? (
+                    <ExpandedPosts>
+                      {sectionsLoading ? (
+                        <MiniEmpty>正在读取收藏帖子...</MiniEmpty>
+                      ) : collectedPosts.length ? (
+                        collectedPosts
+                          .slice(0, 1)
+                          .map((post) => <PostCard key={post.id} post={post} />)
+                      ) : (
+                        <MiniEmpty>
+                          {isMine ? '还没有收藏帖子' : 'Ta 还没有收藏帖子'}
+                        </MiniEmpty>
+                      )}
+                      {!sectionsLoading && collectedPosts.length > 1 ? (
+                        <ViewAllButton
                           type="button"
-                          onClick={() => ranking.id && nav(`/sip-score/${ranking.id}`)}
+                          onClick={() => nav(profileListPath(profileId, 'post'))}
                         >
-                          <span
-                            className="cover"
-                            style={
-                              ranking.cover_img
-                                ? { backgroundImage: `url(${ranking.cover_img})` }
-                                : undefined
-                            }
-                          />
-                          <span>
-                            <h3>{ranking.name || '未命名榜单'}</h3>
-                            <p>{ranking.description || '暂无简介'}</p>
-                          </span>
-                        </RankingCard>
-                      );
-                    })
-                  ) : (
-                    <MiniEmpty>
-                      {isMine ? '还没有收藏榜单' : 'Ta 还没有收藏榜单'}
-                    </MiniEmpty>
-                  )}
-                  {collectedRankings.length > 1 ? (
-                    <ViewAllButton
-                      type="button"
-                      onClick={() => nav(profileListPath(profileId, 'sipScore'))}
-                    >
-                      <span>查看全部收藏榜单</span>
-                      <DesignIcon name="chevronRight" size={18} />
-                    </ViewAllButton>
+                          <span>查看全部收藏帖子</span>
+                          <DesignIcon name="chevronRight" size={18} />
+                        </ViewAllButton>
+                      ) : null}
+                    </ExpandedPosts>
                   ) : null}
-                </ExpandedPosts>
-              ) : null}
+                  <CollectionGroupButton
+                    type="button"
+                    onClick={() =>
+                      setCollectionExpanded((current) => ({
+                        ...current,
+                        rankings: !current.rankings,
+                      }))
+                    }
+                  >
+                    <span>榜单收藏</span>
+                    <DesignIcon
+                      name={collectionExpanded.rankings ? 'chevronUp' : 'chevronDown'}
+                      size={18}
+                    />
+                  </CollectionGroupButton>
+                  {collectionExpanded.rankings ? (
+                    <ExpandedPosts>
+                      {sectionsLoading ? (
+                        <MiniEmpty>正在读取收藏榜单...</MiniEmpty>
+                      ) : collectedRankings.length ? (
+                        collectedRankings.slice(0, 1).map((item) => {
+                          const ranking = item.sip_score || {};
+                          return (
+                            <RankingCard
+                              key={ranking.id || ranking.name}
+                              type="button"
+                              onClick={() =>
+                                ranking.id && nav(`/sip-score/${ranking.id}`)
+                              }
+                            >
+                              <span
+                                className="cover"
+                                style={
+                                  ranking.cover_img
+                                    ? { backgroundImage: `url(${ranking.cover_img})` }
+                                    : undefined
+                                }
+                              />
+                              <span>
+                                <h3>{ranking.name || '未命名榜单'}</h3>
+                                <p>{ranking.description || '暂无简介'}</p>
+                              </span>
+                            </RankingCard>
+                          );
+                        })
+                      ) : (
+                        <MiniEmpty>
+                          {isMine ? '还没有收藏榜单' : 'Ta 还没有收藏榜单'}
+                        </MiniEmpty>
+                      )}
+                      {!sectionsLoading && collectedRankings.length > 1 ? (
+                        <ViewAllButton
+                          type="button"
+                          onClick={() => nav(profileListPath(profileId, 'sipScore'))}
+                        >
+                          <span>查看全部收藏榜单</span>
+                          <DesignIcon name="chevronRight" size={18} />
+                        </ViewAllButton>
+                      ) : null}
+                    </ExpandedPosts>
+                  ) : null}
+                </>
+              )}
             </ExpandedPanel>
           ) : null}
           {isMine ? (

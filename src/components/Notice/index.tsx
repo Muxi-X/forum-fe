@@ -47,7 +47,7 @@ const parseNotification = (message: unknown, index: number): Notification | null
 };
 
 const GlobalNotificationListener: React.FC = () => {
-  const { addNotifications, resetNotifications } = useNotification();
+  const { replaceNotifications, resetNotifications } = useNotification();
   const pollingRef = useRef<NodeJS.Timeout | null>(null);
   const { pathname } = useLocation();
 
@@ -61,9 +61,7 @@ const GlobalNotificationListener: React.FC = () => {
             .map(parseNotification)
             .filter((n): n is Notification => n !== null);
 
-          // 每次轮询重置未读数据并添加新数据
-          resetNotifications();
-          addNotifications(newNotifications);
+          replaceNotifications(newNotifications);
         }
       },
       onError: (error) => {

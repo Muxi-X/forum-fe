@@ -22,6 +22,7 @@ import {
   MobilePostStatPatch,
   MOBILE_SIP_SCORE_COLLECTION_EVENT,
   MOBILE_SIP_SCORE_EVENT,
+  orderPostsByLocalCollectionTime,
   removeUncollectedPosts,
   removeUncollectedSipScores,
   SipScorePatch,
@@ -94,29 +95,64 @@ const Collection: React.FC = () => {
   const [rankings, setRankings] = useState<SipScoreWithEntries[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [privacyBlocked, setPrivacyBlocked] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
     if (!userId) return;
+    const currentUserId = Number(localStorage.getItem('userId')) || 0;
+    let cancelled = false;
     setLoading(true);
     setError('');
-    const request =
-      tab === 'published'
-        ? mobileApi.posts.published(userId, { limit: 30, page: 0 })
-        : tab === 'post'
-        ? mobileApi.collection.list(userId, { limit: 30, page: 0 })
-        : mobileApi.sipScore.collected(userId, { limit: 30, page: 0 });
+    setPrivacyBlocked(false);
+    setPosts([]);
+    setRankings([]);
 
-    request
-      .then((res) => {
+    const load = async () => {
+      if (tab !== 'published' && currentUserId !== userId) {
+        try {
+          const profileRes = await mobileApi.user.profile(userId);
+          if (
+            !cancelled &&
+            profileRes.code === 0 &&
+            profileRes.data.is_public_collection_and_like === false
+          ) {
+            setPrivacyBlocked(true);
+            setError('对方打开了隐私权限哦');
+            setPosts([]);
+            setRankings([]);
+            setLoading(false);
+            return;
+          }
+        } catch {
+          // 继续尝试目标列表接口，让下方错误处理给出最终状态。
+        }
+      }
+
+      const request =
+        tab === 'published'
+          ? mobileApi.posts.published(userId, { limit: 30, page: 0 })
+          : tab === 'post'
+          ? mobileApi.collection.list(userId, { limit: 30, page: 0 })
+          : mobileApi.sipScore.collected(userId, { limit: 30, page: 0 });
+
+      try {
+        const res = await request;
+        if (cancelled) return;
         if (res.code === 20103) {
+          setPrivacyBlocked(true);
           setError('对方打开了隐私权限哦');
           setPosts([]);
           setRankings([]);
           return;
         }
         if (res.code !== 0) {
-          setError(res.message || '加载失败');
-          message.error(res.message || '加载失败');
+          const msg =
+            tab === 'published'
+              ? res.message || '发布的帖子加载失败'
+              : res.message || '收藏加载失败';
+          setError(msg);
+          message.error(msg);
           return;
         }
         if (tab === 'published' || tab === 'post') {
@@ -125,7 +161,11 @@ const Collection: React.FC = () => {
               tab === 'post' ? { ...post, is_collection: true } : post,
             ),
           );
-          setPosts(tab === 'post' ? removeUncollectedPosts(nextPosts) : nextPosts);
+          setPosts(
+            tab === 'post'
+              ? orderPostsByLocalCollectionTime(removeUncollectedPosts(nextPosts))
+              : nextPosts,
+          );
         } else {
           setRankings(
             removeUncollectedSipScores(
@@ -143,12 +183,22 @@ const Collection: React.FC = () => {
             ),
           );
         }
-      })
-      .catch((err) => {
-        setError(err instanceof Error ? err.message : '加载失败');
-      })
-      .finally(() => setLoading(false));
-  }, [tab, userId]);
+      } catch (err) {
+        if (!cancelled) {
+          const fallback = tab === 'published' ? '发布的帖子加载失败' : '收藏加载失败';
+          setError(err instanceof Error ? err.message || fallback : fallback);
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    };
+
+    load();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [tab, userId, reloadKey]);
 
   useEffect(() => {
     const handlePostPatch = (event: Event) => {
@@ -199,9 +249,15 @@ const Collection: React.FC = () => {
         onChange={(value) => setTab(String(value))}
       />
       {loading ? (
-        <LoadingState text="正在读取收藏..." />
+        <LoadingState
+          text={tab === 'published' ? '正在读取发布的帖子...' : '正在读取收藏...'}
+        />
       ) : error ? (
-        <ErrorState text={error} />
+        privacyBlocked ? (
+          <EmptyState title="对方打开了隐私权限哦" text="公开收藏后才能查看这里。" />
+        ) : (
+          <ErrorState text={error} onRetry={() => setReloadKey((key) => key + 1)} />
+        )
       ) : tab === 'published' || tab === 'post' ? (
         posts.length ? (
           <List>

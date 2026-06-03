@@ -19,6 +19,7 @@ import { useDeviceType } from 'hooks/useDeviceType';
 import MobileProfile from 'mobile/pages/Profile';
 import MobileProfileEdit from 'mobile/pages/ProfileEdit';
 import MobileCollection from 'mobile/pages/Collection';
+import MobileFollowList from 'mobile/pages/FollowList';
 
 const UserInfoCard = styled(Card)`
   .ant-card-body {
@@ -196,6 +197,12 @@ const User: React.FC = () => {
   if (isPhone) {
     if (pathname === `/user/${user_id}/seting`) return <MobileProfileEdit />;
     if (pathname === `/user/${user_id}/collect`) return <MobileCollection />;
+    if (
+      pathname === `/user/${user_id}/following` ||
+      pathname === `/user/${user_id}/followers`
+    ) {
+      return <MobileFollowList />;
+    }
     return <MobileProfile />;
   }
   return <DesktopUser />;

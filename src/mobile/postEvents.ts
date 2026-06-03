@@ -6,6 +6,7 @@ export type MobilePostStatPatch = {
   is_liked?: boolean;
   like_num?: number;
   is_collection?: boolean;
+  collected_at?: number;
   collection_num?: number;
   comment_num?: number;
   removed_from_collection?: boolean;
@@ -140,6 +141,14 @@ export const removeUncollectedPosts = (posts: MobilePost[]) =>
     const postId = normalizePostId(post);
     const patch = postStatPatches.get(postId);
     return !patch || patch.is_collection !== false;
+  });
+
+export const orderPostsByLocalCollectionTime = (posts: MobilePost[]) =>
+  [...posts].sort((a, b) => {
+    const aTime = postStatPatches.get(normalizePostId(a))?.collected_at || 0;
+    const bTime = postStatPatches.get(normalizePostId(b))?.collected_at || 0;
+    if (!aTime && !bTime) return 0;
+    return bTime - aTime;
   });
 
 export const emitSipScorePatch = (patch: SipScorePatch) => {

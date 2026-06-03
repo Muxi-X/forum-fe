@@ -21,12 +21,20 @@ const buildQuery = (params?: Record<string, QueryValue>) => {
 
 const request = <T>(
   path: string,
-  options?: { method?: string; query?: Record<string, QueryValue>; body?: unknown },
+  options?: {
+    method?: string;
+    query?: Record<string, QueryValue>;
+    body?: unknown;
+    timeoutMs?: number;
+  },
 ): Promise<ApiEnvelope<T>> =>
   Request(`${path}${buildQuery(options?.query)}`, {
     method: options?.method || 'GET',
     body: options?.body,
+    timeoutMs: options?.timeoutMs,
   });
+
+const listTimeoutMs = 12000;
 
 export type MobileUser = {
   id?: number;
@@ -185,7 +193,10 @@ export const mobileApi = {
     update: (body: Record<string, unknown>) =>
       request<Record<string, never>>('/post', { method: 'PUT', body }),
     published: (userId: number, query?: Record<string, QueryValue>) =>
-      request<{ posts?: MobilePost[] }>(`/post/published/${userId}`, { query }),
+      request<{ posts?: MobilePost[] }>(`/post/published/${userId}`, {
+        query,
+        timeoutMs: listTimeoutMs,
+      }),
   },
   comments: {
     list: (body: Record<string, unknown>) =>
@@ -208,7 +219,10 @@ export const mobileApi = {
         body: { target_id, target_type },
       }),
     list: (userId: number, query?: Record<string, QueryValue>) =>
-      request<{ posts?: MobilePost[] }>(`/collection/list/${userId}`, { query }),
+      request<{ posts?: MobilePost[] }>(`/collection/list/${userId}`, {
+        query,
+        timeoutMs: listTimeoutMs,
+      }),
   },
   report: (body: Record<string, unknown>) =>
     request<Record<string, never>>('/report', { method: 'POST', body }),
@@ -225,11 +239,22 @@ export const mobileApi = {
         following_count?: number;
         follower_count?: number;
       }>('/user/follow', { method: 'POST', body: { target_user_id } }),
-    messages: () => request<{ messages?: string[] }>('/user/message/list'),
-    privateMessages: () =>
-      request<{ messages?: PrivateMessage[] }>('/user/private_message/list'),
+    followList: (
+      userId: number,
+      relation: 'following' | 'followers',
+      query?: Record<string, QueryValue>,
+    ) => request<{ users?: MobileUser[] }>(`/user/${relation}/${userId}`, { query }),
+    messages: (query?: Record<string, QueryValue>) =>
+      request<{ messages?: string[] }>('/user/message/list', { query }),
+    privateMessages: (query?: Record<string, QueryValue>) =>
+      request<{ messages?: PrivateMessage[] }>('/user/private_message/list', { query }),
     sendPrivateMessage: (body: Record<string, unknown>) =>
       request<Record<string, never>>('/user/private_message', { method: 'POST', body }),
+    deletePrivateMessage: (id?: string) =>
+      request<Record<string, never>>('/user/private_message', {
+        method: 'DELETE',
+        query: { id },
+      }),
   },
   chat: {
     history: (id: number, query?: Record<string, QueryValue>) =>
@@ -294,10 +319,12 @@ export const mobileApi = {
     created: (userId: number, query?: Record<string, QueryValue>) =>
       request<{ sip_scores?: SipScoreWithEntries[] }>(`/sip-score/created/${userId}`, {
         query,
+        timeoutMs: listTimeoutMs,
       }),
     collected: (userId: number, query?: Record<string, QueryValue>) =>
       request<{ sip_scores?: SipScoreWithEntries[] }>(`/sip-score/collected/${userId}`, {
         query,
+        timeoutMs: listTimeoutMs,
       }),
   },
 };

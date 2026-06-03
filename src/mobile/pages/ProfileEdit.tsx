@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import styled from 'styled-components';
-import { Input, message } from 'antd';
+import { Input, Switch, message } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import MobileShell from '../components/MobileShell';
 import UploadField from '../components/UploadField';
@@ -140,6 +140,35 @@ const Field = styled.label`
   }
 `;
 
+const ToggleField = styled.div`
+  min-height: 68px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  padding: 14px 18px;
+  background: rgba(255, 255, 255, 0.72);
+  border-top: 1px solid rgba(60, 60, 67, 0.08);
+  .copy {
+    min-width: 0;
+  }
+  h3 {
+    margin: 0 0 4px;
+    color: ${mobilePalette.ink};
+    font-size: 14px;
+    line-height: 1.35;
+  }
+  p {
+    margin: 0;
+    color: ${mobilePalette.muted};
+    font-size: 12px;
+    line-height: 1.45;
+  }
+  .ant-switch-checked {
+    background: ${mobilePalette.orange};
+  }
+`;
+
 const FixedSubmit = styled(PrimaryButton)`
   position: fixed;
   left: 24px;
@@ -184,8 +213,8 @@ const ProfileEdit: React.FC = () => {
       name: form.name,
       avatar_url: form.avatar || form.avatar_url,
       signature: form.signature,
-      is_public_collection_and_like: form.is_public_collection_and_like,
-      is_public_feed: form.is_public_feed,
+      is_public_collection_and_like: form.is_public_collection_and_like !== false,
+      is_public_feed: form.is_public_feed !== false,
     });
     if (res.code !== 0) {
       message.error(res.message);
@@ -245,6 +274,28 @@ const ProfileEdit: React.FC = () => {
               onChange={(event) => setForm({ ...form, signature: event.target.value })}
             />
           </Field>
+          <ToggleField>
+            <div className="copy">
+              <h3>公开动态</h3>
+              <p>允许其他茶友查看你的动态。</p>
+            </div>
+            <Switch
+              checked={form.is_public_feed !== false}
+              onChange={(checked) => setForm({ ...form, is_public_feed: checked })}
+            />
+          </ToggleField>
+          <ToggleField>
+            <div className="copy">
+              <h3>公开收藏和点赞</h3>
+              <p>允许其他茶友查看你的收藏与点赞。</p>
+            </div>
+            <Switch
+              checked={form.is_public_collection_and_like !== false}
+              onChange={(checked) =>
+                setForm({ ...form, is_public_collection_and_like: checked })
+              }
+            />
+          </ToggleField>
         </FormCard>
         <FixedSubmit onClick={submit}>确定</FixedSubmit>
         <MobileBottomSheet

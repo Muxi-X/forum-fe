@@ -51,6 +51,9 @@ const App = () => {
   const { run: getUser } = useRequest(API.user.getUserMyprofile.request, {
     onSuccess: (res) => {
       setUser(res.data);
+      if (res.data.id) {
+        localStorage.setItem('userId', String(res.data.id));
+      }
     },
     manual: true,
     refreshDeps: [],

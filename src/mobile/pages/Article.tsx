@@ -16,6 +16,7 @@ import { mobileMotion, mobilePalette, mobileRadius, PrimaryButton } from '../sty
 import { mobileApi, MobileComment, MobilePost } from '../api';
 import { TARGET_TYPE, TYPE_NAME, SORT_TYPE, mobileTableByCategory } from '../constants';
 import { applyStoredPostStatPatches, emitPostStatPatch } from '../postEvents';
+import { sendPostInteractionNotification } from '../notifications';
 import moment from 'utils/moment';
 
 const ArticleWrap = styled.article`
@@ -41,12 +42,18 @@ const Title = styled.h1`
   color: ${mobilePalette.ink};
 `;
 
-const Author = styled.div`
+const Author = styled.button`
   display: flex;
   align-items: center;
   gap: 9px;
+  padding: 0;
+  background: transparent;
   color: ${mobilePalette.muted};
   font-size: 12px;
+  text-align: left;
+  &:disabled {
+    cursor: default;
+  }
 `;
 
 const Content = styled.div`
@@ -138,6 +145,31 @@ const CommentHead = styled.div`
   gap: 8px;
   color: ${mobilePalette.muted};
   font-size: 12px;
+`;
+
+const CommentUserButton = styled.button`
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  padding: 0;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  strong {
+    max-width: 118px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+`;
+
+const InlineUserButton = styled.button`
+  display: inline;
+  padding: 0;
+  background: transparent;
+  color: inherit;
+  font-weight: 800;
 `;
 
 const CommentText = styled.p`
@@ -262,14 +294,17 @@ const getPostImages = (post: MobilePost) => {
 const CommentList: React.FC<{
   comments: MobileComment[];
   onReply: (comment: MobileComment) => void;
+  onOpenUser: (userId?: number) => void;
   replyingId?: number;
-}> = ({ comments, onReply, replyingId }) => (
+}> = ({ comments, onReply, onOpenUser, replyingId }) => (
   <>
     {comments.map((comment) => (
       <CommentItem key={comment.id}>
         <CommentHead>
-          <MobileAvatar url={comment.creator_avatar} size={28} />
-          <strong>{comment.creator_name || '茶友'}</strong>
+          <CommentUserButton type="button" onClick={() => onOpenUser(comment.creator_id)}>
+            <MobileAvatar url={comment.creator_avatar} size={28} />
+            <strong>{comment.creator_name || '茶友'}</strong>
+          </CommentUserButton>
           <span>{getTime(comment) ? moment(getTime(comment)).fromNow() : ''}</span>
           <ReplyButton
             type="button"
@@ -297,7 +332,12 @@ const CommentList: React.FC<{
           <SubComments>
             {comment.sub_comments.map((sub) => (
               <p key={sub.id}>
-                <strong>{sub.creator_name || '茶友'}</strong>
+                <InlineUserButton
+                  type="button"
+                  onClick={() => onOpenUser(sub.creator_id)}
+                >
+                  {sub.creator_name || '茶友'}
+                </InlineUserButton>
                 {sub.be_replied_user_name ? (
                   <>
                     {' '}
@@ -409,6 +449,8 @@ const Article: React.FC = () => {
         is_liked: post.is_liked,
         like_num: post.like_num,
       });
+    } else if (nextPost.is_liked) {
+      sendPostInteractionNotification(post, 'like');
     }
   };
 
@@ -438,6 +480,8 @@ const Article: React.FC = () => {
         is_collection: post.is_collection,
         collection_num: post.collection_num,
       });
+    } else if (nextPost.is_collection) {
+      sendPostInteractionNotification(post, 'collection');
     }
   };
 
@@ -475,6 +519,14 @@ const Article: React.FC = () => {
       const nextCommentNum = (post.comment_num || 0) + 1;
       setPost({ ...post, comment_num: nextCommentNum });
       emitPostStatPatch({ id: post.id, comment_num: nextCommentNum });
+      sendPostInteractionNotification(post, replyTo ? 'reply_comment' : 'comment', {
+        targetUserIds: replyTo
+          ? [replyTo.creator_id, post.creator_id]
+          : [post.creator_id],
+        content,
+        commentId: replyTo?.id,
+        commentContent: replyTo?.content,
+      });
     } finally {
       setSubmitting(false);
     }
@@ -526,7 +578,11 @@ const Article: React.FC = () => {
           {table.name}
         </TableLabel>
         <Title>{post.title}</Title>
-        <Author>
+        <Author
+          type="button"
+          disabled={!post.creator_id}
+          onClick={() => post.creator_id && nav(`/user/${post.creator_id}`)}
+        >
           <MobileAvatar url={post.creator_avatar} size={30} />
           <span>{post.creator_name || '茶友'}</span>
           <span>{post.time ? moment(post.time).fromNow() : ''}</span>
@@ -571,6 +627,7 @@ const Article: React.FC = () => {
           <CommentList
             comments={comments}
             onReply={setReplyTo}
+            onOpenUser={(id) => id && nav(`/user/${id}`)}
             replyingId={replyTo?.id}
           />
         ) : (
