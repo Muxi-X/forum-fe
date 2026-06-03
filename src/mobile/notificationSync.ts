@@ -1,6 +1,7 @@
 import useNotification, { Notification } from 'store/useNotification';
 import { mobileApi, PrivateMessage } from './api';
 import { refreshChatUnreadStore } from './chatSync';
+import { parseMobileTime } from './time';
 
 export const notificationPollIntervalMs = 5000;
 
@@ -23,8 +24,8 @@ export const buildNoticeContent = (item: PrivateMessage) => {
 };
 
 export const getNoticeTime = (item: PrivateMessage, index = 0) => {
-  const time = item.created_at ? new Date(item.created_at).getTime() : 0;
-  return Number.isFinite(time) && time > 0 ? time : Date.now() - index;
+  const time = parseMobileTime(item.created_at);
+  return time || -index;
 };
 
 export const toStoreNotifications = (items: PrivateMessage[]): Notification[] =>

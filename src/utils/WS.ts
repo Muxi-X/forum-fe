@@ -37,8 +37,9 @@ class WS {
   token: string;
   listeners = new Set<MessageHandler>();
   reconnectAttempts = 0; //当前ws重连次数
-  maxReconnectAttempts = 3; //最大ws重连次数
+  maxReconnectAttempts = 10; //最大ws重连次数
   reconnectTimeout: any = null; //重连延时器
+  manuallyClosed = false;
   constructor(token: string) {
     this.token = token;
     this.connect();
@@ -46,8 +47,10 @@ class WS {
 
   connect() {
     if (this.ws) {
+      this.ws.onclose = null;
       this.ws.close();
     }
+    this.manuallyClosed = false;
     this.ws = new WebSocket(this.url, this.token);
 
     this.ws.onopen = () => {
@@ -73,6 +76,7 @@ class WS {
 
     this.ws.onclose = () => {
       console.warn('WebSocket 已关闭');
+      if (this.manuallyClosed) return;
       this.reconnect();
     };
   }
@@ -97,7 +101,7 @@ class WS {
     this.reconnectAttempts++;
     this.reconnectTimeout = setTimeout(() => {
       this.connect();
-    }, 10000);
+    }, 3000);
   }
 
   clear() {
@@ -108,6 +112,7 @@ class WS {
 
   close() {
     if (this.ws) {
+      this.manuallyClosed = true;
       this.clear();
       this.ws.close();
     }

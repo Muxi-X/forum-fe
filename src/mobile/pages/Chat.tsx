@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import styled from 'styled-components';
 import { Input, message } from 'antd';
 import { useLocation, useSearchParams } from 'react-router-dom';
@@ -12,11 +12,12 @@ import useNotification from 'store/useNotification';
 import WS, { MsgResponse } from 'utils/WS';
 import moment from 'utils/moment';
 import { markChatConversationRead } from '../chatSync';
+import { parseMobileTime } from '../time';
 
 const Wrap = styled.div`
   display: grid;
   grid-template-rows: 1fr auto;
-  min-height: calc(100dvh - 56px - env(safe-area-inset-top));
+  height: calc(100dvh - 56px - env(safe-area-inset-top));
   background: ${mobilePalette.bg};
 `;
 
@@ -78,38 +79,83 @@ const Chat: React.FC = () => {
   const [text, setText] = useState('');
   const [sending, setSending] = useState(false);
   const socketRef = useRef<WS | null>(null);
+  const messagesRef = useRef<HTMLDivElement | null>(null);
 
   const myId = userProfile.id || Number(localStorage.getItem('userId')) || 0;
   const title = useMemo(() => target?.name || '私信', [target]);
 
+  const recordKey = (record: MsgResponse) =>
+    `${record.sender_id}-${record.receiver_id}-${record.time}-${record.content}`;
+
+  const mergeRecords = (prev: MsgResponse[], next: MsgResponse[]) => {
+    const map = new Map<string, MsgResponse>();
+    [...prev, ...next].forEach((record) => {
+      map.set(recordKey(record), record);
+    });
+    return Array.from(map.values()).sort(
+      (a, b) => parseMobileTime(a.time) - parseMobileTime(b.time),
+    );
+  };
+
   const appendRecord = (record: MsgResponse) => {
     setRecords((prev) => {
-      const key = `${record.sender_id}-${record.receiver_id}-${record.time}-${record.content}`;
-      if (
-        prev.some(
-          (item) =>
-            `${item.sender_id}-${item.receiver_id}-${item.time}-${item.content}` === key,
-        )
-      ) {
-        return prev;
-      }
-      return [...prev, record];
+      if (prev.some((item) => recordKey(item) === recordKey(record))) return prev;
+      return mergeRecords(prev, [record]);
     });
   };
+
+  const loadHistory = useCallback(
+    async (options?: { markRead?: boolean }) => {
+      if (!targetId) return;
+      const res = await mobileApi.chat.history(targetId, { limit: 50 });
+      if (res.code !== 0 || !Array.isArray(res.data)) return;
+      setRecords((prev) => mergeRecords(prev, res.data as MsgResponse[]));
+      if (options?.markRead) {
+        markChatRead(targetId);
+        markChatConversationRead(targetId).catch((err) =>
+          console.error('标记私信已读失败:', err),
+        );
+      }
+    },
+    [targetId, markChatRead],
+  );
 
   useEffect(() => {
     if (!targetId) return;
     mobileApi.user.profile(targetId).then((res) => {
       if (res.code === 0) setTarget(res.data);
     });
-    mobileApi.chat.history(targetId, { limit: 50 }).then((res) => {
-      if (res.code === 0 && Array.isArray(res.data))
-        setRecords(res.data.reverse() as MsgResponse[]);
+    setRecords([]);
+    loadHistory({ markRead: true });
+  }, [targetId, loadHistory]);
+
+  useEffect(() => {
+    if (!targetId) return;
+    let stopped = false;
+    const refreshHistory = () => {
+      if (stopped || document.visibilityState !== 'visible') return;
+      loadHistory({ markRead: true }).catch((err) =>
+        console.error('刷新私信记录失败:', err),
+      );
+    };
+    const timer = window.setInterval(refreshHistory, 3000);
+    window.addEventListener('focus', refreshHistory);
+    document.addEventListener('visibilitychange', refreshHistory);
+    return () => {
+      stopped = true;
+      window.clearInterval(timer);
+      window.removeEventListener('focus', refreshHistory);
+      document.removeEventListener('visibilitychange', refreshHistory);
+    };
+  }, [targetId, loadHistory]);
+
+  useEffect(() => {
+    const el = messagesRef.current;
+    if (!el) return;
+    window.requestAnimationFrame(() => {
+      el.scrollTop = el.scrollHeight;
     });
-    markChatConversationRead(targetId).catch((err) =>
-      console.error('标记私信已读失败:', err),
-    );
-  }, [targetId]);
+  }, [records.length, targetId]);
 
   useEffect(() => {
     const socket = ws;
@@ -178,7 +224,7 @@ const Chat: React.FC = () => {
   return (
     <MobileShell title={title} back tabs={false}>
       <Wrap>
-        <Messages>
+        <Messages ref={messagesRef}>
           {records.length ? (
             records.map((record, index) => (
               <React.Fragment key={`${record.time}-${index}`}>

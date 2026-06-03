@@ -23,6 +23,7 @@ import {
   refreshChatUnreadStore,
   toChatUnreadMap,
 } from '../chatSync';
+import { parseMobileTime } from '../time';
 
 const List = styled(Section)`
   margin-top: 0;
@@ -97,8 +98,8 @@ const DotBadge = styled(Badge)`
 `;
 
 const getChatTime = (user: ChatUser, index = 0) => {
-  const time = user.last_message_time ? new Date(user.last_message_time).getTime() : 0;
-  return Number.isFinite(time) && time > 0 ? time : Date.now() - index;
+  const time = parseMobileTime(user.last_message_time);
+  return time || -index;
 };
 
 type ListEntry =
