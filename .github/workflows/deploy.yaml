@@ -62,10 +62,11 @@ jobs:
           mkdir -p ~/.ssh
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -H ${{ secrets.SERVER }} >> ~/.ssh/known_hosts
       - name: SSH into server and deploy
         run: |
-          ssh -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER }} << EOF
+          ssh -i ~/.ssh/id_rsa \
+              -o StrictHostKeyChecking=no \
+              ${{ secrets.SERVER_USER }}@${{ secrets.SERVER }} << EOF
             cd ${{ needs.vars.outputs.deploy_dir }}
             docker rm -f ${{ needs.vars.outputs.service }} || true
             docker pull ${{ secrets.IMAGE_REPO }}/forum_fe:${{ needs.vars.outputs.image_tag }}
