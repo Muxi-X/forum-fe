@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useLayoutEffect, useState } from 'react';
 import styled from 'styled-components';
 import {
   useLocation,
@@ -19,6 +19,12 @@ import BackToTopButton from '../components/BackToTopButton';
 import DesignIcon from '../components/DesignIcon';
 import { mobileMotion, mobilePalette, mobileRadius, Section } from '../styles';
 import { mobileApi, MobilePost, MobileUser, SipScoreWithEntries } from '../api';
+import {
+  emitMobileFollowPatch,
+  getFollowRevision,
+  MOBILE_FOLLOW_EVENT,
+  MobileFollowPatch,
+} from '../followEvents';
 import { mastergoAssets } from '../assets/mastergo';
 import { clearAuthStorage } from '../../utils/auth';
 import useNotification from 'store/useNotification';
@@ -47,6 +53,7 @@ type ProfileCacheState = {
   collectedPosts: MobilePost[];
   collectedRankings: SipScoreWithEntries[];
   currentUserId: number;
+  followRevision: number;
   postRevision: number;
   sipScoreRevision: number;
 };
@@ -59,6 +66,26 @@ export const clearMobileProfileCache = (profileId?: number) => {
     return;
   }
   profileCache.clear();
+};
+
+export const applyMobileProfileFollowPatch = (patch: MobileFollowPatch) => {
+  if (!patch?.targetUserId) return;
+  profileCache.forEach((cache) => {
+    if (cache.profile.id === patch.targetUserId) {
+      cache.profile = {
+        ...cache.profile,
+        is_following: patch.is_following,
+        follower_count: patch.follower_count ?? cache.profile.follower_count,
+      };
+    }
+    if (cache.profile.id === patch.currentUserId) {
+      cache.profile = {
+        ...cache.profile,
+        following_count: patch.following_count ?? cache.profile.following_count,
+      };
+    }
+    cache.followRevision = getFollowRevision();
+  });
 };
 
 const Hero = styled.section`
@@ -449,11 +476,27 @@ const Profile: React.FC = () => {
   const nav = useNavigate();
   const myId = Number(localStorage.getItem('userId')) || 0;
   const { unreadCount } = useNotification();
-  const [currentUserId, setCurrentUserId] = useState(myId);
-  const [profile, setProfile] = useState<MobileUser | null>(null);
-  const [posts, setPosts] = useState<MobilePost[]>([]);
-  const [collectedPosts, setCollectedPosts] = useState<MobilePost[]>([]);
-  const [collectedRankings, setCollectedRankings] = useState<SipScoreWithEntries[]>([]);
+  const initialTargetId = userId || myId;
+  const initialCacheCandidate = initialTargetId
+    ? profileCache.get(initialTargetId)
+    : undefined;
+  const initialCache =
+    initialCacheCandidate &&
+    initialCacheCandidate.postRevision === getPostRevision() &&
+    initialCacheCandidate.sipScoreRevision === getSipScoreRevision()
+      ? initialCacheCandidate
+      : undefined;
+  const [currentUserId, setCurrentUserId] = useState(initialCache?.currentUserId || myId);
+  const [profile, setProfile] = useState<MobileUser | null>(
+    initialCache?.profile || null,
+  );
+  const [posts, setPosts] = useState<MobilePost[]>(initialCache?.posts || []);
+  const [collectedPosts, setCollectedPosts] = useState<MobilePost[]>(
+    initialCache?.collectedPosts || [],
+  );
+  const [collectedRankings, setCollectedRankings] = useState<SipScoreWithEntries[]>(
+    initialCache?.collectedRankings || [],
+  );
   const [expanded, setExpanded] = useState<Record<'posts' | 'collections', boolean>>({
     posts: false,
     collections: false,
@@ -463,7 +506,7 @@ const Profile: React.FC = () => {
     rankings: false,
   });
   const [toast, setToast] = useState<string>('');
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!initialCache);
   const [sectionsLoading, setSectionsLoading] = useState(false);
   const [error, setError] = useState('');
   const isMine = Boolean(
@@ -473,15 +516,35 @@ const Profile: React.FC = () => {
   );
   const canViewCollection = isMine || profile?.is_public_collection_and_like !== false;
 
+  const remoteListState = () =>
+    isMine ? null : { forceReload: Date.now(), source: 'profile' };
+
   const resetVisibleStateForRoute = () => {
-    setProfile(null);
-    setPosts([]);
-    setCollectedPosts([]);
-    setCollectedRankings([]);
+    const nextTarget = userId || currentUserId;
+    const cacheCandidate = nextTarget ? profileCache.get(nextTarget) : undefined;
+    const cached =
+      cacheCandidate &&
+      cacheCandidate.postRevision === getPostRevision() &&
+      cacheCandidate.sipScoreRevision === getSipScoreRevision()
+        ? cacheCandidate
+        : undefined;
+    if (cached) {
+      setProfile(cached.profile);
+      setPosts(cached.posts);
+      setCollectedPosts(cached.collectedPosts);
+      setCollectedRankings(cached.collectedRankings);
+      setCurrentUserId(cached.currentUserId);
+      setLoading(false);
+    } else {
+      setProfile(null);
+      setPosts([]);
+      setCollectedPosts([]);
+      setCollectedRankings([]);
+      setLoading(true);
+    }
     setExpanded({ posts: false, collections: false });
     setCollectionExpanded({ posts: false, rankings: false });
     setError('');
-    setLoading(true);
     setSectionsLoading(false);
   };
 
@@ -631,6 +694,7 @@ const Profile: React.FC = () => {
       collectedPosts: nextCollectedPosts,
       collectedRankings: nextCollectedRankings,
       currentUserId: resolvedCurrentUserId,
+      followRevision: getFollowRevision(),
       postRevision: getPostRevision(),
       sipScoreRevision: getSipScoreRevision(),
     });
@@ -638,7 +702,7 @@ const Profile: React.FC = () => {
     setLoading(false);
   };
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     resetVisibleStateForRoute();
     if ((state as any)?.refreshProfile) {
       refreshProfile();
@@ -726,6 +790,33 @@ const Profile: React.FC = () => {
   }, []);
 
   useEffect(() => {
+    const handleFollowPatch = (event: Event) => {
+      const patch = (event as CustomEvent<MobileFollowPatch>).detail;
+      if (!patch?.targetUserId) return;
+      setProfile((current) => {
+        if (!current?.id) return current;
+        if (current.id === patch.targetUserId) {
+          return {
+            ...current,
+            is_following: patch.is_following,
+            follower_count: patch.follower_count ?? current.follower_count,
+          };
+        }
+        if (current.id === patch.currentUserId) {
+          return {
+            ...current,
+            following_count: patch.following_count ?? current.following_count,
+          };
+        }
+        return current;
+      });
+      applyMobileProfileFollowPatch(patch);
+    };
+    window.addEventListener(MOBILE_FOLLOW_EVENT, handleFollowPatch);
+    return () => window.removeEventListener(MOBILE_FOLLOW_EVENT, handleFollowPatch);
+  }, []);
+
+  useEffect(() => {
     if (!toast) return;
     const timer = window.setTimeout(() => setToast(''), 1800);
     return () => window.clearTimeout(timer);
@@ -755,6 +846,14 @@ const Profile: React.FC = () => {
         };
       }
     }
+    emitMobileFollowPatch({
+      targetUserId: profile.id,
+      currentUserId,
+      targetUser: nextProfile,
+      is_following: res.data.is_following,
+      following_count: res.data.following_count,
+      follower_count: res.data.follower_count,
+    });
   };
 
   const logout = () => {
@@ -827,14 +926,18 @@ const Profile: React.FC = () => {
             <Counts>
               <button
                 type="button"
-                onClick={() => nav(`/user/${profileId}/following`)}
+                onClick={() =>
+                  nav(`/user/${profileId}/following`, { state: remoteListState() })
+                }
                 aria-label="查看关注列表"
               >
                 <strong>{profile.following_count || 0}</strong>关注
               </button>
               <button
                 type="button"
-                onClick={() => nav(`/user/${profileId}/followers`)}
+                onClick={() =>
+                  nav(`/user/${profileId}/followers`, { state: remoteListState() })
+                }
                 aria-label="查看粉丝列表"
               >
                 <strong>{profile.follower_count || 0}</strong>粉丝
@@ -884,7 +987,11 @@ const Profile: React.FC = () => {
                 {!sectionsLoading && posts.length > 1 ? (
                   <ViewAllButton
                     type="button"
-                    onClick={() => nav(profileListPath(profileId, 'published'))}
+                    onClick={() =>
+                      nav(profileListPath(profileId, 'published'), {
+                        state: remoteListState(),
+                      })
+                    }
                   >
                     <span>查看全部帖子</span>
                     <DesignIcon name="chevronRight" size={18} />
@@ -955,7 +1062,11 @@ const Profile: React.FC = () => {
                       {!sectionsLoading && collectedPosts.length > 1 ? (
                         <ViewAllButton
                           type="button"
-                          onClick={() => nav(profileListPath(profileId, 'post'))}
+                          onClick={() =>
+                            nav(profileListPath(profileId, 'post'), {
+                              state: remoteListState(),
+                            })
+                          }
                         >
                           <span>查看全部收藏帖子</span>
                           <DesignIcon name="chevronRight" size={18} />
@@ -1016,7 +1127,11 @@ const Profile: React.FC = () => {
                       {!sectionsLoading && collectedRankings.length > 1 ? (
                         <ViewAllButton
                           type="button"
-                          onClick={() => nav(profileListPath(profileId, 'sipScore'))}
+                          onClick={() =>
+                            nav(profileListPath(profileId, 'sipScore'), {
+                              state: remoteListState(),
+                            })
+                          }
                         >
                           <span>查看全部收藏榜单</span>
                           <DesignIcon name="chevronRight" size={18} />

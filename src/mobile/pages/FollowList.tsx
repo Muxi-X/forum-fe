@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import styled from 'styled-components';
 import { message } from 'antd';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
@@ -8,9 +8,16 @@ import LoadingState from '../components/LoadingState';
 import ErrorState from '../components/ErrorState';
 import MobileAvatar from '../components/MobileAvatar';
 import DesignIcon from '../components/DesignIcon';
+import PullToRefresh from '../components/PullToRefresh';
 import { mobileApi, MobileUser } from '../api';
+import {
+  emitMobileFollowPatch,
+  getFollowRevision,
+  MOBILE_FOLLOW_EVENT,
+  MobileFollowPatch,
+} from '../followEvents';
 import { mobileMotion, mobilePalette, mobileRadius, Section } from '../styles';
-import { clearMobileProfileCache } from './Profile';
+import { applyMobileProfileFollowPatch } from './Profile';
 
 const List = styled(Section)`
   min-height: calc(100dvh - 56px - env(safe-area-inset-top));
@@ -94,56 +101,191 @@ const AvatarButton = styled.button`
   background: transparent;
 `;
 
+type FollowMode = 'following' | 'followers';
+
+type FollowListCacheState = {
+  users: MobileUser[];
+  currentUserId: number;
+  followRevision: number;
+};
+
+const followListCache = new Map<string, FollowListCacheState>();
+const followListCacheKey = (userId: number, mode: FollowMode) => `${userId}:${mode}`;
+
+const applyFollowPatchToUsers = (
+  users: MobileUser[],
+  ownerUserId: number,
+  mode: FollowMode,
+  patch: MobileFollowPatch,
+) => {
+  const shouldRemove =
+    mode === 'following' &&
+    ownerUserId === patch.currentUserId &&
+    patch.is_following === false;
+  const patchedUsers = shouldRemove
+    ? users.filter((item) => item.id !== patch.targetUserId)
+    : users.map((item) =>
+        item.id === patch.targetUserId
+          ? {
+              ...item,
+              is_following: patch.is_following,
+              follower_count: patch.follower_count ?? item.follower_count,
+            }
+          : item.id === patch.currentUserId
+          ? {
+              ...item,
+              following_count: patch.following_count ?? item.following_count,
+            }
+          : item,
+      );
+  const targetUser = patch.targetUser;
+  const shouldInsert =
+    mode === 'following' &&
+    ownerUserId === patch.currentUserId &&
+    patch.is_following &&
+    targetUser &&
+    !patchedUsers.some((item) => item.id === patch.targetUserId);
+  return shouldInsert
+    ? [
+        {
+          ...targetUser,
+          is_following: true,
+          follower_count: patch.follower_count ?? targetUser.follower_count,
+        },
+        ...patchedUsers,
+      ]
+    : patchedUsers;
+};
+
+const applyFollowPatchToFollowCaches = (patch: MobileFollowPatch) => {
+  followListCache.forEach((cache, key) => {
+    const [ownerId, ownerMode] = key.split(':');
+    cache.users = applyFollowPatchToUsers(
+      cache.users,
+      Number(ownerId),
+      ownerMode === 'followers' ? 'followers' : 'following',
+      patch,
+    );
+    cache.followRevision = getFollowRevision();
+  });
+};
+
+const followCacheListenerKey = '__forumMobileFollowCacheListener';
+
+if (
+  typeof window !== 'undefined' &&
+  !(window as typeof window & Record<string, boolean>)[followCacheListenerKey]
+) {
+  (window as typeof window & Record<string, boolean>)[followCacheListenerKey] = true;
+  window.addEventListener(MOBILE_FOLLOW_EVENT, (event) => {
+    const patch = (event as CustomEvent<MobileFollowPatch>).detail;
+    if (patch?.targetUserId) applyFollowPatchToFollowCaches(patch);
+  });
+}
+
 const FollowList: React.FC = () => {
   const { user_id } = useParams();
   const nav = useNavigate();
-  const { pathname } = useLocation();
+  const location = useLocation();
+  const { pathname, state } = location;
   const userId = Number(user_id);
-  const mode = useMemo<'following' | 'followers'>(
+  const mode = useMemo<FollowMode>(
     () => (pathname.endsWith('/followers') ? 'followers' : 'following'),
     [pathname],
   );
-  const [users, setUsers] = useState<MobileUser[]>([]);
+  const initialCurrentUserId = Number(localStorage.getItem('userId')) || 0;
+  const shouldForceInitialLoad = Boolean((state as any)?.forceReload);
+  const initialCache = userId
+    ? followListCache.get(followListCacheKey(userId, mode))
+    : undefined;
+  const initialUsableCache =
+    !shouldForceInitialLoad &&
+    initialCache &&
+    initialCache.followRevision === getFollowRevision()
+      ? initialCache
+      : undefined;
+  const [users, setUsers] = useState<MobileUser[]>(initialUsableCache?.users || []);
   const [currentUserId, setCurrentUserId] = useState(
-    Number(localStorage.getItem('userId')) || 0,
+    initialUsableCache?.currentUserId || initialCurrentUserId,
   );
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!initialUsableCache);
   const [error, setError] = useState('');
   const [pendingId, setPendingId] = useState<number | null>(null);
+  const requestSeqRef = useRef(0);
 
   const title = mode === 'followers' ? '粉丝' : '关注';
 
-  const load = async () => {
+  const applyCache = (cache: FollowListCacheState) => {
+    setUsers(cache.users);
+    setCurrentUserId(cache.currentUserId);
+    setError('');
+    setLoading(false);
+  };
+
+  const load = async (options?: { force?: boolean }) => {
     if (!userId) return;
-    setLoading(true);
+    const key = followListCacheKey(userId, mode);
+    const cached = followListCache.get(key);
+    const usableCache =
+      cached && cached.followRevision === getFollowRevision() ? cached : undefined;
+    if (usableCache && !options?.force) {
+      applyCache(usableCache);
+      return;
+    }
+    const requestSeq = ++requestSeqRef.current;
+    setLoading(!usableCache);
     setError('');
     try {
       const [listRes, myProfileRes] = await Promise.allSettled([
         mobileApi.user.followList(userId, mode, { limit: 50, page: 0 }),
         currentUserId ? Promise.resolve(null) : mobileApi.user.myProfile(),
       ]);
+      if (requestSeq !== requestSeqRef.current) return;
+      let nextCurrentUserId = currentUserId;
       if (myProfileRes.status === 'fulfilled' && myProfileRes.value?.code === 0) {
         const id = myProfileRes.value.data.id || 0;
+        nextCurrentUserId = id;
         setCurrentUserId(id);
         if (id) localStorage.setItem('userId', String(id));
       }
       if (listRes.status !== 'fulfilled' || listRes.value.code !== 0) {
         const msg =
           listRes.status === 'fulfilled' ? listRes.value.message : '列表加载失败';
-        setError(msg || '列表加载失败');
+        const text = msg || '列表加载失败';
+        if (usableCache) {
+          message.error(text);
+        } else {
+          setError(text);
+        }
         return;
       }
-      setUsers(listRes.value.data.users || []);
+      const nextUsers = listRes.value.data.users || [];
+      setUsers(nextUsers);
+      followListCache.set(key, {
+        users: nextUsers,
+        currentUserId: nextCurrentUserId,
+        followRevision: getFollowRevision(),
+      });
     } catch (err) {
-      setError(err instanceof Error ? err.message : '列表加载失败');
+      if (requestSeq !== requestSeqRef.current) return;
+      const text = err instanceof Error ? err.message : '列表加载失败';
+      if (usableCache) {
+        message.error(text);
+      } else {
+        setError(text);
+      }
     } finally {
-      setLoading(false);
+      if (requestSeq === requestSeqRef.current) setLoading(false);
     }
   };
 
   useEffect(() => {
-    load();
-  }, [userId, mode]);
+    const shouldForce = Boolean((state as any)?.forceReload);
+    load({ force: shouldForce });
+    if (shouldForce) {
+      nav(pathname, { replace: true, state: null });
+    }
+  }, [userId, mode, (state as any)?.forceReload]);
 
   const toggleFollow = async (target: MobileUser) => {
     if (!target.id) return;
@@ -158,26 +300,30 @@ const FollowList: React.FC = () => {
         message.error(res.message || '操作失败');
         return;
       }
-      setUsers((current) =>
-        mode === 'following' && userId === currentUserId && !res.data.is_following
-          ? current.filter((item) => item.id !== target.id)
-          : current.map((item) =>
-              item.id === target.id
-                ? {
-                    ...item,
-                    is_following: res.data.is_following,
-                    follower_count: res.data.follower_count,
-                  }
-                : item,
-            ),
-      );
-      clearMobileProfileCache(target.id);
-      clearMobileProfileCache(userId);
-      if (currentUserId) clearMobileProfileCache(currentUserId);
+      const patch: MobileFollowPatch = {
+        targetUserId: target.id,
+        currentUserId,
+        targetUser: target,
+        is_following: res.data.is_following,
+        following_count: res.data.following_count,
+        follower_count: res.data.follower_count,
+      };
+      emitMobileFollowPatch(patch);
+      applyMobileProfileFollowPatch(patch);
     } finally {
       setPendingId(null);
     }
   };
+
+  useEffect(() => {
+    const handleFollowPatch = (event: Event) => {
+      const patch = (event as CustomEvent<MobileFollowPatch>).detail;
+      if (!patch?.targetUserId) return;
+      setUsers((current) => applyFollowPatchToUsers(current, userId, mode, patch));
+    };
+    window.addEventListener(MOBILE_FOLLOW_EVENT, handleFollowPatch);
+    return () => window.removeEventListener(MOBILE_FOLLOW_EVENT, handleFollowPatch);
+  }, [mode, userId]);
 
   if (loading && !users.length) {
     return (
@@ -190,59 +336,67 @@ const FollowList: React.FC = () => {
   if (error && !users.length) {
     return (
       <MobileShell title={title} back tabs={false}>
-        <ErrorState text={error} onRetry={load} />
+        <ErrorState text={error} onRetry={() => load({ force: true })} />
       </MobileShell>
     );
   }
 
   return (
     <MobileShell title={title} back tabs={false}>
-      {users.length ? (
-        <List>
-          {users.map((user) => {
-            const isMe = Boolean(currentUserId && user.id === currentUserId);
-            return (
-              <UserItem key={user.id}>
-                <AvatarButton
-                  type="button"
-                  onClick={() => user.id && nav(`/user/${user.id}`)}
-                  aria-label={`查看 ${user.name || '茶友'} 的主页`}
-                >
-                  <MobileAvatar url={user.avatar || user.avatar_url} size={46} />
-                </AvatarButton>
-                <UserMain
-                  type="button"
-                  onClick={() => user.id && nav(`/user/${user.id}`)}
-                >
-                  <h3>{user.name || '茶友'}</h3>
-                  <p>{user.signature || '还没有填写简介'}</p>
-                  <span className="counts">
-                    <span>{user.following_count || 0} 关注</span>
-                    <span>{user.follower_count || 0} 粉丝</span>
-                  </span>
-                </UserMain>
-                {isMe ? (
-                  <DesignIcon name="user" size={22} color={mobilePalette.mutedSoft} />
-                ) : (
-                  <FollowButton
+      <PullToRefresh
+        disabled={loading}
+        indicatorTop="calc(66px + env(safe-area-inset-top))"
+        onRefresh={() => load({ force: true })}
+      >
+        {users.length ? (
+          <List>
+            {users.map((user) => {
+              const isMe = Boolean(currentUserId && user.id === currentUserId);
+              return (
+                <UserItem key={user.id}>
+                  <AvatarButton
                     type="button"
-                    active={user.is_following}
-                    disabled={pendingId === user.id}
-                    onClick={() => toggleFollow(user)}
+                    onClick={() => user.id && nav(`/user/${user.id}`)}
+                    aria-label={`查看 ${user.name || '茶友'} 的主页`}
                   >
-                    {user.is_following ? '已关注' : '+ 关注'}
-                  </FollowButton>
-                )}
-              </UserItem>
-            );
-          })}
-        </List>
-      ) : (
-        <EmptyState
-          title={mode === 'followers' ? '还没有粉丝' : '还没有关注的人'}
-          text={mode === 'followers' ? '被关注后会出现在这里。' : '去看看其他茶友吧。'}
-        />
-      )}
+                    <MobileAvatar url={user.avatar || user.avatar_url} size={46} />
+                  </AvatarButton>
+                  <UserMain
+                    type="button"
+                    onClick={() => user.id && nav(`/user/${user.id}`)}
+                  >
+                    <h3>{user.name || '茶友'}</h3>
+                    <p>{user.signature || '还没有填写简介'}</p>
+                    <span className="counts">
+                      <span>{user.following_count || 0} 关注</span>
+                      <span>{user.follower_count || 0} 粉丝</span>
+                    </span>
+                  </UserMain>
+                  {isMe ? (
+                    <DesignIcon name="user" size={22} color={mobilePalette.mutedSoft} />
+                  ) : (
+                    <FollowButton
+                      type="button"
+                      active={user.is_following}
+                      disabled={pendingId === user.id}
+                      onClick={() => toggleFollow(user)}
+                    >
+                      {user.is_following ? '已关注' : '+ 关注'}
+                    </FollowButton>
+                  )}
+                </UserItem>
+              );
+            })}
+          </List>
+        ) : error ? (
+          <ErrorState text={error} onRetry={() => load({ force: true })} />
+        ) : (
+          <EmptyState
+            title={mode === 'followers' ? '还没有粉丝' : '还没有关注的人'}
+            text={mode === 'followers' ? '被关注后会出现在这里。' : '去看看其他茶友吧。'}
+          />
+        )}
+      </PullToRefresh>
     </MobileShell>
   );
 };

@@ -17,10 +17,10 @@ const Root = styled.div`
   overscroll-behavior-y: contain;
 `;
 
-const Indicator = styled.div<{ pull: number; active: boolean }>`
+const Indicator = styled.div<{ pull: number; active: boolean; $top?: string }>`
   position: fixed;
   left: 50%;
-  top: calc(10px + env(safe-area-inset-top));
+  top: ${(props) => props.$top || 'calc(10px + env(safe-area-inset-top))'};
   z-index: 80;
   display: inline-flex;
   align-items: center;
@@ -70,9 +70,10 @@ const Spinner = styled.span<{ refreshing: boolean }>`
 
 const PullToRefresh: React.FC<{
   disabled?: boolean;
+  indicatorTop?: string;
   onRefresh: () => Promise<void> | void;
   children: React.ReactNode;
-}> = ({ disabled, onRefresh, children }) => {
+}> = ({ disabled, indicatorTop, onRefresh, children }) => {
   const startYRef = useRef<number | null>(null);
   const pointerIdRef = useRef<number | null>(null);
   const [pull, setPull] = useState(0);
@@ -162,7 +163,13 @@ const PullToRefresh: React.FC<{
       onPointerUp={handlePointerUp}
       onPointerCancel={reset}
     >
-      <Indicator pull={pull} active={active} aria-live="polite" aria-hidden={!active}>
+      <Indicator
+        pull={pull}
+        active={active}
+        $top={indicatorTop}
+        aria-live="polite"
+        aria-hidden={!active}
+      >
         {active ? (
           <>
             <SpinnerShell pull={pull}>
