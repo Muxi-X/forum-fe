@@ -194,6 +194,9 @@ const DesktopArticle: React.FC = () => {
     like_num,
     collection_num,
   } = articleInfo;
+  const articleCreateTime =
+    (articleInfo as defs.post_GetPostResponse & { create_time?: string }).create_time ||
+    time;
 
   useEffect(() => {
     if (document.body.scrollHeight < window.innerHeight * 3) {
@@ -496,7 +499,9 @@ const DesktopArticle: React.FC = () => {
                   <div className="info">
                     <style.Name>{creator_name}</style.Name>
                     <style.Time>
-                      {moment(time).format('YYYY年MM月DD日 HH:MM:ss')}
+                      {articleCreateTime
+                        ? moment(articleCreateTime).format('YYYY年MM月DD日 HH:mm:ss')
+                        : ''}
                     </style.Time>
                   </div>
                 </style.CreatorInfo>

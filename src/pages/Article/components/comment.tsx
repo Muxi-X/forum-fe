@@ -20,6 +20,11 @@ const { TextArea } = Input;
 
 type commentType = 'comment' | 'subComment' | 'reply';
 
+type PostCommentRequest = defs.comment_CreateRequest & {
+  target_id: number;
+  target_type: 'post';
+};
+
 type HandleAddComment = (
   num: number,
   content?: string,
@@ -185,16 +190,17 @@ const CommentItem: React.FC<CommentItemProps> = ({
     if (commentType === 'comment') type = 'first-level';
     else type = 'second-level';
 
-    run(
-      {},
-      {
-        content: replyContent,
-        post_id,
-        father_id: id,
-        type_name: type,
-        img_url: img,
-      },
-    );
+    const payload: PostCommentRequest = {
+      content: replyContent,
+      post_id,
+      target_id: post_id,
+      target_type: 'post',
+      father_id: id,
+      type_name: type,
+      img_url: img,
+    };
+
+    run({}, payload);
   };
 
   const handleUpload = (src: string) => {
@@ -510,10 +516,17 @@ const CommentCp = (props: IProps, ref: any) => {
   }); //这是用于处理根评论
 
   const handleSubmit = () => {
-    run(
-      {},
-      { content, post_id, father_id: post_id, type_name: 'sub-post', img_url: img },
-    );
+    const payload: PostCommentRequest = {
+      content,
+      post_id,
+      target_id: post_id,
+      target_type: 'post',
+      father_id: post_id,
+      type_name: 'sub-post',
+      img_url: img,
+    };
+
+    run({}, payload);
   };
 
   const handleUpload = (src: string) => {
