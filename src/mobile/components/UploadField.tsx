@@ -2,11 +2,13 @@ import React, { useState } from 'react';
 import styled from 'styled-components';
 import { message } from 'antd';
 import useProfile from 'store/useProfile';
-import qiniupload, { observer, CompleteRes } from 'utils/qiniup';
+import qiniupload, { CompleteRes } from 'utils/qiniup';
 import { QiniuServer } from 'config';
 import { mobileMotion, mobilePalette, mobileRadius } from '../styles';
 import { mastergoAssets } from '../assets/mastergo';
 import DesignIcon from './DesignIcon';
+
+const uploadTimeoutMs = 30000;
 
 const Box = styled.label<{ compact?: boolean; round?: boolean }>`
   width: ${(props) => (props.compact ? '88px' : '100%')};
@@ -69,42 +71,63 @@ const Preview = styled.label<{ compact?: boolean; round?: boolean }>`
 const UploadField: React.FC<{
   value?: string;
   onChange: (url: string) => void;
-  uploadFile?: (file: File) => Promise<string>;
   compact?: boolean;
   round?: boolean;
   iconOnly?: boolean;
   label?: string;
-}> = ({ value, onChange, uploadFile, compact, round, iconOnly, label }) => {
+  onUploadingChange?: (uploading: boolean) => void;
+}> = ({ value, onChange, compact, round, iconOnly, label, onUploadingChange }) => {
   const { qiniuToken } = useProfile();
   const [uploading, setUploading] = useState(false);
 
+  const setUploadState = (nextUploading: boolean) => {
+    setUploading(nextUploading);
+    onUploadingChange?.(nextUploading);
+  };
+
   const handleUpload = (file: File) => {
-    setUploading(true);
-    if (uploadFile) {
-      uploadFile(file)
-        .then((url) => {
-          onChange(url);
-          message.success('上传成功');
-        })
-        .catch((err: any) => {
-          message.error(err?.message || '上传失败');
-        })
-        .finally(() => {
-          setUploading(false);
-        });
+    if (!qiniuToken) {
+      message.error('图片上传凭证缺失，请重新登录后再试');
       return;
     }
 
-    observer.complete = (res: CompleteRes) => {
-      setUploading(false);
-      onChange(QiniuServer + res.key);
-      message.success('上传成功');
+    setUploadState(true);
+    let settled = false;
+    let subscription: ReturnType<typeof qiniupload> | undefined;
+    const uploadTimer = window.setTimeout(() => {
+      if (settled) return;
+      settled = true;
+      subscription?.unsubscribe();
+      setUploadState(false);
+      message.error('上传超时，请稍后重试');
+    }, uploadTimeoutMs);
+
+    const clearUploadState = () => {
+      settled = true;
+      window.clearTimeout(uploadTimer);
+      setUploadState(false);
     };
-    observer.error = (err: any) => {
-      setUploading(false);
-      message.error(err?.message || '上传失败');
-    };
-    qiniupload(file, qiniuToken);
+
+    try {
+      subscription = qiniupload(file, qiniuToken, {
+        complete: (res: CompleteRes) => {
+          if (settled) return;
+          clearUploadState();
+          onChange(QiniuServer + res.key);
+          message.success('上传成功');
+        },
+        error: (err: any) => {
+          if (settled) return;
+          clearUploadState();
+          message.error(err?.message || '上传失败');
+        },
+      });
+    } catch (err) {
+      if (!settled) {
+        clearUploadState();
+        message.error(err instanceof Error ? err.message : '上传失败');
+      }
+    }
   };
 
   if (value) {

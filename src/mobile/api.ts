@@ -233,15 +233,6 @@ export const mobileApi = {
   },
   report: (body: Record<string, unknown>) =>
     request<Record<string, never>>('/report', { method: 'POST', body }),
-  uploadFeedbackImage: (file: File) => {
-    const body = new FormData();
-    body.append('file', file);
-    return request<{ file_token?: string }>('/feedback/image', {
-      method: 'POST',
-      body,
-      timeoutMs: 30000,
-    });
-  },
   feedback: (body: Record<string, unknown>) =>
     request<Record<string, never>>('/feedback', { method: 'POST', body }),
   user: {

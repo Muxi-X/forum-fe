@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import styled from 'styled-components';
 import { Input, message } from 'antd';
 import { useNavigate } from 'react-router-dom';
@@ -61,44 +61,10 @@ const Feedback: React.FC = () => {
   const nav = useNavigate();
   const [content, setContent] = useState('');
   const [contact, setContact] = useState('');
-  const [imagePreview, setImagePreview] = useState('');
-  const [imageToken, setImageToken] = useState('');
-  const [imageUploading, setImageUploading] = useState(false);
+  const [img, setImg] = useState('');
   const [category, setCategory] = useState('产品改进');
   const [submitting, setSubmitting] = useState(false);
-
-  useEffect(() => {
-    return () => {
-      if (imagePreview.startsWith('blob:')) {
-        URL.revokeObjectURL(imagePreview);
-      }
-    };
-  }, [imagePreview]);
-
-  const clearImage = useCallback(() => {
-    setImagePreview('');
-    setImageToken('');
-  }, []);
-
-  const uploadFeedbackImage = useCallback(async (file: File) => {
-    const previewUrl = URL.createObjectURL(file);
-    setImageUploading(true);
-    try {
-      const res = await mobileApi.uploadFeedbackImage(file);
-      const fileToken = res.data?.file_token;
-      if (res.code !== 0 || !fileToken) {
-        throw new Error(res.message || '上传失败');
-      }
-      setImageToken(fileToken);
-      setImagePreview(previewUrl);
-      return previewUrl;
-    } catch (error) {
-      URL.revokeObjectURL(previewUrl);
-      throw error;
-    } finally {
-      setImageUploading(false);
-    }
-  }, []);
+  const [imageUploading, setImageUploading] = useState(false);
 
   const submit = async () => {
     if (!content.trim()) {
@@ -115,14 +81,13 @@ const Feedback: React.FC = () => {
         category,
         content: content.trim(),
         contact: contact.trim(),
-        images: imageToken ? [imageToken] : [],
+        img_url: img,
       });
       if (res.code !== 0) {
         message.error(res.message);
         return;
       }
       message.success('感谢反馈');
-      clearImage();
       nav(-1);
     } catch (error) {
       message.error(error instanceof Error ? error.message : '提交失败');
@@ -162,15 +127,9 @@ const Feedback: React.FC = () => {
           <UploadField
             compact
             iconOnly
-            value={imagePreview}
-            onChange={(value) => {
-              if (!value) {
-                clearImage();
-                return;
-              }
-              setImagePreview(value);
-            }}
-            uploadFile={uploadFeedbackImage}
+            value={img}
+            onChange={setImg}
+            onUploadingChange={setImageUploading}
           />
           <Label>联系方式</Label>
           <Input
