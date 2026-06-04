@@ -38,6 +38,7 @@ interface IProps {
   post_id: number;
   handleAddComment: HandleAddComment;
   commentNum: number;
+  onCommentListChange?: (comments: defs.post_SubPost[]) => void;
 }
 
 interface EditorProps {
@@ -61,6 +62,7 @@ interface CommentItemProps extends defs.post_Comment, defs.post_SubPost {
   addReply?: (reply: defs.post_Comment) => void;
   handleAddComment: HandleAddComment;
   commentNum: number;
+  syncSubComments?: (subs: defs.post_Comment[]) => void;
 }
 
 const IconFont = createFromIconfontCN({
@@ -77,7 +79,9 @@ const SubList: React.FC<{
   if (subComments.length === 0) return <></>;
   const [replies, setReplies] = useState(subComments);
   const handleReply = (reply: defs.post_Comment) => {
-    setReplies([...replies, reply]);
+    const updatedReplies = [...replies, reply];
+    setReplies(updatedReplies);
+    syncSubComments(updatedReplies);
   };
 
   const subLen = subComments.length;
@@ -105,6 +109,7 @@ const SubList: React.FC<{
             addReply={handleReply}
             commentNum={commentNum}
             handleAddComment={handleAddComment}
+            syncSubComments={syncSubComments}
           />
         );
       })}
@@ -130,6 +135,7 @@ const CommentItem: React.FC<CommentItemProps> = ({
   addReply,
   commentNum,
   handleAddComment,
+  syncSubComments,
   img_url,
 }) => {
   const [likes, setLikes] = useState(like_num as number);
@@ -147,9 +153,15 @@ const CommentItem: React.FC<CommentItemProps> = ({
   const { run } = useRequest(API.comment.postComment.request, {
     manual: true,
     onSuccess: (res) => {
+      const newReply = {
+        ...res.data,
+        time: new Date().toISOString(),
+      } as defs.post_Comment;
       setTimeout(() => {
         if (commentType === 'comment') {
-          setSubComments([...subComments, res.data]);
+          const updatedSubComments = [...subComments, newReply];
+          setSubComments(updatedSubComments);
+          syncSubComments && syncSubComments(updatedSubComments);
           setReplyContent('');
           setSubmitting(false);
           setReply(false);
@@ -157,7 +169,7 @@ const CommentItem: React.FC<CommentItemProps> = ({
           setReplyContent('');
           setSubmitting(false);
           setReply(false);
-          addReply && addReply(res.data);
+          addReply && addReply(newReply);
         }
         handleAddComment(commentNum + 1, replyContent, id, creator_id, content);
         setImg('');
@@ -239,6 +251,7 @@ const CommentItem: React.FC<CommentItemProps> = ({
 
   const handleAddSub = (subs: defs.post_Comment[]) => {
     setSubComments(subs);
+    syncSubComments && syncSubComments(subs);
   };
 
   const getComments = () => {
@@ -325,7 +338,23 @@ const CommentList: React.FC<{
   post_id: number;
   handleAddComment: HandleAddComment;
   commentNum: number;
-}> = ({ comments, post_id, commentNum, handleAddComment }) => {
+  onCommentListChange?: (comments: defs.post_SubPost[]) => void;
+}> = ({ comments, post_id, commentNum, handleAddComment, onCommentListChange }) => {
+  const handleSyncSubComments = (
+    commentId: number | undefined,
+    subComments: defs.post_Comment[],
+  ) => {
+    const updatedComments = comments.map((comment) => {
+      if (comment.id !== commentId) return comment;
+      return {
+        ...comment,
+        comments: subComments,
+        comment_num: subComments.length,
+      };
+    });
+    onCommentListChange && onCommentListChange(updatedComments);
+  };
+
   return (
     <List
       dataSource={comments}
@@ -339,6 +368,7 @@ const CommentList: React.FC<{
           post_id={post_id}
           commentNum={commentNum}
           handleAddComment={handleAddComment}
+          syncSubComments={(subComments) => handleSyncSubComments(props.id, subComments)}
         />
       )}
     />
@@ -476,7 +506,8 @@ const Editor = ({
 };
 
 const CommentCp = (props: IProps, ref: any) => {
-  const { commentList, post_id, commentNum, handleAddComment } = props;
+  const { commentList, post_id, commentNum, handleAddComment, onCommentListChange } =
+    props;
   const [comments, setComments] = useState<defs.post_SubPost[]>(
     commentList ? commentList : [],
   );
@@ -488,6 +519,10 @@ const CommentCp = (props: IProps, ref: any) => {
   const {
     userProfile: { avatar, name },
   } = useProfile();
+
+  useEffect(() => {
+    setComments(commentList ? commentList : []);
+  }, [commentList]);
 
   const descOrder = (comments: Array<defs.post_Comment>) => {
     return [...comments].sort((a, b) => {
@@ -502,11 +537,16 @@ const CommentCp = (props: IProps, ref: any) => {
     onSuccess: (res) => {
       const newComment = {
         ...res.data,
-        time: res.data.create_time, //因为res.data没有time属性，这里用于倒序排列
-      };
-      const updatedComments = descOrder([...comments, newComment]);
+        comment_num: 0,
+        comments: [],
+        time: new Date().toISOString(),
+      } as defs.post_SubPost;
       setTimeout(() => {
-        setComments(updatedComments);
+        setComments((prevComments) => {
+          const updatedComments = descOrder([...prevComments, newComment]);
+          onCommentListChange && onCommentListChange(updatedComments);
+          return updatedComments;
+        });
         setContent('');
         setSubmitting(false);
         handleAddComment(commentNum + 1, content);
@@ -522,7 +562,7 @@ const CommentCp = (props: IProps, ref: any) => {
       target_id: post_id,
       target_type: 'post',
       father_id: post_id,
-      type_name: 'sub-post',
+      type_name: 'first-level',
       img_url: img,
     };
 
@@ -568,6 +608,7 @@ const CommentCp = (props: IProps, ref: any) => {
           commentNum={commentNum}
           comments={descOrder(comments)}
           post_id={post_id}
+          onCommentListChange={onCommentListChange}
         />
       )}
     </style.Wrapper>

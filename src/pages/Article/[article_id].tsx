@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useParams } from 'react-router';
 import MarkdownNavbar from 'markdown-navbar';
 import DOMPurify from 'dompurify';
@@ -28,6 +28,7 @@ import moment from 'utils/moment';
 import 'assets/theme/theme.less';
 import { useDeviceType } from 'hooks/useDeviceType';
 import MobileArticle from 'mobile/pages/Article';
+import Request from 'utils/fetchMiddleware';
 
 interface ActionProps {
   done?: boolean;
@@ -40,6 +41,22 @@ type SendNotificationOptions = {
   commentId?: number;
   commentContent?: string;
   targetUserIds?: Array<number | undefined>;
+};
+
+type ArticleComment = defs.post_SubPost & {
+  create_time?: string;
+  sub_comments?: ArticleSubComment[];
+  sub_num?: number;
+};
+
+type ArticleSubComment = defs.post_Comment & {
+  create_time?: string;
+  img_url?: string;
+  father_content?: string;
+};
+
+type CommentListResponse = {
+  comments?: ArticleComment[];
 };
 
 const { Category } = Tag;
@@ -142,8 +159,56 @@ const Icon: React.FC<{ onClick?: () => void; type: string }> = ({ type, onClick 
   );
 };
 
+const getArticleComments = (postId: number) =>
+  Request('/comment/list', {
+    method: 'POST',
+    body: {
+      target_id: postId,
+      target_type: 'post',
+      sort_type: 1,
+      page_size: 50,
+    },
+  }) as Promise<ResponseTypeWarpper<CommentListResponse>>;
+
+const normalizeSubComment = (comment: ArticleSubComment): defs.post_Comment =>
+  ({
+    ...comment,
+    time: comment.time || comment.create_time,
+    be_replied_content: comment.be_replied_content || comment.father_content,
+  } as defs.post_Comment);
+
+const normalizeComment = (comment: ArticleComment): defs.post_SubPost =>
+  ({
+    ...comment,
+    time: comment.time || comment.create_time,
+    comment_num: comment.comment_num ?? comment.sub_num,
+    comments: (comment.comments || comment.sub_comments || []).map(normalizeSubComment),
+  } as defs.post_SubPost);
+
+const emptyComments: defs.post_SubPost[] = [];
+
+const mergeCommentLists = (
+  comments: defs.post_SubPost[],
+  legacySubPosts: defs.post_SubPost[],
+) => {
+  const merged = new Map<number, defs.post_SubPost>();
+  const commentsWithoutId: defs.post_SubPost[] = [];
+
+  [...comments, ...legacySubPosts].forEach((comment) => {
+    if (!comment) return;
+    if (comment.id) {
+      if (!merged.has(comment.id)) merged.set(comment.id, comment);
+      return;
+    }
+    commentsWithoutId.push(comment);
+  });
+
+  return [...merged.values(), ...commentsWithoutId];
+};
+
 const DesktopArticle: React.FC = () => {
   const [articleInfo, setArticleInfo] = useState<defs.post_GetPostResponse>({});
+  const [commentList, setCommentList] = useState<defs.post_SubPost[]>([]);
   const [navBar, setNavBar] = useState({ show: false, content: '' });
   const [showReport, setShowReport] = useState(false);
   const [reportVal, setReportVal] = useState('');
@@ -194,6 +259,10 @@ const DesktopArticle: React.FC = () => {
     like_num,
     collection_num,
   } = articleInfo;
+  const commentsForDisplay = useMemo(
+    () => mergeCommentLists(commentList, sub_posts || emptyComments),
+    [commentList, sub_posts],
+  );
   const articleCreateTime =
     (articleInfo as defs.post_GetPostResponse & { create_time?: string }).create_time ||
     time;
@@ -235,6 +304,18 @@ const DesktopArticle: React.FC = () => {
       },
     },
   );
+
+  const { run: loadComments } = useRequest(getArticleComments, {
+    manual: true,
+    onSuccess: (response) => {
+      setCommentList((response.data?.comments || []).map(normalizeComment));
+    },
+  });
+
+  useEffect(() => {
+    if (!article_id) return;
+    loadComments(+(article_id as string));
+  }, [article_id]);
 
   const { run: report } = useRequest(API.report.postReport.request, {
     manual: true,
@@ -532,10 +613,11 @@ const DesktopArticle: React.FC = () => {
             <Card>
               <Comment
                 ref={commentRef}
-                commentList={sub_posts ? sub_posts : []}
+                commentList={commentsForDisplay}
                 post_id={+(article_id as string)}
                 commentNum={commentNum}
                 handleAddComment={handleAddComment}
+                onCommentListChange={setCommentList}
               />
             </Card>
           </style.Wrapper>
