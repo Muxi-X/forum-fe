@@ -156,6 +156,9 @@ declare namespace defs {
 
     /** signature */
     signature?: string;
+
+    /** student_id */
+    student_id?: string;
   }
 
   export class User {

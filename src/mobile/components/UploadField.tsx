@@ -69,13 +69,43 @@ const Preview = styled.label<{ compact?: boolean; round?: boolean }>`
 const UploadField: React.FC<{
   value?: string;
   onChange: (url: string) => void;
+  uploadFile?: (file: File) => Promise<string>;
   compact?: boolean;
   round?: boolean;
   iconOnly?: boolean;
   label?: string;
-}> = ({ value, onChange, compact, round, iconOnly, label }) => {
+}> = ({ value, onChange, uploadFile, compact, round, iconOnly, label }) => {
   const { qiniuToken } = useProfile();
   const [uploading, setUploading] = useState(false);
+
+  const handleUpload = (file: File) => {
+    setUploading(true);
+    if (uploadFile) {
+      uploadFile(file)
+        .then((url) => {
+          onChange(url);
+          message.success('上传成功');
+        })
+        .catch((err: any) => {
+          message.error(err?.message || '上传失败');
+        })
+        .finally(() => {
+          setUploading(false);
+        });
+      return;
+    }
+
+    observer.complete = (res: CompleteRes) => {
+      setUploading(false);
+      onChange(QiniuServer + res.key);
+      message.success('上传成功');
+    };
+    observer.error = (err: any) => {
+      setUploading(false);
+      message.error(err?.message || '上传失败');
+    };
+    qiniupload(file, qiniuToken);
+  };
 
   if (value) {
     return (
@@ -86,17 +116,7 @@ const UploadField: React.FC<{
           onChange={(event) => {
             const file = event.currentTarget.files?.[0];
             if (!file) return;
-            setUploading(true);
-            observer.complete = (res: CompleteRes) => {
-              setUploading(false);
-              onChange(QiniuServer + res.key);
-              message.success('上传成功');
-            };
-            observer.error = (err: any) => {
-              setUploading(false);
-              message.error(err?.message || '上传失败');
-            };
-            qiniupload(file, qiniuToken);
+            handleUpload(file);
           }}
         />
         <img src={value} alt="" />
@@ -115,17 +135,7 @@ const UploadField: React.FC<{
         onChange={(event) => {
           const file = event.currentTarget.files?.[0];
           if (!file) return;
-          setUploading(true);
-          observer.complete = (res: CompleteRes) => {
-            setUploading(false);
-            onChange(QiniuServer + res.key);
-            message.success('上传成功');
-          };
-          observer.error = (err: any) => {
-            setUploading(false);
-            message.error(err?.message || '上传失败');
-          };
-          qiniupload(file, qiniuToken);
+          handleUpload(file);
         }}
       />
       <span>
