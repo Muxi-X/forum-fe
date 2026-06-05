@@ -227,7 +227,7 @@ const Editor: React.FC = () => {
   const [summary, setSummary] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
-  const draftKey = id || `article${Date.now()}`;
+  const draftKey = useMemo(() => id || 'mobile-editor-new', [id]);
   const activeTable = useMemo(
     () => MOBILE_TABLES.find((item) => item.apiCategory === category) || DEFAULT_TABLE,
     [category],
