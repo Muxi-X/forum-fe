@@ -1122,7 +1122,11 @@ const Profile: React.FC = () => {
                   posts
                     .slice(0, 1)
                     .map((post) => (
-                      <PostCard key={post.id} post={post} variant="compactOwn" />
+                      <PostCard
+                        key={getMobilePostId(post)}
+                        post={post}
+                        variant="compactOwn"
+                      />
                     ))
                 ) : (
                   <MiniEmpty>{isMine ? '还没有发过帖子' : 'Ta 还没有发过帖子'}</MiniEmpty>
@@ -1196,7 +1200,9 @@ const Profile: React.FC = () => {
                       ) : collectedPosts.length ? (
                         collectedPosts
                           .slice(0, 1)
-                          .map((post) => <PostCard key={post.id} post={post} />)
+                          .map((post) => (
+                            <PostCard key={getMobilePostId(post)} post={post} />
+                          ))
                       ) : (
                         <MiniEmpty>
                           {isMine ? '还没有收藏帖子' : 'Ta 还没有收藏帖子'}

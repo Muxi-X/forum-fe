@@ -311,7 +311,6 @@ const Editor: React.FC = () => {
       category,
       summary: generatedSummary(),
       tags,
-      img_url: image,
       ...(isUpdate ? { id: Number(id) } : {}),
     };
     try {

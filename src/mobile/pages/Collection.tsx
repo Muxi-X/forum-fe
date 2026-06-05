@@ -491,7 +491,7 @@ const Collection: React.FC = () => {
           posts.length ? (
             <List>
               {posts.map((post) => (
-                <PostCard key={post.id} post={post} />
+                <PostCard key={getMobilePostId(post)} post={post} />
               ))}
             </List>
           ) : (

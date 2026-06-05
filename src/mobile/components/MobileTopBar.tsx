@@ -122,14 +122,8 @@ const MobileTopBar: React.FC<{
   const { totalUnreadCount } = useNotification();
   return (
     <Bar borderless={borderless}>
-      <IconButton
-        type="button"
-        onClick={() => {
-          if (back) nav(-1);
-        }}
-        aria-label="返回"
-      >
-        {back ? (
+      {back ? (
+        <IconButton type="button" onClick={() => nav(-1)} aria-label="返回">
           <BackPill>
             <img
               src={mastergoAssets.icons.backButtonDark}
@@ -137,8 +131,10 @@ const MobileTopBar: React.FC<{
               style={{ width: 10, height: 18 }}
             />
           </BackPill>
-        ) : null}
-      </IconButton>
+        </IconButton>
+      ) : (
+        <RightSlot aria-hidden="true" />
+      )}
       <Title>{title}</Title>
       {right || onRight ? (
         <IconButton type="button" onClick={onRight} aria-label="操作">

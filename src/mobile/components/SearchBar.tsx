@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import styled from 'styled-components';
 import DesignIcon from './DesignIcon';
 
@@ -33,6 +33,11 @@ const SearchBar: React.FC<{
   onSearch: (value: string) => void;
 }> = ({ placeholder = '搜索茶馆', defaultValue = '', onSearch }) => {
   const [value, setValue] = useState(defaultValue);
+
+  useEffect(() => {
+    setValue(defaultValue);
+  }, [defaultValue]);
+
   return (
     <Form
       onSubmit={(event) => {

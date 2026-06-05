@@ -1,4 +1,5 @@
 import create from 'zustand';
+import { getCurrentUserId } from 'utils/auth';
 
 export interface Notification {
   id: string;
@@ -15,10 +16,15 @@ interface ChatUnread {
 
 const chatUnreadStorageKey = 'forum_chat_unread';
 
+const getChatUnreadStorageKey = () => {
+  const userId = getCurrentUserId();
+  return userId ? `${chatUnreadStorageKey}:${userId}` : chatUnreadStorageKey;
+};
+
 const loadChatUnread = (): ChatUnread => {
   if (typeof localStorage === 'undefined') return {};
   try {
-    const raw = localStorage.getItem(chatUnreadStorageKey);
+    const raw = localStorage.getItem(getChatUnreadStorageKey());
     if (!raw) return {};
     const parsed = JSON.parse(raw);
     if (!parsed || typeof parsed !== 'object') return {};
@@ -34,7 +40,7 @@ const loadChatUnread = (): ChatUnread => {
 
 const saveChatUnread = (chatUnread: ChatUnread) => {
   if (typeof localStorage === 'undefined') return;
-  localStorage.setItem(chatUnreadStorageKey, JSON.stringify(chatUnread));
+  localStorage.setItem(getChatUnreadStorageKey(), JSON.stringify(chatUnread));
 };
 
 interface NotificationStore {

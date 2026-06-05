@@ -621,7 +621,7 @@ const Article: React.FC = () => {
       <CommentSection id="mobile-comments">
         <h2>
           评论
-          <span>{comments.length || post.comment_num || 0}</span>
+          <span>{post.comment_num ?? comments.length ?? 0}</span>
         </h2>
         {comments.length ? (
           <CommentList

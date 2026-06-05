@@ -6,7 +6,7 @@ import { mobileMotion, mobilePalette } from '../styles';
 const Button = styled.button<{ visible: boolean; offset?: number }>`
   position: fixed;
   right: max(18px, calc((100vw - 520px) / 2 + 18px));
-  bottom: calc(${(props) => props.offset || 160}px + env(safe-area-inset-bottom));
+  bottom: calc(${(props) => props.offset ?? 160}px + env(safe-area-inset-bottom));
   z-index: 34;
   width: 42px;
   height: 42px;

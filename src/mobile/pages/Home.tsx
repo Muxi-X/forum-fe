@@ -670,7 +670,7 @@ const Home: React.FC = () => {
           <>
             <PostList>
               {posts.map((post) => (
-                <PostCard key={post.id} post={post} />
+                <PostCard key={getMobilePostId(post)} post={post} />
               ))}
             </PostList>
             <LoadMoreStatus ref={loadMoreRef}>

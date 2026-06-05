@@ -41,7 +41,11 @@ const StarRating: React.FC<{
   size?: number;
   readonly?: boolean;
 }> = ({ value, onChange, size = 22, readonly }) => (
-  <Wrap $size={size} $readonly={readonly || !onChange}>
+  <Wrap
+    $size={size}
+    $readonly={readonly || !onChange}
+    role={readonly || !onChange ? undefined : 'radiogroup'}
+  >
     {[1, 2, 3, 4, 5].map((item) => {
       const icon = item <= value ? <StarFilled /> : <StarOutlined />;
       if (readonly || !onChange) {
@@ -51,8 +55,10 @@ const StarRating: React.FC<{
         <button
           key={item}
           type="button"
+          role="radio"
           aria-label={`评分 ${item} 星`}
-          aria-pressed={item === value}
+          aria-checked={item === value}
+          tabIndex={item === value || (!value && item === 1) ? 0 : -1}
           onClick={() => onChange(item)}
         >
           {icon}

@@ -442,6 +442,8 @@ const SipScoreDetail: React.FC = () => {
       setEntryCover('');
       setEntries((current) => (createdId ? [createdEntry, ...current] : current));
       load();
+    } catch (err) {
+      message.error(err instanceof Error ? err.message : '添加失败');
     } finally {
       setSubmitting(false);
     }

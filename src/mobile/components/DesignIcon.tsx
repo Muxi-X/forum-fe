@@ -309,7 +309,7 @@ const DesignIcon: React.FC<{
         <path
           d="M9 6.2 15.4 12 9 17.8"
           fill="none"
-          stroke="#c6c6c6"
+          stroke={color}
           strokeWidth="1.6"
           strokeLinecap="round"
           strokeLinejoin="round"
@@ -323,7 +323,7 @@ const DesignIcon: React.FC<{
       <Svg width={size} height={size} viewBox="0 0 24 24" aria-hidden>
         <path
           d={name === 'chevronUp' ? 'M6 15.2 12 8.8l6 6.4' : 'M6 8.8 12 15.2l6-6.4'}
-          fill="#c6c6c6"
+          fill={color}
         />
       </Svg>
     );

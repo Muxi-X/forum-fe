@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import styled from 'styled-components';
 import { Input, message } from 'antd';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
@@ -337,7 +337,7 @@ const EntryDetail: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  const loadEntry = async () => {
+  const loadEntry = useCallback(async () => {
     setLoading(true);
     setError('');
     let syncedEntry: SipScoreEntry | null = null;
@@ -367,9 +367,9 @@ const EntryDetail: React.FC = () => {
       setLoading(false);
     }
     return syncedEntry;
-  };
+  }, [sipScoreId, scoreEntryId]);
 
-  const loadRatings = async () => {
+  const loadRatings = useCallback(async () => {
     try {
       const [list, featuredList] = await Promise.all([
         mobileApi.sipScore.ratings(sipScoreId, scoreEntryId, {
@@ -402,20 +402,15 @@ const EntryDetail: React.FC = () => {
     } catch {
       setFeaturedRating(null);
     }
-  };
-
-  const load = async () => {
-    await loadEntry();
-    void loadRatings();
-  };
+  }, [sipScoreId, scoreEntryId, ratingSort]);
 
   useEffect(() => {
-    if (sipScoreId && scoreEntryId) load();
-  }, [sipScoreId, scoreEntryId]);
+    if (sipScoreId && scoreEntryId) void loadEntry();
+  }, [sipScoreId, scoreEntryId, loadEntry]);
 
   useEffect(() => {
     if (sipScoreId && scoreEntryId && entry) void loadRatings();
-  }, [ratingSort]);
+  }, [sipScoreId, scoreEntryId, entry?.id, loadRatings]);
 
   useEffect(() => {
     const state = location.state as { openRating?: boolean } | null;
@@ -582,7 +577,7 @@ const EntryDetail: React.FC = () => {
   if (error && !entry) {
     return (
       <MobileShell title="项目详情" back tabs={false}>
-        <ErrorState text={error} onRetry={load} />
+        <ErrorState text={error} onRetry={loadEntry} />
       </MobileShell>
     );
   }

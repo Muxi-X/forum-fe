@@ -16,7 +16,9 @@ import { syncMobileProfileSessionForRoute } from 'mobile/profileSession';
 const Routes = () => {
   const location = useLocation();
 
-  syncMobileProfileSessionForRoute(location.pathname, location.search);
+  useEffect(() => {
+    syncMobileProfileSessionForRoute(location.pathname, location.search);
+  }, [location.pathname, location.search]);
 
   return (
     <Layout>

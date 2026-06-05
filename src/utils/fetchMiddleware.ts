@@ -6,18 +6,34 @@ const handleAuthError = (res: any) => {
   window.location.replace('/login');
 };
 
+const normalizeHeaders = (headers: any = {}) => {
+  if (typeof Headers !== 'undefined' && headers instanceof Headers) {
+    return Object.fromEntries(headers.entries());
+  }
+  if (Array.isArray(headers)) return Object.fromEntries(headers);
+  return { ...headers };
+};
+
+const hasAuthHeader = (headers: Record<string, unknown>) =>
+  Object.keys(headers).some((key) => key.toLowerCase() === 'authorization');
+
 const Request = (url: string, options: any = {}) => {
   const { timeoutMs, ...fetchOptions } = options;
   url = `/api/v1${url}`;
   const isFile = fetchOptions.body instanceof FormData;
   const authToken = getAuthToken();
-  fetchOptions.headers = isFile
+  const existingHeaders = normalizeHeaders(fetchOptions.headers);
+  const defaultHeaders = isFile
     ? {}
     : {
         Accept: 'application/json',
         'Content-Type': 'application/json',
       };
-  if (authToken) {
+  fetchOptions.headers = {
+    ...defaultHeaders,
+    ...existingHeaders,
+  };
+  if (authToken && !hasAuthHeader(fetchOptions.headers)) {
     fetchOptions.headers.Authorization = authToken;
   }
 
