@@ -25,6 +25,8 @@ import RtfEditor from 'components/Editor/RtfEditor';
 import { CATEGORY, CATEGORY_TEAM } from 'config';
 import * as style from './style';
 import useDocTitle from 'hooks/useDocTitle';
+import { useDeviceType } from 'hooks/useDeviceType';
+import MobileEditor from 'mobile/pages/Editor';
 
 interface PostProps {
   handlePost: (val: defs.post_CreateRequest) => void;
@@ -250,7 +252,7 @@ const Post: React.FC<
   );
 };
 
-const EditorPage: React.FC = () => {
+const DesktopEditorPage: React.FC = () => {
   const {
     userProfile: { id: userId },
   } = useProfile();
@@ -531,6 +533,11 @@ const EditorPage: React.FC = () => {
       </style.EditorPageWrapper>
     </>
   );
+};
+
+const EditorPage: React.FC = () => {
+  const isPhone = useDeviceType() === 'phone';
+  return isPhone ? <MobileEditor /> : <DesktopEditorPage />;
 };
 
 export default EditorPage;

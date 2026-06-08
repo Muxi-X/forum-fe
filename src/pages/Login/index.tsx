@@ -1,13 +1,12 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { message } from 'antd';
+import { ArrowRightOutlined, SafetyCertificateOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router';
 import { useSearchParams } from 'react-router-dom';
 import useRequest from 'hooks/useRequest';
 import useForm from 'hooks/useForm';
 import useDocTitle from 'hooks/useDocTitle';
 import useProfile from 'store/useProfile';
-import useWS from 'store/useWS';
-import WS from 'utils/WS';
 import ResultPage from 'pages/Result';
 import './index.less';
 
@@ -18,6 +17,7 @@ interface LoginState {
 
 interface StudentLoginFlowState {
   token?: string;
+  redirect_url?: string;
   session_id?: string;
   status?: string;
   message?: string;
@@ -55,6 +55,23 @@ const secondAuthCopy: Record<
 
 const isSecondAuthMethod = (value?: string): value is SecondAuthMethod =>
   value === 'sms' || value === 'email';
+
+const studentLoginProvider = import.meta.env.VITE_STUDENT_LOGIN_PROVIDER || 'oauth';
+const isStudentOAuthLogin = studentLoginProvider === 'oauth';
+
+const getStudentOAuthCallbackURL = () => {
+  const configured = import.meta.env.VITE_STUDENT_OAUTH_CALLBACK_URL?.trim();
+  if (configured) return configured;
+  return `${window.location.origin}/login/student-oauth`;
+};
+
+const rememberStudentOAuthRedirectURL = (redirectURL: string) => {
+  try {
+    sessionStorage.setItem('student_oauth_redirect_url', redirectURL);
+  } catch {
+    // Ignore storage failures; navigation should not depend on debug state.
+  }
+};
 
 const getSecondAuthTarget = (
   loginFlow: StudentLoginFlowState | null,
@@ -107,8 +124,9 @@ const Login: React.FC = () => {
   const [pendingAction, setPendingAction] = useState<StudentLoginAction>('');
   const [isMuxi, setIsMuxi] = useState(false);
   const [searchParams] = useSearchParams();
+  const handledStudentOAuthCodeRef = useRef('');
+  const handledTeamOAuthCodeRef = useRef('');
   const { setUser, setToken } = useProfile();
-  const { setTip, setWS } = useWS();
 
   useDocTitle(`惠然之顾 - 茶馆`);
 
@@ -139,6 +157,12 @@ const Login: React.FC = () => {
     !!serverSecondAuthMethod &&
     secondAuthMethod === serverSecondAuthMethod &&
     !!secondAuthCode.trim();
+  const isStudentOAuthCallback = window.location.pathname === '/login/student-oauth';
+  const studentOAuthCode =
+    isStudentOAuthCallback &&
+    (searchParams.get('code') || searchParams.get('accessCode') || '');
+  const teamOAuthCode = !isStudentOAuthCallback ? searchParams.get('accessCode') : '';
+  const isHandlingOAuthCallback = !!studentOAuthCode || !!teamOAuthCode;
   const flowStatusText = simplifyFlowMessage(loginStatus, loginFlow?.message);
   const captchaImageSrc = loginFlow?.captcha_image_base64
     ? `data:image/jpeg;base64,${loginFlow.captcha_image_base64}`
@@ -162,17 +186,6 @@ const Login: React.FC = () => {
     manual: true,
   });
 
-  const webSocketInit = () => {
-    const token = localStorage.getItem('token') as string;
-    const WebSocket = new WS(token);
-    if (WebSocket.ws) {
-      WebSocket.ws.onmessage = () => {
-        setTip(true);
-      };
-      setWS(WebSocket);
-    }
-  };
-
   const finishLogin = async (token: string) => {
     message.success('登录成功');
     localStorage.setItem('token', token);
@@ -185,7 +198,6 @@ const Login: React.FC = () => {
     }
     const qiniu = await getQiniuToken({});
     setToken(qiniu.data.token as string);
-    webSocketInit();
     nav('/');
   };
 
@@ -194,6 +206,12 @@ const Login: React.FC = () => {
     if (res.code !== 0) return;
 
     const data = res.data as StudentLoginFlowState;
+    if (data.redirect_url) {
+      rememberStudentOAuthRedirectURL(data.redirect_url);
+      window.location.href = data.redirect_url;
+      return;
+    }
+
     if (data.status && data.status !== 'logged_in') {
       setLoginFlow(data);
       if (isSecondAuthMethod(data.current_second_auth_method)) {
@@ -255,12 +273,28 @@ const Login: React.FC = () => {
     manual: true,
   });
 
-  const oauth_code = searchParams.get('accessCode');
   useEffect(() => {
-    if (oauth_code) {
-      runTeam({}, { oauth_code });
+    if (studentOAuthCode) {
+      if (handledStudentOAuthCodeRef.current === studentOAuthCode) return;
+      handledStudentOAuthCodeRef.current = studentOAuthCode;
+      nav('/login/student-oauth', { replace: true });
+      runStudent(
+        {},
+        {
+          provider: 'oauth',
+          oauth_code: studentOAuthCode,
+          callback_url: getStudentOAuthCallbackURL(),
+        },
+      );
+      return;
     }
-  }, [oauth_code]);
+
+    if (teamOAuthCode) {
+      if (handledTeamOAuthCodeRef.current === teamOAuthCode) return;
+      handledTeamOAuthCodeRef.current = teamOAuthCode;
+      runTeam({}, { oauth_code: teamOAuthCode });
+    }
+  }, [nav, runStudent, runTeam, studentOAuthCode, teamOAuthCode]);
 
   const handleMuxierLogin = () => {
     const landing = `${window.location.host}/login`;
@@ -291,6 +325,18 @@ const Login: React.FC = () => {
 
   const handleLogin = () => {
     if (studentActionLoading) return;
+    if (isStudentOAuthLogin) {
+      setPendingAction('start');
+      runStudent(
+        {},
+        {
+          provider: 'oauth',
+          callback_url: getStudentOAuthCallbackURL(),
+        },
+      );
+      return;
+    }
+
     if (!student_id || !password) {
       message.warning('请先输入学号和密码');
       return;
@@ -355,13 +401,13 @@ const Login: React.FC = () => {
   };
 
   const renderFlowButtonLabel = (
-    idleLabel: string,
+    idleLabel: React.ReactNode,
     loadingLabel: string,
     loading: boolean,
   ) => (
     <span className="flow-btn-content">
       {loading ? <span className="flow-btn-spinner" aria-hidden /> : null}
-      <span>{loading ? loadingLabel : idleLabel}</span>
+      {loading ? <span>{loadingLabel}</span> : idleLabel}
     </span>
   );
 
@@ -369,32 +415,77 @@ const Login: React.FC = () => {
     if (!showCaptchaFlow && !showSecondAuthFlow) {
       return (
         <div key="credentials" className="auth-stage">
-          <h2 className="title">登录</h2>
-          <div className="input-field">
-            <i className="fa fa-user"></i>
-            <input
-              value={student_id}
-              onChange={(e) => {
-                handleUserLogin(e.target.value, 'id');
-              }}
-              type="text"
-              placeholder="学号"
-            />
+          {isStudentOAuthLogin ? (
+            <div className="auth-visual" aria-hidden>
+              <img src="https://ossforum.muxixyz.com/default/register.svg" alt="" />
+            </div>
+          ) : null}
+          <div className="auth-heading">
+            {isStudentOAuthLogin ? (
+              <span className="auth-kicker">CCNU ACCOUNT</span>
+            ) : (
+              <span className="auth-kicker">STUDENT LOGIN</span>
+            )}
+            <h2 className="title">
+              {isStudentOAuthLogin ? '学校统一身份认证' : '学生登录'}
+            </h2>
+            <p className="auth-subtitle">
+              {isStudentOAuthLogin
+                ? '使用学校账号完成认证后返回茶馆'
+                : '使用已有学号进入茶馆'}
+            </p>
           </div>
-          <div className="input-field">
-            <i className="fa fa-lock"></i>
-            <input
-              value={password}
-              onChange={(e) => {
-                handleUserLogin(e.target.value, 'pwd');
-              }}
-              type="password"
-              placeholder="密码"
-            />
-          </div>
-          <button onClick={handleLogin} type="button" className="btn solid stage-submit">
-            立即登录
+          {!isStudentOAuthLogin ? (
+            <>
+              <div className="input-field">
+                <i className="fa fa-user"></i>
+                <input
+                  value={student_id}
+                  onChange={(e) => {
+                    handleUserLogin(e.target.value, 'id');
+                  }}
+                  type="text"
+                  placeholder="学号"
+                />
+              </div>
+              <div className="input-field">
+                <i className="fa fa-lock"></i>
+                <input
+                  value={password}
+                  onChange={(e) => {
+                    handleUserLogin(e.target.value, 'pwd');
+                  }}
+                  type="password"
+                  placeholder="密码"
+                />
+              </div>
+            </>
+          ) : null}
+          <button
+            onClick={handleLogin}
+            type="button"
+            className={`btn solid stage-submit ${
+              pendingAction === 'start' ? 'loading' : ''
+            }`}
+            disabled={pendingAction === 'start'}
+          >
+            {isStudentOAuthLogin
+              ? renderFlowButtonLabel(
+                  <>
+                    <SafetyCertificateOutlined />
+                    <span>前往学校认证</span>
+                    <ArrowRightOutlined />
+                  </>,
+                  '正在跳转',
+                  pendingAction === 'start',
+                )
+              : '立即登录'}
           </button>
+          {isStudentOAuthLogin ? (
+            <button onClick={handleLoginRole} type="button" className="auth-switch-link">
+              木犀成员登录
+            </button>
+          ) : null}
         </div>
       );
     }
@@ -552,7 +643,7 @@ const Login: React.FC = () => {
 
   return (
     <div className="login-page">
-      {!oauth_code ? (
+      {!isHandlingOAuthCallback ? (
         <div
           aria-hidden
           onKeyDown={(e) => {

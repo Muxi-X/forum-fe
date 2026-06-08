@@ -1,0 +1,290 @@
+import React, { useState } from 'react';
+import styled from 'styled-components';
+import { Input, message } from 'antd';
+import { useNavigate } from 'react-router-dom';
+import MobileShell from '../components/MobileShell';
+import UploadField from '../components/UploadField';
+import { FloatingSubmitBar, mobilePalette, PrimaryButton, mobileRadius } from '../styles';
+import { DEFAULT_TABLE } from '../constants';
+import { mobileApi } from '../api';
+import { emitSipScorePatch } from '../postEvents';
+
+const MAX_TAG_COUNT = 4;
+
+const Wrap = styled.div`
+  padding: 14px 16px calc(22px + env(safe-area-inset-bottom));
+  background: linear-gradient(180deg, #fffaf0 0%, #f7f8fb 36%, #f7f8fb 100%);
+  min-height: calc(100vh - 52px);
+
+  .ant-input,
+  .ant-input-affix-wrapper {
+    border-radius: ${mobileRadius.lg};
+    border-color: rgba(60, 60, 67, 0.1);
+    box-shadow: 0 8px 22px rgba(16, 24, 40, 0.04);
+  }
+`;
+
+const FormCard = styled.section`
+  padding: 16px;
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.74);
+  box-shadow: 0 16px 36px rgba(16, 24, 40, 0.06);
+  backdrop-filter: blur(18px);
+`;
+
+const SectionBlock = styled.section`
+  margin-top: 12px;
+  padding: 14px 16px;
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.86);
+  border: 1px solid rgba(60, 60, 67, 0.08);
+  box-shadow: 0 12px 30px rgba(16, 24, 40, 0.045);
+`;
+
+const SectionHead = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+  strong {
+    color: ${mobilePalette.ink};
+  }
+  span {
+    color: ${mobilePalette.muted};
+    font-size: 12px;
+  }
+`;
+
+const Label = styled.label`
+  display: block;
+  margin: 16px 0 9px;
+  color: #1a202c;
+  font-weight: 700;
+  &:first-child {
+    margin-top: 0;
+  }
+`;
+
+const FixedBar = styled(FloatingSubmitBar)``;
+
+const SubmitButton = styled(PrimaryButton)`
+  width: 100%;
+`;
+
+const TagRow = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+`;
+
+const TagChip = styled.button<{ active?: boolean }>`
+  height: 36px;
+  min-width: 82px;
+  padding: 0 16px;
+  border-radius: 999px;
+  border: 1px solid
+    ${(props) => (props.active ? 'rgba(254, 152, 0, 0.28)' : 'rgba(60, 60, 67, 0.08)')};
+  background: ${(props) =>
+    props.active ? 'rgba(255, 198, 65, 0.24)' : 'rgba(255, 255, 255, 0.78)'};
+  color: ${(props) => (props.active ? '#a15a00' : mobilePalette.inkSoft)};
+  font-size: 13px;
+  font-weight: 700;
+`;
+
+const CustomTagForm = styled.form`
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+  input {
+    flex: 1;
+    min-width: 0;
+    height: 38px;
+    padding: 0 14px;
+    border: 1px solid rgba(60, 60, 67, 0.12);
+    border-radius: ${mobileRadius.pill};
+  }
+  button {
+    width: 58px;
+    border-radius: ${mobileRadius.pill};
+    background: linear-gradient(135deg, #ffc641, #fe9800);
+    color: #fff;
+    font-weight: 800;
+    &:disabled {
+      opacity: 0.45;
+    }
+  }
+`;
+
+const SipScoreNew: React.FC = () => {
+  const nav = useNavigate();
+  const [name, setName] = useState('');
+  const [description, setDescription] = useState('');
+  const [cover, setCover] = useState('');
+  const [tags, setTags] = useState<string[]>([]);
+  const [customTag, setCustomTag] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+
+  const submit = async () => {
+    if (!name.trim() || !description.trim()) {
+      message.warning('请填写榜单名称和简介');
+      return;
+    }
+    setSubmitting(true);
+    try {
+      const nextTags = tags.slice(0, MAX_TAG_COUNT);
+      const res = await mobileApi.sipScore.create({
+        name,
+        description,
+        cover_img: cover,
+        tags: nextTags,
+        domain: 'normal',
+        category: DEFAULT_TABLE.apiCategory,
+      });
+      if (res.code !== 0) {
+        message.error(res.message);
+        return;
+      }
+      const sipScoreId = Number(res.data.id || 0);
+      if (sipScoreId) {
+        emitSipScorePatch({
+          id: sipScoreId,
+          created: true,
+          withEntries: {
+            sip_score: {
+              id: sipScoreId,
+              name,
+              description,
+              cover_img: cover,
+              tags: nextTags,
+              domain: 'normal',
+              category: DEFAULT_TABLE.apiCategory,
+              entry_count: 0,
+              collect_count: 0,
+              participant_count: 0,
+              is_collected: false,
+            },
+            entries: [],
+          },
+        });
+      }
+      message.success('创建成功');
+      nav(`/sip-score/${res.data.id}`);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const tagList = tags;
+  const presetTags = ['校园生活', '学习资料', '美食', '课程', '宿舍', '工具'];
+  const visibleTags = Array.from(new Set([...presetTags, ...tagList]));
+
+  const updateTags = (nextTags: string[]) => {
+    setTags(Array.from(new Set(nextTags)).filter(Boolean).slice(0, MAX_TAG_COUNT));
+  };
+
+  const addCustomTag = () => {
+    const next = customTag.replace(/^#/, '').trim();
+    if (!next) return;
+    if (next.length > 12) {
+      message.warning('标签最多 12 个字');
+      return;
+    }
+    if (!tagList.includes(next) && tagList.length >= MAX_TAG_COUNT) {
+      message.warning(`最多添加 ${MAX_TAG_COUNT} 个标签`);
+      return;
+    }
+    const merged = new Set(tagList);
+    merged.add(next);
+    updateTags(Array.from(merged));
+    setCustomTag('');
+  };
+
+  return (
+    <MobileShell title="创建榜单" back tabs={false}>
+      <Wrap>
+        <FormCard>
+          <Label>榜单名称</Label>
+          <Input
+            value={name}
+            maxLength={30}
+            placeholder="例如：大一新生好物榜"
+            onChange={(event) => setName(event.target.value)}
+          />
+          <Label>榜单简介</Label>
+          <Input.TextArea
+            value={description}
+            rows={5}
+            maxLength={300}
+            placeholder="简单介绍一下你的榜单吧"
+            onChange={(event) => setDescription(event.target.value)}
+          />
+          <Label>上传封面图</Label>
+          <UploadField value={cover} onChange={setCover} />
+        </FormCard>
+        <SectionBlock>
+          <SectionHead>
+            <strong>标签</strong>
+            <span>
+              {tagList.length
+                ? `${tagList.length}/${MAX_TAG_COUNT}`
+                : `可选 · 0/${MAX_TAG_COUNT}`}
+            </span>
+          </SectionHead>
+          <TagRow>
+            {visibleTags.map((tag) => {
+              const value = tag.replace(/^#/, '');
+              const active = tagList.includes(value);
+              return (
+                <TagChip
+                  key={tag}
+                  type="button"
+                  active={active}
+                  onClick={() => {
+                    const next = new Set(tagList);
+                    if (next.has(value)) {
+                      next.delete(value);
+                    } else if (tagList.length >= MAX_TAG_COUNT) {
+                      message.warning(`最多添加 ${MAX_TAG_COUNT} 个标签`);
+                      return;
+                    } else {
+                      next.add(value);
+                    }
+                    updateTags(Array.from(next));
+                  }}
+                >
+                  #{value}
+                  {active ? ' ×' : ''}
+                </TagChip>
+              );
+            })}
+          </TagRow>
+          <CustomTagForm
+            onSubmit={(event) => {
+              event.preventDefault();
+              addCustomTag();
+            }}
+          >
+            <input
+              value={customTag}
+              maxLength={12}
+              placeholder="添加自定义标签"
+              onChange={(event) => setCustomTag(event.target.value)}
+            />
+            <button type="button" disabled={!customTag.trim()} onClick={addCustomTag}>
+              添加
+            </button>
+          </CustomTagForm>
+        </SectionBlock>
+        <FixedBar>
+          <SubmitButton disabled={submitting} onClick={submit}>
+            {submitting ? '发布中...' : '发布榜单'}
+          </SubmitButton>
+        </FixedBar>
+      </Wrap>
+    </MobileShell>
+  );
+};
+
+export default SipScoreNew;

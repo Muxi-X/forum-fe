@@ -10,6 +10,7 @@ import * as getUserProfileById from './getUserProfileById';
 import * as postUserPrivateMessage from './postUserPrivateMessage'
 import * as getUserPrivateMessageList from './getUserPrivateMessageList'
 import * as deleteUserPrivateMessage from './deleteUserPrivateMessage'
+import * as patchUserPrivateMessageRead from './patchUserPrivateMessageRead'
 
 export {
   putUser,
@@ -20,5 +21,6 @@ export {
   getUserProfileById,
   postUserPrivateMessage,
   getUserPrivateMessageList,
-  deleteUserPrivateMessage
+  deleteUserPrivateMessage,
+  patchUserPrivateMessageRead
 };

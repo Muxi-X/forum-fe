@@ -12,8 +12,10 @@ import useDocTitle from 'hooks/useDocTitle';
 import useRequest from 'hooks/useRequest';
 import { useNavigate } from 'react-router-dom';
 import moment from 'utils/moment';
+import { useDeviceType } from 'hooks/useDeviceType';
+import MobileNotice from 'mobile/pages/Notice';
 
-const Notice: React.FC = () => {
+const DesktopNotice: React.FC = () => {
   const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotification();
   const nav = useNavigate();
 
@@ -40,25 +42,29 @@ const Notice: React.FC = () => {
       case 'collection':
         return '有人收藏了你的帖子';
       case 'reply_comment':
-        return '有人回复了你的评论';
+        return '有人回复了评论';
       default:
         return '不是哥们这能被你整出来啊';
     }
   };
 
-  const handleNotificationClick = (notification: Notification) => {
+  const { runAsync: markMessagesRead } = useRequest(
+    API.user.patchUserPrivateMessageRead.request,
+    {
+      manual: true,
+      onError: (error) => {
+        console.error('标记通知失败:', error);
+      },
+    },
+  );
+
+  const handleNotificationClick = async (notification: Notification) => {
     if (!notification.read) {
       markAsRead(notification.id);
+      await markMessagesRead({ id: notification.id });
     }
     nav(`/article/${notification.postId}`);
   };
-
-  const { run: deleteMessages } = useRequest(API.user.deleteUserPrivateMessage.request, {
-    manual: true,
-    onError: (error) => {
-      console.error('清除通知失败:', error);
-    },
-  });
 
   const handleMarkAllRead = () => {
     Modal.confirm({
@@ -69,10 +75,10 @@ const Notice: React.FC = () => {
       onOk: async () => {
         try {
           markAllAsRead();
-          await deleteMessages({}, {});
+          await markMessagesRead({}, {});
           message.success('已全部标记为已读');
         } catch (error) {
-          console.error('清除通知失败:', error);
+          console.error('标记通知失败:', error);
           message.error('操作失败，请稍后重试');
         }
       },
@@ -138,6 +144,11 @@ const Notice: React.FC = () => {
       </Card>
     </style.Wrapper>
   );
+};
+
+const Notice: React.FC = () => {
+  const isPhone = useDeviceType() === 'phone';
+  return isPhone ? <MobileNotice /> : <DesktopNotice />;
 };
 
 export default Notice;

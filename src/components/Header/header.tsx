@@ -10,6 +10,7 @@ import useProfile from 'store/useProfile';
 import Avatar from 'components/Avatar/avatar';
 import useWS from 'store/useWS';
 import useNotification from 'store/useNotification';
+import { clearAuthStorage } from 'utils/auth';
 import * as style from './style';
 
 const HeaderAvatar = styled(Avatar)`
@@ -49,7 +50,7 @@ const Header: React.FC = () => {
     ws?.close();
     setContacts([]);
     setSelectedId(0);
-    localStorage.removeItem('token');
+    clearAuthStorage();
     nav('/login');
   };
 

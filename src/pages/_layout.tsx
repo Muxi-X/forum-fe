@@ -10,6 +10,10 @@ import Footer from 'components/Footer';
 import ResultPage from './Result';
 import media from 'styles/media';
 import useChat from 'store/useChat';
+import useNotification from 'store/useNotification';
+import { useDeviceType } from 'hooks/useDeviceType';
+import { hasAuthToken, isLoginRoute } from 'utils/auth';
+import { markChatConversationRead } from 'mobile/chatSync';
 
 export const ContentWrapper = styled.main`
   display: flex;
@@ -40,32 +44,48 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { setShowHeader } = useShowHeader();
 
   const isSpecialPage = () => {
-    const isLogin = pathname === '/login';
+    const isLogin = isLoginRoute(pathname);
     const isPost = pathname.includes('/editor');
     return isLogin || isPost;
   };
   const { setTip, setWS, ws } = useWS();
   const { setSelectedId } = useChat();
+  const { markChatUnread, markChatRead } = useNotification();
   const { showHeader } = useShowHeader();
+  const isPhone = useDeviceType() === 'phone';
+  const shouldRedirectToLogin = !isLoginRoute(pathname) && !hasAuthToken();
 
   const webSocketInit = () => {
     const token = localStorage.getItem('token') as string;
     const WebSocket = new WS(token);
-    if (WebSocket.ws) {
-      WebSocket.ws.onmessage = (res) => {
-        console.log(res.data);
-        const data: MsgResponse = JSON.parse(res.data);
-        if (typeof data?.sender_id === 'number') {
-          setTip(true);
-          setSelectedId(data.sender_id);
+    WebSocket.subscribe((data: MsgResponse) => {
+      if (typeof data?.sender_id === 'number') {
+        const params = new URLSearchParams(window.location.search);
+        const activeChatTargetId =
+          window.location.pathname === '/user/chat'
+            ? Number(params.get('target_id') || 0)
+            : 0;
+        setTip(true);
+        setSelectedId(data.sender_id);
+        if (activeChatTargetId === data.sender_id) {
+          markChatRead(data.sender_id);
+          markChatConversationRead(data.sender_id).catch((err) =>
+            console.error('标记私信已读失败:', err),
+          );
+        } else {
+          markChatUnread(data.sender_id);
         }
-      };
-    }
+      }
+    });
     setWS(WebSocket);
   };
 
   useEffect(() => {
-    if (!ws) {
+    if (shouldRedirectToLogin) {
+      window.location.replace('/login');
+      return;
+    }
+    if (!ws && !isLoginRoute(pathname) && hasAuthToken()) {
       webSocketInit();
     }
     if (isSpecialPage()) {
@@ -74,6 +94,12 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
       setShowHeader(true);
     }
   }, [pathname]);
+  if (shouldRedirectToLogin) {
+    return null;
+  }
+  if (isPhone) {
+    return <ErrorBoundary fallbackRender={ErrorInfo}>{children}</ErrorBoundary>;
+  }
   if (isSpecialPage())
     return <ErrorBoundary fallbackRender={ErrorInfo}>{children}</ErrorBoundary>;
   else {

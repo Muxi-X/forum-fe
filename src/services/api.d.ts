@@ -68,11 +68,20 @@ declare namespace defs {
     /** action */
     action?: string;
 
+    /** callback_url */
+    callback_url?: string;
+
     /** captcha */
     captcha?: string;
 
+    /** oauth_code */
+    oauth_code?: string;
+
     /** password */
     password?: string;
+
+    /** provider */
+    provider?: string;
 
     /** second_auth_code */
     second_auth_code?: string;
@@ -105,6 +114,9 @@ declare namespace defs {
 
     /** message */
     message?: string;
+
+    /** redirect_url */
+    redirect_url?: string;
 
     /** session_id */
     session_id?: string;
@@ -144,6 +156,9 @@ declare namespace defs {
 
     /** signature */
     signature?: string;
+
+    /** student_id */
+    student_id?: string;
   }
 
   export class User {
@@ -192,6 +207,9 @@ declare namespace defs {
 
     /** receiver_id */
     receiver_id?: number;
+
+    /** read */
+    read?: boolean;
 
     /** time */
     time?: string;
@@ -736,6 +754,25 @@ login the team-forum
       export type HooksParams = (() => Params) | Params;
 
       export type Response = ResponseTypeWarpper<Array<defs.chat_Message>>;
+
+      export const method: string;
+
+      export function request(params: Params, options?: any): Promise<Response>;
+    }
+
+    /**
+     * 标记与某用户的私信为已读
+     * /chat/read/{id}
+     */
+    export namespace patchReadById {
+      export class Params {
+        /** id */
+        id: number;
+      }
+
+      export type HooksParams = (() => Params) | Params;
+
+      export type Response = ResponseTypeWarpper<any>;
 
       export const method: string;
 
@@ -1372,6 +1409,25 @@ login the team-forum
       export class Params {
         /** message_id */
         id?: number;
+      }
+
+      export type HooksParams = (() => Params) | Params;
+
+      export type Response = ResponseTypeWarpper<defs.Response>;
+
+      export const method: string;
+
+      export function request(params: Params, options?: any): Promise<Response>;
+    }
+
+    /**
+     * 标记 private message 已读
+     * /user/private_message/read
+     */
+    export namespace patchUserPrivateMessageRead {
+      export class Params {
+        /** message_id */
+        id?: string;
       }
 
       export type HooksParams = (() => Params) | Params;

@@ -7,6 +7,12 @@ export type CompleteRes = {
   key: string;
 };
 
+type UploadObserver = {
+  next?: (res: unknown) => void;
+  error?: (err: any) => void;
+  complete: (res: CompleteRes) => void;
+};
+
 export const observer = {
   next(res: any) {},
   error(err: any) {
@@ -15,7 +21,11 @@ export const observer = {
   complete(res: any) {},
 };
 
-const qiniupload = (file: File, token: string) => {
+const qiniupload = (
+  file: File,
+  token: string,
+  uploadObserver: UploadObserver = observer,
+) => {
   const putExtra = {};
   const key = nanoid();
   const config = {
@@ -25,7 +35,7 @@ const qiniupload = (file: File, token: string) => {
   //选择并上传文件到七牛云
   const observable = qiniu.upload(file, key, token, putExtra, config);
 
-  observable.subscribe(observer); // 上传开始
+  return observable.subscribe(uploadObserver); // 上传开始
 };
 
 export default qiniupload;

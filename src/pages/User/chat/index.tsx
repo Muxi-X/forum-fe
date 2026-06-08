@@ -17,6 +17,10 @@ import media from 'styles/media';
 import useDocTitle from 'hooks/useDocTitle';
 import EmptyCard from 'components/EmptyCard';
 import Loading from 'components/Loading';
+import { useDeviceType } from 'hooks/useDeviceType';
+import MobileChat from 'mobile/pages/Chat';
+import useNotification from 'store/useNotification';
+import { markChatConversationRead } from 'mobile/chatSync';
 
 interface LocationState {
   id: string;
@@ -42,35 +46,51 @@ const ChatPage = styled.section`
   ${media.desktop`width: 100vw`}
 `;
 
-const Chat: React.FC = () => {
+const DesktopChat: React.FC = () => {
   const chatStore = useChat();
   const { userProfile } = useProfile();
   const myId = userProfile.id as number;
   const name = userProfile.name;
   const { setContacts, setSelectedId, contacts, getRecords, setRecords, selectedId } =
     chatStore;
-  const { ws, setTip, setWS } = useWS();
+  const { ws, setWS } = useWS();
   const { state } = useLocation();
   const { runAsync } = useRequest(API.user.getUserProfileById.request, { manual: true });
   const { runAsync: getHistory } = useRequest(API.chat.getHistoryById.request, {
     manual: true,
   });
+  const { markChatUnread, markChatRead } = useNotification();
 
   const [loading, setLoading] = useState(true);
 
+  const handleSocketMessage = (
+    res: MsgResponse,
+    options?: { updateUnread?: boolean },
+  ) => {
+    const peerId = res.sender_id === myId ? res.receiver_id : res.sender_id;
+    if (!peerId) return;
+    const newTime = formatYear(res.time, 'YYYY-MM-DD HH:MM:SS');
+    const records = [...getRecords(peerId, myId), { ...res, time: newTime }];
+    setRecords(records, peerId, myId);
+    if (options?.updateUnread === false) return;
+    if (peerId === selectedId) {
+      markChatRead(peerId);
+      markChatConversationRead(peerId).catch((err) =>
+        console.error('标记私信已读失败:', err),
+      );
+    } else {
+      markChatUnread(peerId);
+    }
+  };
+
   const webSocketInit = () => {
     const token = localStorage.getItem('token') as string;
-    const WebSocket = new WS(token);
-    if (WebSocket.ws) {
-      WebSocket.ws.onmessage = (e) => {
-        const res = JSON.parse(e.data) as MsgResponse;
-        const newTime = formatYear(res.time, 'YYYY-MM-DD HH:MM:SS');
-        const records = [...getRecords(res.sender_id, myId), { ...res, time: newTime }];
-        setRecords(records, res.sender_id, myId);
-      };
-    }
-    setWS(WebSocket);
-    console.log(WebSocket);
+    const socket = new WS(token);
+    const unsubscribe = socket.subscribe((data) =>
+      handleSocketMessage(data, { updateUnread: false }),
+    );
+    setWS(socket);
+    return unsubscribe;
   };
 
   const messageMerge = (messages: (MsgResponse | Message)[]) => {
@@ -237,30 +257,16 @@ const Chat: React.FC = () => {
     };
     initContacts();
 
-    if (ws) {
-      (ws as WS).ws!.onmessage = (e) => {
-        const res = JSON.parse(e.data) as MsgResponse;
-        const newTime = formatYear(res.time, 'YYYY-MM-DD HH:MM:SS');
-        const records = [...getRecords(res.sender_id, myId), { ...res, time: newTime }];
-        setRecords(records, res.sender_id, myId);
-      };
-    } else {
-      webSocketInit();
-    }
+    const unsubscribe = ws
+      ? (ws as WS).subscribe((data) => handleSocketMessage(data, { updateUnread: false }))
+      : webSocketInit();
 
     name ? useDocTitle(`${name} - 轻风高谊 - 茶馆`) : useDocTitle(`轻风高谊 - 茶馆`);
 
     return () => {
-      if (ws)
-        (ws as WS).ws!.onmessage = (res) => {
-          const data: MsgResponse = JSON.parse(res.data);
-          if (typeof data?.sender_id === 'number') {
-            setTip(true);
-            setSelectedId(data.sender_id);
-          }
-        };
+      unsubscribe?.();
     };
-  }, [myId, ws, name]);
+  }, [myId, ws, name, selectedId]);
 
   return (
     <>
@@ -276,6 +282,11 @@ const Chat: React.FC = () => {
       )}
     </>
   );
+};
+
+const Chat: React.FC = () => {
+  const isPhone = useDeviceType() === 'phone';
+  return isPhone ? <MobileChat /> : <DesktopChat />;
 };
 
 export default Chat;

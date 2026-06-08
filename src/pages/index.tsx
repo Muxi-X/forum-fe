@@ -12,6 +12,8 @@ import useRequest from 'hooks/useRequest';
 import useList from 'store/useList';
 import useProfile from 'store/useProfile';
 import media from 'styles/media';
+import { useDeviceType } from 'hooks/useDeviceType';
+import MobileHome from 'mobile/pages/Home';
 
 type isTrigger = { trigger: boolean };
 
@@ -54,7 +56,7 @@ const Categories = styled.div`
   user-select: none;
 `;
 
-const Square: React.FC = () => {
+const DesktopSquare: React.FC = () => {
   const { pathname, search } = location;
   const { setList, postList, getList } = useList();
   const {
@@ -327,6 +329,11 @@ const Square: React.FC = () => {
       <BackToTop />
     </>
   );
+};
+
+const Square: React.FC = () => {
+  const isPhone = useDeviceType() === 'phone';
+  return isPhone ? <MobileHome /> : <DesktopSquare />;
 };
 
 export default Square;

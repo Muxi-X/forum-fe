@@ -1,5 +1,5 @@
 import React, { Suspense, useEffect } from 'react';
-import { BrowserRouter as Router, useRoutes } from 'react-router-dom';
+import { BrowserRouter as Router, useLocation, useRoutes } from 'react-router-dom';
 import routes from '~react-pages';
 import useRequest from 'hooks/useRequest';
 import Header from 'components/Header/header';
@@ -9,8 +9,17 @@ import useWS from 'store/useWS';
 import Layout, { Content, ContentWrapper } from 'pages/_layout';
 import Loading from 'components/Loading';
 import GlobalNotificationListener from 'components/Notice';
+import { useDeviceType } from 'hooks/useDeviceType';
+import { hasAuthToken, isLoginRoute } from 'utils/auth';
+import { syncMobileProfileSessionForRoute } from 'mobile/profileSession';
 
 const Routes = () => {
+  const location = useLocation();
+
+  useEffect(() => {
+    syncMobileProfileSessionForRoute(location.pathname, location.search);
+  }, [location.pathname, location.search]);
+
   return (
     <Layout>
       <Suspense
@@ -30,10 +39,11 @@ const Routes = () => {
 
 const SetRoutes = () => {
   const { showHeader } = useShowHeader();
+  const isPhone = useDeviceType() === 'phone';
 
   return (
     <Router>
-      {showHeader ? <Header /> : null}
+      {showHeader && !isPhone ? <Header /> : null}
       <GlobalNotificationListener />
       <Routes />
     </Router>
@@ -48,6 +58,9 @@ const App = () => {
   const { run: getUser } = useRequest(API.user.getUserMyprofile.request, {
     onSuccess: (res) => {
       setUser(res.data);
+      if (res.data.id) {
+        localStorage.setItem('userId', String(res.data.id));
+      }
     },
     manual: true,
     refreshDeps: [],
@@ -62,7 +75,7 @@ const App = () => {
   });
 
   useEffect(() => {
-    if (location.pathname.includes('login')) {
+    if (isLoginRoute(location.pathname) || !hasAuthToken()) {
       return;
     } else {
       getUser({});
